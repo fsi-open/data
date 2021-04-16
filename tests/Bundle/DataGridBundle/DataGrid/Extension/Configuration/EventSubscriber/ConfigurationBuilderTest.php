@@ -187,7 +187,7 @@ class ConfigurationBuilderTest extends TestCase
         /** @var Kernel&MockObject $kernelMock */
         $kernelMock = $this->getMockBuilder(Kernel::class)
             ->setConstructorArgs(['dev', true])
-            ->setMethods(['registerContainerConfiguration', 'registerBundles', 'getBundles', 'getContainer'])
+            ->onlyMethods(['registerContainerConfiguration', 'registerBundles', 'getBundles', 'getContainer'])
             ->getMock();
 
         $this->kernel = $kernelMock;

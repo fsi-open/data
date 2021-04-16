@@ -18,12 +18,12 @@ use Symfony\Component\HttpFoundation\Request;
 
 class BindParameters implements EventSubscriberInterface
 {
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [DataSourceEvents::PRE_BIND_PARAMETERS => ['preBindParameters', 1024]];
     }
 
-    public function preBindParameters(DataSourceEvent\ParametersEventArgs $event)
+    public function preBindParameters(DataSourceEvent\ParametersEventArgs $event): void
     {
         $parameters = $event->getParameters();
         if (true === $parameters instanceof Request) {

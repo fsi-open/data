@@ -11,13 +11,12 @@ declare(strict_types=1);
 
 namespace FSi\Tests\Component\DataSource;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use FSi\Component\DataSource\DataSource;
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\DataSourceView;
-use FSi\Component\DataSource\Driver\DriverInterface;
 use FSi\Component\DataSource\Exception\DataSourceViewException;
 use FSi\Component\DataSource\Field\FieldViewInterface;
+use FSi\Component\DataSource\Result;
+use FSi\Tests\Component\DataSource\Fixtures\TestResult;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -61,12 +60,11 @@ final class DataSourceViewTest extends TestCase
     public function testGetResults(): void
     {
         $datasource = $this->createDatasourceMock();
-        $datasource->expects(self::once())->method('getResult')->willReturn(new ArrayCollection());
+        $datasource->expects(self::once())->method('getResult')->willReturn(new TestResult());
 
         $view = new DataSourceView($datasource);
-        $view->getParameters();
 
-        self::assertInstanceOf(ArrayCollection::class, $view->getResult());
+        self::assertInstanceOf(Result::class, $view->getResult());
     }
 
     /**
@@ -201,11 +199,9 @@ final class DataSourceViewTest extends TestCase
 
         self::assertEquals('name3', $view['name3']->getName());
 
-        // Checking fake methods.
+        $this->expectException(DataSourceViewException::class);
         $view['name0'] = 'trash';
-        self::assertNotEquals('trash', $view['name0']);
         unset($view['name0']);
-        self::assertTrue(isset($view['name0']));
     }
 
     /**

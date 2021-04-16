@@ -47,7 +47,7 @@ class Entity
     }
 
     /**
-     * @return EntityCategory
+     * @return EntityCategory|null
      */
     public function getCategory()
     {

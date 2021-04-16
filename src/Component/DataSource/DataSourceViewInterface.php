@@ -7,101 +7,62 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource;
 
+use ArrayAccess;
 use Countable;
-use Doctrine\Common\Collections\ArrayCollection;
 use FSi\Component\DataSource\Field\FieldViewInterface;
 use FSi\Component\DataSource\Util\AttributesContainerInterface;
 use IteratorAggregate;
+use SeekableIterator;
 
 /**
  * DataSources view is responsible for keeping options needed to build view, fields view objects,
  * and proxy some requests to DataSource.
  */
-interface DataSourceViewInterface extends AttributesContainerInterface, \ArrayAccess, \Countable, \SeekableIterator
+interface DataSourceViewInterface extends AttributesContainerInterface, ArrayAccess, Countable, SeekableIterator
 {
-    /**
-     * Returns name of datasource.
-     *
-     * @return string
-     */
-    public function getName();
+    public function getName(): string;
 
     /**
-     * Returns parameters that were binded to datasource.
-     *
-     * @return array
+     * Returns parameters that were bound to datasource.
      */
-    public function getParameters();
+    public function getParameters(): array;
 
     /**
-     * Returns parameters that were binded to all datasources.
-     *
-     * @return array
+     * Returns parameters that were bound to all datasources.
      */
-    public function getAllParameters();
+    public function getAllParameters(): array;
 
     /**
-     * Returns parameters that were binded to other datasources.
-     *
-     * @return array
+     * Returns parameters that were bound to other datasources.
      */
-    public function getOtherParameters();
+    public function getOtherParameters(): array;
+
+    public function hasField(string $name): bool;
+
+    public function removeField(string $name): void;
+
+    public function getField(string $name): FieldViewInterface;
 
     /**
-     * Checks whether view has field with given name.
-     *
-     * @param string $name
+     * @return array<FieldViewInterface>
      */
-    public function hasField($name);
+    public function getFields(): array;
+
+    public function clearFields(): void;
+
+    public function addField(FieldViewInterface $fieldView): void;
 
     /**
-     * Removes field with given name.
-     *
-     * @param string $name
+     * @param array<FieldViewInterface> $fields
      */
-    public function removeField($name);
-
-    /**
-     * Returns field with given name.
-     *
-     * @param string $name
-     */
-    public function getField($name);
-
-    /**
-     * Return array of all fields.
-     *
-     * @return array
-     */
-    public function getFields();
-
-    /**
-     * Removes all fields.
-     *
-     * @return DataSourceViewInterface
-     */
-    public function clearFields();
-
-    /**
-     * Adds new field view.
-     *
-     * @param FieldViewInterface $fieldView
-     */
-    public function addField(Field\FieldViewInterface $fieldView);
-
-    /**
-     * Replace fields with specified ones.
-     *
-     * Each of field must be instance of \FSi\Component\DataSource\Field\FieldViewInterface
-     *
-     * @param FieldViewInterface[] $fields
-     */
-    public function setFields(array $fields);
+    public function setFields(array $fields): void;
 
     /**
      * @return Countable&IteratorAggregate
      */
-    public function getResult();
+    public function getResult(): IteratorAggregate;
 }

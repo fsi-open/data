@@ -193,8 +193,8 @@ class DBALDriverResultTest extends TestBase
 
         self::assertRegExp(
             '/^SELECT c\.\*, COUNT\(n\.id\) newscount FROM category c '
-            . 'LEFT JOIN news n ON n\.category_id = c\.id '
-            . 'GROUP BY c\.id HAVING newscount > :newscount LIMIT 3( OFFSET 0)?$/',
+                . 'LEFT JOIN news n ON n\.category_id = c\.id '
+                . 'GROUP BY c\.id HAVING newscount > :newscount LIMIT 3( OFFSET 0)?$/',
             $this->testDoctrineExtension->getQueryBuilder()->getSQL()
         );
 
@@ -210,8 +210,8 @@ class DBALDriverResultTest extends TestBase
 
         self::assertRegExp(
             '/^SELECT c\.\*, COUNT\(n\.id\) newscount FROM category c '
-            . 'LEFT JOIN news n ON n\.category_id = c\.id '
-            . 'GROUP BY c\.id HAVING newscount > :newscount LIMIT 3( OFFSET 0)?$/',
+                . 'LEFT JOIN news n ON n\.category_id = c\.id '
+                . 'GROUP BY c\.id HAVING newscount > :newscount LIMIT 3( OFFSET 0)?$/',
             $this->testDoctrineExtension->getQueryBuilder()->getSQL()
         );
 
@@ -243,8 +243,8 @@ class DBALDriverResultTest extends TestBase
 
         self::assertRegExp(
             '/^SELECT c\.\*, COUNT\(n\.id\) newscount FROM category c '
-            . 'LEFT JOIN news n ON n\.category_id = c\.id '
-            . 'GROUP BY c\.id HAVING newscount BETWEEN :newscount_from AND :newscount_to LIMIT 2( OFFSET 0)?$/',
+                . 'LEFT JOIN news n ON n\.category_id = c\.id '
+                . 'GROUP BY c\.id HAVING newscount BETWEEN :newscount_from AND :newscount_to LIMIT 2( OFFSET 0)?$/',
             $this->testDoctrineExtension->getQueryBuilder()->getSQL()
         );
     }

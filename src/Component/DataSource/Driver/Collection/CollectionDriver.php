@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver\Collection;
 
 use Doctrine\Common\Collections\Criteria;
@@ -14,12 +16,13 @@ use Doctrine\Common\Collections\Selectable;
 use FSi\Component\DataSource\Driver\DriverAbstract;
 use FSi\Component\DataSource\Driver\Collection\Exception\CollectionDriverException;
 use FSi\Component\DataSource\Exception\DataSourceException;
+use IteratorAggregate;
 use Traversable;
 
 class CollectionDriver extends DriverAbstract
 {
     /**
-     * @var array|Traversable|Selectable
+     * @var Selectable
      */
     private $collection;
 
@@ -35,13 +38,7 @@ class CollectionDriver extends DriverAbstract
      */
     private $currentCriteria;
 
-    /**
-     * @param array $extensions
-     * @param array|Traversable|Selectable $collection
-     * @param Criteria|null $criteria
-     * @throws DataSourceException
-     */
-    public function __construct(array $extensions, $collection, ?Criteria $criteria = null)
+    public function __construct(array $extensions, Selectable $collection, ?Criteria $criteria = null)
     {
         parent::__construct($extensions);
 
@@ -49,30 +46,36 @@ class CollectionDriver extends DriverAbstract
         $this->baseCriteria = $criteria ?? Criteria::create();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getType()
+    public function getType(): string
     {
         return 'collection';
     }
 
-    protected function initResult()
+    /**
+     * Returns criteria.
+     *
+     * If criteria is set to null (so when getResult method is NOT executed at the moment) exception is thrown.
+     */
+    public function getCriteria(): Criteria
     {
-        $this->currentCriteria = clone $this->baseCriteria;
+        if (null === $this->currentCriteria) {
+            throw new CollectionDriverException('Criteria is accessible only during preGetResult event.');
+        }
+
+        return $this->currentCriteria;
     }
 
     /**
-     * @param array $fields
-     * @param int $first
-     * @param int $max
-     * @return \FSi\Component\DataSource\Driver\Collection\CollectionResult
-     * @throws \FSi\Component\DataSource\Driver\Collection\Exception\CollectionDriverException
+     * @param array<CollectionFieldInterface> $fields
+     * @param int|null $first
+     * @param int|null $max
+     * @return CollectionResult
+     * @throws CollectionDriverException
      */
-    protected function buildResult($fields, $first, $max)
+    protected function buildResult(array $fields, ?int $first, ?int $max): IteratorAggregate
     {
         foreach ($fields as $field) {
-            if (!$field instanceof CollectionFieldInterface) {
+            if (false === $field instanceof CollectionFieldInterface) {
                 throw new CollectionDriverException(
                     sprintf('All fields must be instances of %s', CollectionFieldInterface::class)
                 );
@@ -81,7 +84,7 @@ class CollectionDriver extends DriverAbstract
             $field->buildCriteria($this->currentCriteria);
         }
 
-        if ($max > 0) {
+        if (null !== $max || null !== $first) {
             $this->currentCriteria->setMaxResults($max);
             $this->currentCriteria->setFirstResult($first);
         }
@@ -89,20 +92,8 @@ class CollectionDriver extends DriverAbstract
         return new CollectionResult($this->collection, $this->currentCriteria);
     }
 
-    /**
-     * Returns criteria.
-     *
-     * If criteria is set to null (so when getResult method is NOT executed at the moment) exception is throwed.
-     *
-     * @throws Exception\CollectionDriverException
-     * @return Criteria
-     */
-    public function getCriteria()
+    protected function initResult(): void
     {
-        if ($this->currentCriteria === null) {
-            throw new CollectionDriverException('Criteria is accessible only during preGetResult event.');
-        }
-
-        return $this->currentCriteria;
+        $this->currentCriteria = clone $this->baseCriteria;
     }
 }

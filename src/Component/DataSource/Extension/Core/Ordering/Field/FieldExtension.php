@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Extension\Core\Ordering\Field;
 
 use FSi\Component\DataSource\Event\FieldEvent;
@@ -16,26 +18,28 @@ use FSi\Component\DataSource\Extension\Core\Pagination\PaginationExtension;
 use FSi\Component\DataSource\Field\FieldAbstractExtension;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
 
+use function array_key_exists;
+
 class FieldExtension extends FieldAbstractExtension
 {
     /**
-     * @var array
+     * @var array<string, array{priority: string, direction: string}|null>
      */
     private $ordering = [];
 
-    public function getExtendedFieldTypes()
+    public function getExtendedFieldTypes(): array
     {
         return ['text', 'number', 'date', 'time', 'datetime', 'boolean'];
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             FieldEvents::POST_BUILD_VIEW => ['postBuildView']
         ];
     }
 
-    public function initOptions(FieldTypeInterface $field)
+    public function initOptions(FieldTypeInterface $field): void
     {
         $field->getOptionsResolver()
             ->setDefined(['default_sort_priority'])
@@ -45,7 +49,7 @@ class FieldExtension extends FieldAbstractExtension
             ])
             ->setAllowedTypes('default_sort_priority', 'integer')
             ->setAllowedTypes('sortable', 'bool')
-            ->setAllowedValues('default_sort', [null, 'asc', 'desc']);
+            ->setAllowedValues('default_sort', [null, 'asc', 'desc'])
         ;
     }
 
@@ -53,7 +57,7 @@ class FieldExtension extends FieldAbstractExtension
      * @param FieldTypeInterface $field
      * @param array{priority: string, direction: string}|null $ordering
      */
-    public function setOrdering(FieldTypeInterface $field, $ordering)
+    public function setOrdering(FieldTypeInterface $field, ?array $ordering): void
     {
         $field_oid = spl_object_hash($field);
         $this->ordering[$field_oid] = $ordering;
@@ -63,24 +67,24 @@ class FieldExtension extends FieldAbstractExtension
      * @param FieldTypeInterface $field
      * @return array{priority: string, direction: string}|null
      */
-    public function getOrdering(FieldTypeInterface $field)
+    public function getOrdering(FieldTypeInterface $field): ?array
     {
         $field_oid = spl_object_hash($field);
-        if (isset($this->ordering[$field_oid])) {
+        if (true === array_key_exists($field_oid, $this->ordering)) {
             return $this->ordering[$field_oid];
         }
 
         return null;
     }
 
-    public function postBuildView(FieldEvent\ViewEventArgs $event)
+    public function postBuildView(FieldEvent\ViewEventArgs $event): void
     {
         $field = $event->getField();
         $field_oid = spl_object_hash($field);
         $view = $event->getView();
 
         $view->setAttribute('sortable', $field->getOption('sortable'));
-        if (!$field->getOption('sortable')) {
+        if (false === $field->getOption('sortable')) {
             return;
         }
 
@@ -88,21 +92,23 @@ class FieldExtension extends FieldAbstractExtension
         $dataSourceName = $field->getDataSource()->getName();
 
         if (
-            isset($this->ordering[$field_oid]['direction'])
-            && (key($parameters[$dataSourceName][OrderingExtension::PARAMETER_SORT]) == $field->getName())
+            true === array_key_exists($field_oid, $this->ordering)
+            && true === array_key_exists('direction', $this->ordering[$field_oid])
+            && key($parameters[$dataSourceName][OrderingExtension::PARAMETER_SORT]) === $field->getName()
         ) {
-            $view->setAttribute('sorted_ascending', $this->ordering[$field_oid]['direction'] == 'asc');
-            $view->setAttribute('sorted_descending', $this->ordering[$field_oid]['direction'] == 'desc');
+            $view->setAttribute('sorted_ascending', 'asc' === $this->ordering[$field_oid]['direction']);
+            $view->setAttribute('sorted_descending', 'desc' === $this->ordering[$field_oid]['direction']);
         } else {
             $view->setAttribute('sorted_ascending', false);
             $view->setAttribute('sorted_descending', false);
         }
 
-        if (isset($parameters[$dataSourceName][OrderingExtension::PARAMETER_SORT][$field->getName()])) {
-            unset($parameters[$dataSourceName][OrderingExtension::PARAMETER_SORT][$field->getName()]);
-        }
+        unset($parameters[$dataSourceName][OrderingExtension::PARAMETER_SORT][$field->getName()]);
 
-        if (!isset($parameters[$dataSourceName][OrderingExtension::PARAMETER_SORT])) {
+        if (
+            false === array_key_exists($dataSourceName, $parameters)
+            || false === array_key_exists(OrderingExtension::PARAMETER_SORT, $parameters[$dataSourceName])
+        ) {
             $parameters[$dataSourceName][OrderingExtension::PARAMETER_SORT] = [];
         }
 
@@ -110,6 +116,7 @@ class FieldExtension extends FieldAbstractExtension
         // Little hack: we do not know if PaginationExtension is loaded but if
         // it is we don't want page number in sorting URLs.
         unset($parameters[$dataSourceName][PaginationExtension::PARAMETER_PAGE]);
+
         $fields = array_keys($parameters[$dataSourceName][OrderingExtension::PARAMETER_SORT]);
         array_unshift($fields, $field->getName());
         $directions = array_values($parameters[$dataSourceName][OrderingExtension::PARAMETER_SORT]);

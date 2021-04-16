@@ -7,9 +7,11 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Tests\Component\DataSource\Driver\Doctrine\DBAL;
 
-use DateTime;
+use DateTimeImmutable;
 use FSi\Component\DataSource\DataSourceInterface;
 
 class DBALFieldsTest extends TestBase
@@ -55,35 +57,35 @@ class DBALFieldsTest extends TestBase
                 'event_date',
                 'date',
                 [
-                    ['eq', new DateTime('1970-01-02 00:00:00'), 24],
-                    ['neq', new DateTime('1970-01-01 00:00:00'), 76],
-                    ['lt', new DateTime('1970-01-02 00:00:00'), 24],
-                    ['lte', new DateTime('1970-01-02 00:00:00'), 48],
-                    ['gt', new DateTime('1970-01-02 00:00:00'), 52],
-                    ['gte', new DateTime('1970-01-02 00:00:00'), 76],
+                    ['eq', new DateTimeImmutable('1970-01-02 00:00:00'), 24],
+                    ['neq', new DateTimeImmutable('1970-01-01 00:00:00'), 76],
+                    ['lt', new DateTimeImmutable('1970-01-02 00:00:00'), 24],
+                    ['lte', new DateTimeImmutable('1970-01-02 00:00:00'), 48],
+                    ['gt', new DateTimeImmutable('1970-01-02 00:00:00'), 52],
+                    ['gte', new DateTimeImmutable('1970-01-02 00:00:00'), 76],
                     [
                         'in',
                         [
-                            new DateTime('1970-01-01 00:00:00'),
-                            new DateTime('1970-01-01 01:00:00'),
-                            new DateTime('1970-01-02 00:00:00'),
+                            new DateTimeImmutable('1970-01-01 00:00:00'),
+                            new DateTimeImmutable('1970-01-01 01:00:00'),
+                            new DateTimeImmutable('1970-01-02 00:00:00'),
                         ],
                         48 //not 3 because it's date, not datetime
                     ],
                     [
                         'notIn',
                         [
-                            new DateTime('1970-01-01 00:00:00'),
-                            new DateTime('1970-01-01 01:00:00'),
-                            new DateTime('1970-01-02 00:00:00'),
+                            new DateTimeImmutable('1970-01-01 00:00:00'),
+                            new DateTimeImmutable('1970-01-01 01:00:00'),
+                            new DateTimeImmutable('1970-01-02 00:00:00'),
                         ],
                         52 //not 97 because it's date, not datetime
                     ],
                     [
                         'between',
                         [
-                            'from' => new DateTime('1970-01-02 00:00:00'),
-                            'to' => new DateTime('1970-01-03 00:00:00'),
+                            'from' => new DateTimeImmutable('1970-01-02 00:00:00'),
+                            'to' => new DateTimeImmutable('1970-01-03 00:00:00'),
                         ],
                         48
                     ],
@@ -94,33 +96,33 @@ class DBALFieldsTest extends TestBase
                 'create_datetime',
                 'datetime',
                 [
-                    ['eq', new DateTime('1970-01-01 00:00:00'), 1],
-                    ['neq', new DateTime('1970-01-01 00:00:00'), 99],
-                    ['lt', new DateTime('1970-01-02 00:00:00'), 24],
-                    ['lte', new DateTime('1970-01-02 00:00:00'), 25],
-                    ['gt', new DateTime('1970-01-02 00:00:00'), 75],
-                    ['gte', new DateTime('1970-01-02 00:00:00'), 76],
+                    ['eq', new DateTimeImmutable('1970-01-01 00:00:00'), 1],
+                    ['neq', new DateTimeImmutable('1970-01-01 00:00:00'), 99],
+                    ['lt', new DateTimeImmutable('1970-01-02 00:00:00'), 24],
+                    ['lte', new DateTimeImmutable('1970-01-02 00:00:00'), 25],
+                    ['gt', new DateTimeImmutable('1970-01-02 00:00:00'), 75],
+                    ['gte', new DateTimeImmutable('1970-01-02 00:00:00'), 76],
                     [
                         'in',
                         [
-                            new DateTime('1970-01-01 00:00:00'),
-                            new DateTime('1970-01-01 01:00:00'),
+                            new DateTimeImmutable('1970-01-01 00:00:00'),
+                            new DateTimeImmutable('1970-01-01 01:00:00'),
                         ],
                         2
                     ],
                     [
                         'notIn',
                         [
-                            new DateTime('1970-01-01 00:00:00'),
-                            new DateTime('1970-01-01 01:00:00'),
+                            new DateTimeImmutable('1970-01-01 00:00:00'),
+                            new DateTimeImmutable('1970-01-01 01:00:00'),
                         ],
                         98
                     ],
                     [
                         'between',
                         [
-                            'from' => new DateTime('1970-01-01 00:00:00'),
-                            'to' => new DateTime('1970-01-02 00:00:00'),
+                            'from' => new DateTimeImmutable('1970-01-01 00:00:00'),
+                            'to' => new DateTimeImmutable('1970-01-02 00:00:00'),
                         ],
                         25
                     ],
@@ -131,27 +133,27 @@ class DBALFieldsTest extends TestBase
                 'event_hour',
                 'time',
                 [
-                    ['eq', new DateTime('1970-01-01 01:00:00'), 5],
-                    ['neq',new DateTime('1970-01-01 01:00:00'), 95],
-                    ['lt', new DateTime('1970-01-01 03:00:00'), 15],
-                    ['lte', new DateTime('1970-01-01 03:00:00'), 20],
-                    ['gt', new DateTime('1970-01-02 03:00:00'), 80],
-                    ['gte', new DateTime('1970-01-02 03:00:00'), 85],
+                    ['eq', new DateTimeImmutable('1970-01-01 01:00:00'), 5],
+                    ['neq',new DateTimeImmutable('1970-01-01 01:00:00'), 95],
+                    ['lt', new DateTimeImmutable('1970-01-01 03:00:00'), 15],
+                    ['lte', new DateTimeImmutable('1970-01-01 03:00:00'), 20],
+                    ['gt', new DateTimeImmutable('1970-01-02 03:00:00'), 80],
+                    ['gte', new DateTimeImmutable('1970-01-02 03:00:00'), 85],
                     [
                         'in',
                         [
-                            new DateTime('1970-01-01 00:00:00'),
-                            new DateTime('1970-01-01 01:00:00'),
-                            new DateTime('1970-01-02 01:00:00'),
+                            new DateTimeImmutable('1970-01-01 00:00:00'),
+                            new DateTimeImmutable('1970-01-01 01:00:00'),
+                            new DateTimeImmutable('1970-01-02 01:00:00'),
                         ],
                         10 //not 15 because it's time, not datetime
                     ],
                     [
                         'notIn',
                         [
-                            new DateTime('1970-01-01 00:00:00'),
-                            new DateTime('1970-01-01 01:00:00'),
-                            new DateTime('1970-01-02 01:00:00'),
+                            new DateTimeImmutable('1970-01-01 00:00:00'),
+                            new DateTimeImmutable('1970-01-01 01:00:00'),
+                            new DateTimeImmutable('1970-01-02 01:00:00'),
                         ],
                         90 //not 85 because it's time, not datetime
                     ],
@@ -159,8 +161,8 @@ class DBALFieldsTest extends TestBase
                         'between',
                         [
                             //dates doesn't matter
-                            'from' => new DateTime('1970-01-01 02:00:00'),
-                            'to' => new DateTime('1970-01-02 05:00:00'),
+                            'from' => new DateTimeImmutable('1970-01-01 02:00:00'),
+                            'to' => new DateTimeImmutable('1970-01-02 05:00:00'),
                         ],
                         18
                     ],

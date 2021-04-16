@@ -7,9 +7,11 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Tests\Component\DataSource\Driver\Collection;
 
-use DateTime;
+use DateTimeImmutable;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,6 +20,7 @@ use Doctrine\ORM\Tools\Setup;
 use FSi\Component\DataSource\DataSource;
 use FSi\Component\DataSource\DataSourceFactory;
 use FSi\Component\DataSource\DataSourceInterface;
+use FSi\Component\DataSource\Driver\Collection\CollectionDriver;
 use FSi\Component\DataSource\Driver\Collection\CollectionFactory;
 use FSi\Component\DataSource\Driver\Collection\CollectionResult;
 use FSi\Component\DataSource\Driver\Collection\Exception\CollectionDriverException;
@@ -30,7 +33,6 @@ use FSi\Component\DataSource\Field\FieldTypeInterface;
 use FSi\Tests\Component\DataSource\Fixtures\Category;
 use FSi\Tests\Component\DataSource\Fixtures\Group;
 use FSi\Tests\Component\DataSource\Fixtures\News;
-use IteratorAggregate;
 use PHPUnit\Framework\TestCase;
 
 class CollectionDriverTest extends TestCase
@@ -140,7 +142,7 @@ class CollectionDriverTest extends TestCase
                     'author' => 'domain1.com',
                     'title' => 'title3',
                     'created' => [
-                        'from' => new DateTime(date('Y:m:d H:i:s', 35 * 24 * 60 * 60)),
+                        'from' => new DateTimeImmutable(date('Y:m:d H:i:s', 35 * 24 * 60 * 60)),
                     ],
                 ],
             ],
@@ -301,7 +303,7 @@ class CollectionDriverTest extends TestCase
         $datasource->bindParameters($parameters);
         $result = $datasource->getResult();
         self::assertInstanceOf(CollectionResult::class, $result);
-        self::assertFalse(false, $result[0]->isActive());
+        self::assertFalse($result[0]->isActive());
 
 
         // test 'notIn' comparison
@@ -326,13 +328,10 @@ class CollectionDriverTest extends TestCase
     public function testExceptions(): void
     {
         $datasource = $this->prepareArrayDataSource();
-        $field = $this->createMock(FieldTypeInterface::class);
 
-        $field
-            ->expects(self::any())
-            ->method('getName')
-            ->willReturn('example')
-        ;
+        $field = $this->createMock(FieldTypeInterface::class);
+        $field->method('getName')->willReturn('example');
+        $field->method('getExtensions')->willReturn([]);
 
         $datasource->addField($field);
 
@@ -344,6 +343,7 @@ class CollectionDriverTest extends TestCase
     {
         $driverFactory = $this->getCollectionFactory();
         $driver = $driverFactory->createDriver();
+        self::assertInstanceOf(CollectionDriver::class, $driver);
 
         $this->expectException(CollectionDriverException::class);
         $driver->getCriteria();
@@ -440,8 +440,8 @@ class CollectionDriverTest extends TestCase
             }
 
             // Each entity has different date of creation and one of four hours of creation.
-            $createDate = new DateTime(date('Y:m:d H:i:s', $i * 24 * 60 * 60));
-            $createTime = new DateTime(date('H:i:s', (($i % 4) + 1 ) * 60 * 60));
+            $createDate = new DateTimeImmutable(date('Y:m:d H:i:s', $i * 24 * 60 * 60));
+            $createTime = new DateTimeImmutable(date('H:i:s', (($i % 4) + 1 ) * 60 * 60));
 
             $news->setCreateDate($createDate);
             $news->setCreateTime($createTime);

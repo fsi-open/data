@@ -7,13 +7,17 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Tests\Component\DataSource\Driver\Doctrine\DBAL;
 
+use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
 use FSi\Component\DataSource\DataSourceFactory;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALFactory;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\CoreExtension;
@@ -81,20 +85,20 @@ abstract class TestBase extends TestCase
         $schemaManager = $connection->getSchemaManager();
 
         $schemaManager->createTable(new Table(self::TABLE_CATEGORY_NAME, [
-            new Column('id', Type::getType(Type::INTEGER)),
-            new Column('type', Type::getType(Type::STRING)),
-            new Column('name', Type::getType(Type::STRING)),
+            new Column('id', Type::getType(Types::INTEGER)),
+            new Column('type', Type::getType(Types::STRING)),
+            new Column('name', Type::getType(Types::STRING)),
         ]));
 
         $schemaManager->createTable(new Table(self::TABLE_NEWS_NAME, [
-            new Column('id', Type::getType(Type::INTEGER)),
-            new Column('visible', Type::getType(Type::BOOLEAN)),
-            new Column('title', Type::getType(Type::STRING)),
-            new Column('create_datetime', Type::getType(Type::DATETIME)),
-            new Column('event_date', Type::getType(Type::DATE)),
-            new Column('event_hour', Type::getType(Type::TIME)),
-            new Column('content', Type::getType(Type::TEXT)),
-            new Column('category_id', Type::getType(Type::INTEGER)),
+            new Column('id', Type::getType(Types::INTEGER)),
+            new Column('visible', Type::getType(Types::BOOLEAN)),
+            new Column('title', Type::getType(Types::STRING)),
+            new Column('create_datetime', Type::getType(Types::DATETIME_IMMUTABLE)),
+            new Column('event_date', Type::getType(Types::DATE_IMMUTABLE)),
+            new Column('event_hour', Type::getType(Types::TIME_IMMUTABLE)),
+            new Column('content', Type::getType(Types::TEXT)),
+            new Column('category_id', Type::getType(Types::INTEGER)),
         ]));
 
         for ($i = 1; $i <= 10; $i++) {
@@ -108,11 +112,11 @@ abstract class TestBase extends TestCase
         for ($i = 1; $i <= 100; $i++) {
             $connection->insert(self::TABLE_NEWS_NAME, [
                 'id' => $i,
-                'visible' => (int) $i % 2 == 0,
+                'visible' => $i % 2 === 0,
                 'title' => sprintf('title-%d', $i),
-                'create_datetime' => new \DateTime('@' . (($i - 1) * 60 * 60)),
-                'event_date' => new \DateTime('@' . (($i - 1) * 60 * 60)),
-                'event_hour' => new \DateTime('@' . (($i - 1) * 60 * 60)),
+                'create_datetime' => new DateTimeImmutable('@' . (($i - 1) * 60 * 60)),
+                'event_date' => new DateTimeImmutable('@' . (($i - 1) * 60 * 60)),
+                'event_hour' => new DateTimeImmutable('@' . (($i - 1) * 60 * 60)),
                 'content' => sprintf('Lorem ipsum %d', $i % 3),
                 'category_id' => ceil(log($i + 0.001, 101) * 10),
                 /*
@@ -129,14 +133,14 @@ abstract class TestBase extends TestCase
                  * 10 - 37
                  */
             ], [
-                Type::INTEGER,
-                Type::BOOLEAN,
-                Type::STRING,
-                Type::DATETIME,
-                Type::DATE,
-                Type::TIME,
-                Type::TEXT,
-                Type::INTEGER,
+                Types::INTEGER,
+                Types::BOOLEAN,
+                Types::STRING,
+                Types::DATETIME_IMMUTABLE,
+                Types::DATE_IMMUTABLE,
+                Types::TIME_IMMUTABLE,
+                Types::TEXT,
+                Types::INTEGER,
             ]);
         }
     }

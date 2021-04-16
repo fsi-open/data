@@ -7,9 +7,10 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Tests\Component\DataSource;
 
-use Doctrine\Common\Collections\ArrayCollection;
 use FSi\Component\DataSource\DataSource;
 use FSi\Component\DataSource\DataSourceExtensionInterface;
 use FSi\Component\DataSource\DataSourceFactoryInterface;
@@ -23,7 +24,6 @@ use FSi\Tests\Component\DataSource\Fixtures\TestResult;
 use FSi\Tests\Component\DataSource\Fixtures\DataSourceExtension;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use stdClass;
 
 class DataSourceTest extends TestCase
 {
@@ -74,10 +74,12 @@ class DataSourceTest extends TestCase
     {
         $datasource = new DataSource($this->createDriverMock());
         $extension1 = $this->createMock(DataSourceExtensionInterface::class);
-        $extension2 = $this->createMock(DataSourceExtensionInterface::class);
-
         $extension1->expects(self::once())->method('loadDriverExtensions')->willReturn([]);
+        $extension1->expects(self::once())->method('loadSubscribers')->willReturn([]);
+
+        $extension2 = $this->createMock(DataSourceExtensionInterface::class);
         $extension2->expects(self::once())->method('loadDriverExtensions')->willReturn([]);
+        $extension2->expects(self::once())->method('loadSubscribers')->willReturn([]);
 
         $datasource->addExtension($extension1);
         $datasource->addExtension($extension2);
@@ -102,7 +104,7 @@ class DataSourceTest extends TestCase
     {
         $datasource = new DataSource($this->createDriverMock());
         $this->expectException(DataSourceException::class);
-        $datasource->addField('field', '', 'type');
+        $datasource->addField('field', null, 'type');
     }
 
     /**
@@ -162,9 +164,9 @@ class DataSourceTest extends TestCase
 
         self::assertEquals($field, $datasource->getField('name'));
 
-        self::assertTrue($datasource->removeField('name'));
+        $datasource->removeField('name');
         self::assertCount(0, $datasource->getFields());
-        self::assertFalse($datasource->removeField('name'));
+        $datasource->removeField('name');
 
         $this->expectException(DataSourceException::class);
         $datasource->getField('wrong');
@@ -218,34 +220,6 @@ class DataSourceTest extends TestCase
     }
 
     /**
-     * Tests exception when driver returns scalar.
-     */
-    public function testWrongResult1(): void
-    {
-        $driver = $this->createDriverMock();
-        $datasource = new DataSource($driver);
-
-        $driver->expects(self::once())->method('getResult')->willReturn('scalar');
-
-        $this->expectException(DataSourceException::class);
-        $datasource->getResult();
-    }
-
-    /**
-     * Tests exception when driver return object, that doesn't implement Countable and IteratorAggregate interfaces.
-     */
-    public function testWrongResult2(): void
-    {
-        $driver = $this->createDriverMock();
-        $datasource = new DataSource($driver);
-
-        $driver->expects(self::once())->method('getResult')->willReturn(new stdClass());
-
-        $this->expectException(DataSourceException::class);
-        $datasource->getResult();
-    }
-
-    /**
      * Checks if parameters for pagination are forwarded to driver.
      */
     public function testPagination(): void
@@ -289,7 +263,7 @@ class DataSourceTest extends TestCase
     public function testViewCreation(): void
     {
         $driver = $this->createDriverMock();
-        $driver->expects(self::once())->method('getResult')->willReturn(new ArrayCollection());
+        $driver->expects(self::once())->method('getResult')->willReturn(new TestResult());
 
         $datasource = new DataSource($driver);
         $view = $datasource->createView();
@@ -318,8 +292,8 @@ class DataSourceTest extends TestCase
 
         $datasource = new DataSource($this->createDriverMock());
 
-        $factory->expects(self::once())->method('getOtherParameters')->with($datasource);
-        $factory->expects(self::once())->method('getAllParameters');
+        $factory->expects(self::once())->method('getOtherParameters')->with($datasource)->willReturn([]);
+        $factory->expects(self::once())->method('getAllParameters')->willReturn([]);
 
         $datasource->setFactory($factory);
         $datasource->getOtherParameters();
@@ -332,11 +306,13 @@ class DataSourceTest extends TestCase
     public function testDriverExtensionLoading(): void
     {
         $driver = $this->createDriverMock();
-        $extension = $this->createMock(DataSourceExtensionInterface::class);
-        $driverExtension = $this->createMock(DriverExtensionInterface::class);
 
-        $extension->expects(self::once())->method('loadDriverExtensions')->willReturn([$driverExtension]);
+        $driverExtension = $this->createMock(DriverExtensionInterface::class);
         $driverExtension->expects(self::once())->method('getExtendedDriverTypes')->willReturn(['fake']);
+
+        $extension = $this->createMock(DataSourceExtensionInterface::class);
+        $extension->expects(self::once())->method('loadDriverExtensions')->willReturn([$driverExtension]);
+        $extension->expects(self::once())->method('loadSubscribers')->willReturn([]);
 
         $driver->expects(self::once())->method('getType')->willReturn('fake');
         $driver->expects(self::once())->method('addExtension')->with($driverExtension);

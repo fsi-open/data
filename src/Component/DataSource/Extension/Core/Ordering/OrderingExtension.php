@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Extension\Core\Ordering;
 
 use FSi\Component\DataSource\DataSourceAbstractExtension;
@@ -27,10 +29,7 @@ class OrderingExtension extends DataSourceAbstractExtension
      */
     public const PARAMETER_SORT = 'sort';
 
-    /**
-     * {@inheritdoc}
-     */
-    public function loadDriverExtensions()
+    public function loadDriverExtensions(): array
     {
         return [
             new Driver\DoctrineExtension(),
@@ -39,10 +38,7 @@ class OrderingExtension extends DataSourceAbstractExtension
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function loadSubscribers()
+    public function loadSubscribers(): array
     {
         return [
             new EventSubscriber\Events(),

@@ -7,78 +7,92 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver\Collection;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Selectable;
+use FSi\Component\DataSource\Driver\Collection\Exception\CollectionDriverException;
+use FSi\Component\DataSource\Driver\DriverExtensionInterface;
 use FSi\Component\DataSource\Driver\DriverFactoryInterface;
+use FSi\Component\DataSource\Driver\DriverInterface;
+use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Traversable;
 
-/**
- * {@inheritdoc}
- */
+use function get_class;
+use function gettype;
+use function is_object;
+use function iterator_to_array;
+
 class CollectionFactory implements DriverFactoryInterface
 {
     /**
-     * Array of extensions.
-     *
-     * @var array
+     * @var array<DriverExtensionInterface>
      */
     private $extensions;
 
     /**
-     * @var \Symfony\Component\OptionsResolver\OptionsResolver
+     * @var OptionsResolver
      */
     private $optionsResolver;
 
     /**
-     * @param array $extensions
+     * @param array<DriverExtensionInterface> $extensions
      */
-    public function __construct($extensions = [])
+    public function __construct(array $extensions = [])
     {
         $this->extensions = $extensions;
         $this->optionsResolver = new OptionsResolver();
         $this->initOptions();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getDriverType()
+    public function getDriverType(): string
     {
         return 'collection';
     }
 
-    /**
-     * Creates driver.
-     *
-     * @param array $options
-     * @return \FSi\Component\DataSource\Driver\Collection\CollectionDriver
-     */
-    public function createDriver($options = [])
+    public function createDriver(array $options = []): DriverInterface
     {
         $options = $this->optionsResolver->resolve($options);
 
         return new CollectionDriver($this->extensions, $options['collection'], $options['criteria']);
     }
 
-    /**
-     * Initialize Options Resolvers for driver and datasource builder.
-     */
-    private function initOptions()
+    private function initOptions(): void
     {
         $this->optionsResolver->setDefaults([
             'criteria' => null,
             'collection' => [],
         ]);
 
-        $this->optionsResolver->setAllowedTypes('collection', [
-            'array',
-            Traversable::class,
-            Selectable::class
-        ]);
-
+        $this->optionsResolver->setAllowedTypes('collection', ['array', Traversable::class, Selectable::class]);
         $this->optionsResolver->setAllowedTypes('criteria', ['null', Criteria::class]);
+
+        $this->optionsResolver->setNormalizer('collection', function (Options $options, $collection): Selectable {
+            if (true === $collection instanceof Selectable) {
+                return $collection;
+            }
+
+            if (true === $collection instanceof Traversable) {
+                return new ArrayCollection(iterator_to_array($collection));
+            }
+
+            if (true === is_array($collection)) {
+                return new ArrayCollection($collection);
+            }
+
+            throw new CollectionDriverException(
+                sprintf(
+                    'Provided collection type "%s" should be an instance of %s, %s or an array, but given %s',
+                    get_class($collection),
+                    Selectable::class,
+                    Traversable::class,
+                    is_object($collection) ? get_class($collection) : gettype($collection)
+                )
+            );
+        });
     }
 }

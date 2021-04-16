@@ -13,7 +13,7 @@ namespace FSi\Bundle\DataGridBundle\HttpFoundation;
 
 use FSi\Component\DataGrid\DataGridViewInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 abstract class ExportAbstract extends Response
 {

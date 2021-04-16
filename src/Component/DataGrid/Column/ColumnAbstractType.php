@@ -167,12 +167,7 @@ abstract class ColumnAbstractType implements ColumnTypeInterface
 
     public function setOption(string $name, $value): void
     {
-        $this->options = $this->getOptionsResolver()->resolve(array_merge(
-            is_array($this->options)
-                ? $this->options
-                : [],
-            [$name => $value]
-        ));
+        $this->options = $this->getOptionsResolver()->resolve(array_merge($this->options, [$name => $value]));
     }
 
     public function setOptions(array $options): void

@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource;
 
 use Countable;
@@ -20,7 +22,7 @@ use IteratorAggregate;
  *
  * DataSource maintains communication with driver, manipulating fields (adding,
  * removing, etc.), calling DataSource extensions events, view creation and more.
- *  It's first and main interface client will communicate with.
+ * It's first and main interface client will communicate with.
  */
 interface DataSourceInterface
 {
@@ -29,20 +31,9 @@ interface DataSourceInterface
      */
     public const PARAMETER_FIELDS = 'fields';
 
-    /**
-     * Returns name of the DataSource.
-     *
-     * @return string
-     */
-    public function getName();
+    public function getName(): string;
 
-    /**
-     * Checks whether data source has field with given name.
-     *
-     * @param string $name
-     * @return bool
-     */
-    public function hasField($name);
+    public function hasField(string $name): bool;
 
     /**
      * Adds field to data source.
@@ -51,130 +42,59 @@ interface DataSourceInterface
      * $type and $comparison are mandatory and it's up to implementation to check whether are given.
      *
      * @param object|string $name
-     * @param string $type
-     * @param string $comparison
+     * @param string|null $type
+     * @param string|null $comparison
      * @param array $options
      * @return DataSourceInterface
      * @throws DataSourceException
      */
-    public function addField($name, $type = null, $comparison = null, $options = []);
+    public function addField(
+        $name,
+        ?string $type = null,
+        ?string $comparison = null,
+        array $options = []
+    ): DataSourceInterface;
+
+    public function removeField(string $name): void;
+
+    public function getField(string $name): FieldTypeInterface;
 
     /**
-     * Removes given field.
-     *
-     * If there wasn't field with given name, method will return false.
-     *
-     * @param string $name
-     * @return bool
-     */
-    public function removeField($name);
-
-    /**
-     * Returns field for given name.
-     *
-     * @param string $name
-     * @return FieldTypeInterface
-     */
-    public function getField($name);
-
-    /**
-     * Returns array of all fields.
-     *
      * @return array<FieldTypeInterface>
      * @throws DataSourceException
      */
-    public function getFields();
+    public function getFields(): array;
+
+    public function clearFields(): void;
+
+    public function setMaxResults(?int $max): DataSourceInterface;
+
+    public function setFirstResult(?int $first): DataSourceInterface;
+
+    public function getMaxResults(): ?int;
+
+    public function getFirstResult(): ?int;
 
     /**
-     * Removes all fields from datasource.
+     * Binds parameters to datasource. These could be any type of data that will be converted to array i.e by some
+     * event subscriber
      *
-     * @return DataSourceInterface
+     * @param mixed $parameters
      */
-    public function clearFields();
+    public function bindParameters($parameters = []): void;
+
+    public function getResult(): Result;
+
+    public function addExtension(DataSourceExtensionInterface $extension): void;
 
     /**
-     * Sets maximal amount of result that will be returned.
-     *
-     * It should just proxy request to driver.
-     * If 0, then theres no limit.
-     *
-     * @param int $max
-     * @return DataSourceInterface
-     */
-    public function setMaxResults($max);
-
-    /**
-     * Sets number of result (in general), that will be first in collection of returned results.
-     *
-     * It should just proxy request to driver.
-     *
-     * @param int $first
-     * @return DataSourceInterface
-     */
-    public function setFirstResult($first);
-
-    /**
-     * Return maximal amount of results.
-     *
-     * It should just proxy request to driver.
-     *
-     * @return int|null
-     */
-    public function getMaxResults();
-
-    /**
-     * Returns first result offset.
-     *
-     * It should just proxy request to driver.
-     *
-     * @return int|null
-     */
-    public function getFirstResult();
-
-    /**
-     * Binds parameters to fields.
-     *
-     * @param array $parameters
-     */
-    public function bindParameters($parameters = []);
-
-    /**
-     * Returns collection with result.
-     *
-     * It should just proxy request to driver.
-     *
-     * @return Countable&IteratorAggregate
-     * @throws DataSourceException
-     */
-    public function getResult();
-
-    /**
-     * Adds extension.
-     *
-     * @param DataSourceExtensionInterface $extension
-     */
-    public function addExtension(DataSourceExtensionInterface $extension);
-
-    /**
-     * Return array of loaded extensions.
-     *
      * @return array<DataSourceExtensionInterface>
      */
-    public function getExtensions();
+    public function getExtensions(): array;
 
-    /**
-     * Return ready view.
-     *
-     * @return DataSourceViewInterface
-     */
-    public function createView();
+    public function createView(): DataSourceViewInterface;
 
-    /**
-     * Returns parameters of returned data.
-     *
-     * @return array
-     */
-    public function getParameters();
+    public function getParameters(): array;
 
     /**
      * Returns all parameters from all datasources on page.
@@ -186,7 +106,7 @@ interface DataSourceInterface
      *
      * @return array
      */
-    public function getAllParameters();
+    public function getAllParameters(): array;
 
     /**
      * Returns all parameters from all datasources on page except this one.
@@ -196,21 +116,9 @@ interface DataSourceInterface
      *
      * @return array
      */
-    public function getOtherParameters();
+    public function getOtherParameters(): array;
 
-    /**
-     * Sets factory reference to DataSource.
-     *
-     * DataSource needs that reference for example during getAllParameters method.
-     *
-     * @param DataSourceFactoryInterface $factory
-     */
-    public function setFactory(DataSourceFactoryInterface $factory);
+    public function setFactory(DataSourceFactoryInterface $factory): void;
 
-    /**
-     * Return assigned factory.
-     *
-     * @return DataSourceFactoryInterface|null
-     */
-    public function getFactory();
+    public function getFactory(): ?DataSourceFactoryInterface;
 }

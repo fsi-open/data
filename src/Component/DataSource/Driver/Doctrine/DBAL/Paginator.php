@@ -7,15 +7,15 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
 use ArrayIterator;
-use Countable;
-use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Query\QueryBuilder;
-use Iterator;
+use FSi\Component\DataSource\Result;
 
-class Paginator implements \Countable, \IteratorAggregate
+class Paginator implements Result
 {
     /**
      * @var QueryBuilder
@@ -27,16 +27,12 @@ class Paginator implements \Countable, \IteratorAggregate
         $this->query = $query;
     }
 
-    /**
-     * @return Iterator&Countable
-     * @throws DBALException
-     */
-    public function getIterator()
+    public function getIterator(): ArrayIterator
     {
         return new ArrayIterator($this->query->execute()->fetchAll());
     }
 
-    public function count()
+    public function count(): int
     {
         $query = clone $this->query;
         $query->setFirstResult(null);
@@ -51,6 +47,6 @@ class Paginator implements \Countable, \IteratorAggregate
         ;
 
         $row = $query->execute()->fetch();
-        return $row['count'];
+        return (int) $row['count'];
     }
 }

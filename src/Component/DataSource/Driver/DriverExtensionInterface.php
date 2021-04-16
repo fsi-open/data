@@ -7,61 +7,35 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver;
 
 use FSi\Component\DataSource\Field\FieldExtensionInterface;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-/**
- * Extension of driver.
- */
 interface DriverExtensionInterface
 {
     /**
-     * Returns types of extended drivers
-     *
-     * return array
+     * @return array<string>
      */
-    public function getExtendedDriverTypes();
+    public function getExtendedDriverTypes(): array;
+
+    public function hasFieldType(string $type): bool;
+
+    public function getFieldType(string $type): FieldTypeInterface;
+
+    public function hasFieldTypeExtensions(string $type): bool;
 
     /**
-     * Checks whether given extension has field for given type.
-     *
-     * @param string $type
-     * @return bool
-     */
-    public function hasFieldType($type);
-
-    /**
-     * Returns field for given type, or, if can't fine one, throws exception.
-     *
-     * @param string $type
-     * @return FieldTypeInterface
-     */
-    public function getFieldType($type);
-
-    /**
-     * Checks whether given extension has any extension for given field type.
-     *
-     * @param string $type
-     * @return bool
-     */
-    public function hasFieldTypeExtensions($type);
-
-    /**
-     * Returns collection of extensions for given field type.
-     *
      * @param string $type
      * @return array<FieldExtensionInterface>
      */
-    public function getFieldTypeExtensions($type);
+    public function getFieldTypeExtensions(string $type): array;
 
     /**
-     * Loads events subscribers.
-     *
-     * Each subscriber must implements \Symfony\Component\EventDispatcher\EventSubscriberInterface.
-     *
-     * @return array
+     * @return array<EventSubscriberInterface>
      */
-    public function loadSubscribers();
+    public function loadSubscribers(): array;
 }

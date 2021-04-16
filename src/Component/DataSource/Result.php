@@ -9,10 +9,11 @@
 
 declare(strict_types=1);
 
-namespace FSi\Component\DataSource\Driver\Doctrine\DBAL\Exception;
+namespace FSi\Component\DataSource;
 
-use FSi\Component\DataSource\Exception\DataSourceException;
+use Countable;
+use IteratorAggregate;
 
-class DBALDriverException extends DataSourceException
+interface Result extends IteratorAggregate, Countable
 {
 }

@@ -7,21 +7,26 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver\Doctrine\ORM;
 
 use FSi\Component\DataSource\Field\FieldAbstractType;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\Exception\DoctrineDriverException;
 use Doctrine\ORM\QueryBuilder;
+use Symfony\Component\OptionsResolver\Options;
+
+use function array_shift;
 
 abstract class DoctrineAbstractField extends FieldAbstractType implements DoctrineFieldInterface
 {
-    public function buildQuery(QueryBuilder $qb, $alias)
+    public function buildQuery(QueryBuilder $qb, string $alias): void
     {
         $data = $this->getCleanParameter();
         $fieldName = $this->getFieldName($alias);
         $name = $this->getName();
 
-        if (($data === []) || ($data === '') || ($data === null)) {
+        if (true === $this->isEmpty($data)) {
             return;
         }
 
@@ -29,59 +34,58 @@ abstract class DoctrineAbstractField extends FieldAbstractType implements Doctri
         $comparison = $this->getComparison();
         $func = sprintf('and%s', ucfirst($this->getOption('clause')));
 
-        if ($comparison == 'between') {
-            if (!is_array($data)) {
+        if ('between' === $comparison) {
+            if (false === is_array($data)) {
                 throw new DoctrineDriverException('Fields with \'between\' comparison require to bind an array.');
             }
 
             $from = array_shift($data);
-            $to = array_shift($data);
+            $to = count($data) ? array_shift($data) : null;
 
-            if (empty($from) && ($from !== 0)) {
+            if (true === $this->isEmpty($from)) {
                 $from = null;
             }
-
-            if (empty($to) && ($to !== 0)) {
+            if (true === $this->isEmpty($to)) {
                 $to = null;
             }
-
-            if ($from === null && $to === null) {
+            if (null === $from && null === $to) {
                 return;
-            } elseif ($from === null) {
+            }
+
+            if (null === $from) {
                 $comparison = 'lte';
                 $data = $to;
-            } elseif ($to === null) {
+            } elseif (null === $to) {
                 $comparison = 'gte';
                 $data = $from;
             } else {
                 $qb->$func($qb->expr()->between($fieldName, ":{$name}_from", ":{$name}_to"));
                 $qb->setParameter("{$name}_from", $from, $type);
                 $qb->setParameter("{$name}_to", $to, $type);
+
                 return;
             }
         }
 
-        if ($comparison == 'isNull') {
-            $qb->$func($fieldName . ' IS ' . ($data === 'null' ? '' : 'NOT ') . 'NULL');
+        if ('isNull' === $comparison) {
+            $qb->$func($fieldName . ' IS ' . ('null' === $data ? '' : 'NOT ') . 'NULL');
             return;
         }
 
-        if (in_array($comparison, ['in', 'notIn']) && !is_array($data)) {
+        if (true === in_array($comparison, ['in', 'notIn'], true) && false === is_array($data)) {
             throw new DoctrineDriverException('Fields with \'in\' and \'notIn\' comparisons require to bind an array.');
-        } elseif (in_array($comparison, ['like', 'contains'])) {
+        }
+        if (true === in_array($comparison, ['like', 'contains'], true)) {
             $data = "%$data%";
             $comparison = 'like';
         }
+
         $qb->$func($qb->expr()->$comparison($fieldName, ":$name"));
         $qb->setParameter($this->getName(), $data, $type);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function initOptions()
+    public function initOptions(): void
     {
-        $field = $this;
         $this->getOptionsResolver()
             ->setDefaults([
                 'field' => null,
@@ -91,42 +95,32 @@ abstract class DoctrineAbstractField extends FieldAbstractType implements Doctri
             ->setAllowedValues('clause', ['where', 'having'])
             ->setAllowedTypes('field', ['string', 'null'])
             ->setAllowedTypes('auto_alias', 'bool')
-            ->setNormalizer('field', function ($options, $value) use ($field) {
-                if (!isset($value) && $field->getName()) {
-                    return $field->getName();
-                } else {
-                    return $value;
-                }
+            ->setNormalizer('field', function (Options $options, ?string $value): ?string {
+                return $value ?? $this->getName();
             })
-            ->setNormalizer('clause', function ($options, $value) {
+            ->setNormalizer('clause', function (Options $options, string $value): string {
                 return strtolower($value);
-            });
+            })
         ;
+    }
+
+    public function getDBALType(): ?string
+    {
+        return null;
     }
 
     /**
      * Constructs proper field name from field mapping or (if absent) from own name.
      * Optionally adds alias (if missing and auto_alias option is set to true).
-     *
-     * @param string $alias
-     * @return string
      */
-    protected function getFieldName($alias)
+    protected function getFieldName(string $alias): string
     {
         $name = $this->getOption('field');
 
-        if ($this->getOption('auto_alias') && !preg_match('/\./', $name)) {
+        if (true === $this->getOption('auto_alias') && false === strpos($name, ".")) {
             $name = "$alias.$name";
         }
 
         return $name;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getDBALType()
-    {
-        return null;
     }
 }

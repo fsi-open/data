@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace FSi\Tests\Bundle\DataSourceBundle\Fixtures;
 
-use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class StubTranslator implements TranslatorInterface
 {

@@ -25,15 +25,18 @@ use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\TimeType;
-use Symfony\Component\Form\FormFactory;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
-use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Component\OptionsResolver\Options;
+use Symfony\Contracts\Translation\TranslatorInterface;
+
+use function array_key_exists;
+use function array_merge;
 
 class FormFieldExtension extends FieldAbstractExtension
 {
     /**
-     * @var FormFactory
+     * @var FormFactoryInterface
      */
     protected $formFactory;
 
@@ -43,24 +46,24 @@ class FormFieldExtension extends FieldAbstractExtension
     protected $translator;
 
     /**
-     * @var array
+     * @var array<FormInterface>
      */
     protected $forms = [];
 
     /**
      * Original values of input parameters for each supported field.
      *
-     * @var array
+     * @var array<mixed>
      */
     protected $parameters = [];
 
-    public function __construct(FormFactory $formFactory, TranslatorInterface $translator)
+    public function __construct(FormFactoryInterface $formFactory, TranslatorInterface $translator)
     {
         $this->formFactory = $formFactory;
         $this->translator = $translator;
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             FieldEvents::PRE_BIND_PARAMETER => ['preBindParameter'],
@@ -69,22 +72,22 @@ class FormFieldExtension extends FieldAbstractExtension
         ];
     }
 
-    public function getExtendedFieldTypes()
+    public function getExtendedFieldTypes(): array
     {
         return ['text', 'number', 'date', 'time', 'datetime', 'entity', 'boolean'];
     }
 
-    public function initOptions(FieldTypeInterface $field)
+    public function initOptions(FieldTypeInterface $field): void
     {
         $field->getOptionsResolver()
             ->setDefaults([
                 'form_filter' => true,
                 'form_options' => [],
                 'form_from_options' => [],
-                'form_to_options' => []
+                'form_to_options' => [],
+                'form_type' => null,
             ])
             ->setDefined([
-                'form_type',
                 'form_order'
             ])
             ->setAllowedTypes('form_filter', 'bool')
@@ -92,11 +95,70 @@ class FormFieldExtension extends FieldAbstractExtension
             ->setAllowedTypes('form_from_options', 'array')
             ->setAllowedTypes('form_to_options', 'array')
             ->setAllowedTypes('form_order', 'integer')
-            ->setAllowedTypes('form_type', 'string')
+            ->setAllowedTypes('form_type', ['string', 'null'])
+            ->setNormalizer('form_type', static function (Options $options, ?string $type) use ($field): ?string {
+                if (null !== $type) {
+                    return $type;
+                }
+
+                if ('isNull' === $field->getComparison()) {
+                    return ChoiceType::class;
+                }
+
+                switch ($field->getType()) {
+                    case 'boolean':
+                        return ChoiceType::class;
+                    case 'text':
+                        return TextType::class;
+                    case 'number':
+                        return NumberType::class;
+                    case 'date':
+                        return DateType::class;
+                    case 'time':
+                        return TimeType::class;
+                    case 'datetime':
+                        return DateTimeType::class;
+                    case 'entity':
+                        return EntityType::class;
+                    default:
+                        return null;
+                }
+            })
+            ->setNormalizer('form_options', function (Options $options, array $formOptions) use ($field): array {
+                if ('isNull' === $field->getComparison() && ChoiceType::class === $options['form_type']) {
+                    return array_merge([
+                        'placeholder' => '',
+                        'choices' => [
+                            $this->translator->trans('datasource.form.choices.is_null', [], 'DataSourceBundle')
+                                => 'null',
+                            $this->translator->trans('datasource.form.choices.is_not_null', [], 'DataSourceBundle')
+                                => 'no_null',
+                        ],
+                    ], $formOptions);
+                }
+
+                if ('boolean' === $field->getType() && ChoiceType::class === $options['form_type']) {
+                    return array_merge([
+                        'placeholder' => '',
+                        'choices' => [
+                            $this->translator->trans('datasource.form.choices.yes', [], 'DataSourceBundle') => '1',
+                            $this->translator->trans('datasource.form.choices.no', [], 'DataSourceBundle') => '0'
+                        ],
+                    ], $formOptions);
+                }
+
+                return $formOptions;
+            })
+            ->setNormalizer('form_from_options', static function (Options $options, array $formFromOptions): array {
+                return array_merge($options['form_options'], $formFromOptions);
+            })
+            ->setNormalizer('form_to_options', static function (Options $options, array $formToOptions): array {
+                return array_merge($options['form_options'], $formToOptions);
+            })
         ;
     }
 
-    public function postBuildView(FieldEvent\ViewEventArgs $event)
+    public function postBuildView(FieldEvent\ViewEventArgs $event): void
     {
         $field = $event->getField();
         $view = $event->getView();
@@ -107,11 +169,11 @@ class FormFieldExtension extends FieldAbstractExtension
         }
     }
 
-    public function preBindParameter(FieldEvent\ParameterEventArgs $event)
+    public function preBindParameter(FieldEvent\ParameterEventArgs $event): void
     {
         $field = $event->getField();
         $form = $this->getForm($field);
-        if ($form === null) {
+        if (null === $form) {
             return;
         }
 
@@ -122,19 +184,19 @@ class FormFieldExtension extends FieldAbstractExtension
             $form = $this->getForm($field, true);
         }
 
-        $datasourceName = $field->getDataSource() ? $field->getDataSource()->getName() : null;
-        if (null === $datasourceName || '' === $datasourceName) {
+        $datasourceName = null !== $field->getDataSource() ? $field->getDataSource()->getName() : null;
+        if (null === $datasourceName) {
             return;
         }
 
-        if ($this->hasParameterValue($parameter, $field)) {
+        if (true === $this->hasParameterValue($parameter, $field)) {
             $this->parameters[$fieldOid] = $this->getParameterValue($parameter, $field);
 
             $fieldForm = $form->get(DataSourceInterface::PARAMETER_FIELDS)->get($field->getName());
             $fieldForm->submit($this->parameters[$fieldOid]);
             $data = $fieldForm->getData();
 
-            if ($data !== null) {
+            if (null !== $data) {
                 $this->setParameterValue($parameter, $field, $data);
             } else {
                 $this->clearParameterValue($parameter, $field);
@@ -144,12 +206,12 @@ class FormFieldExtension extends FieldAbstractExtension
         }
     }
 
-    public function preGetParameter(FieldEvent\ParameterEventArgs $event)
+    public function preGetParameter(FieldEvent\ParameterEventArgs $event): void
     {
         $field = $event->getField();
         $fieldOid = spl_object_hash($field);
 
-        if (isset($this->parameters[$fieldOid])) {
+        if (true === array_key_exists($fieldOid, $this->parameters)) {
             $parameters = [];
             $this->setParameterValue($parameters, $field, $this->parameters[$fieldOid]);
             $event->setParameter($parameters);
@@ -159,16 +221,16 @@ class FormFieldExtension extends FieldAbstractExtension
     protected function getForm(FieldTypeInterface $field, bool $force = false): ?FormInterface
     {
         $datasource = $field->getDataSource();
-        if ($datasource === null) {
+        if (null === $datasource) {
             return null;
         }
 
-        if (!$field->getOption('form_filter')) {
+        if (false === $field->getOption('form_filter')) {
             return null;
         }
 
         $fieldOid = spl_object_hash($field);
-        if (isset($this->forms[$fieldOid]) && !$force) {
+        if (true === array_key_exists($fieldOid, $this->parameters) && false === $force) {
             return $this->forms[$fieldOid];
         }
 
@@ -194,17 +256,9 @@ class FormFieldExtension extends FieldAbstractExtension
             case 'between':
                 $this->buildBetweenComparisonForm($fieldsForm, $field, $options);
                 break;
-            case 'isNull':
-                $this->buildIsNullComparisonForm($fieldsForm, $field, $options);
-                break;
+
             default:
-                switch ($field->getType()) {
-                    case 'boolean':
-                        $this->buildBooleanForm($fieldsForm, $field, $options);
-                        break;
-                    default:
-                        $fieldsForm->add($field->getName(), $this->getFieldFormType($field), $options);
-                }
+                $fieldsForm->add($field->getName(), $field->getOption('form_type'), $options);
         }
 
         $form->add($fieldsForm);
@@ -213,11 +267,8 @@ class FormFieldExtension extends FieldAbstractExtension
         return $this->forms[$fieldOid];
     }
 
-    protected function buildBetweenComparisonForm(
-        FormInterface $form,
-        FieldTypeInterface $field,
-        array $options = []
-    ): void {
+    protected function buildBetweenComparisonForm(FormInterface $form, FieldTypeInterface $field, array $options): void
+    {
         $betweenBuilder = $this->getFormFactory()->createNamedBuilder(
             $field->getName(),
             BetweenType::class,
@@ -229,7 +280,7 @@ class FormFieldExtension extends FieldAbstractExtension
         $toOptions = $field->getOption('form_to_options');
         $fromOptions = array_merge($options, $fromOptions);
         $toOptions = array_merge($options, $toOptions);
-        $type = $this->getFieldFormType($field);
+        $type = $field->getOption('form_type');
 
         $betweenBuilder->add('from', $type, $fromOptions);
         $betweenBuilder->add('to', $type, $toOptions);
@@ -237,86 +288,9 @@ class FormFieldExtension extends FieldAbstractExtension
         $form->add($betweenBuilder->getForm());
     }
 
-    /**
-     * @param FormInterface $form
-     * @param FieldTypeInterface $field
-     * @param array $options
-     */
-    protected function buildIsNullComparisonForm(FormInterface $form, FieldTypeInterface $field, $options = [])
-    {
-        if ($field->hasOption('form_type')) {
-            return $form->add($field->getName(), $field->getOption('form_type'), $options);
-        }
-
-        $defaultOptions = [
-            'placeholder' => '',
-            'choices' => [
-                $this->translator->trans('datasource.form.choices.is_null', [], 'DataSourceBundle') => 'null',
-                $this->translator->trans('datasource.form.choices.is_not_null', [], 'DataSourceBundle') => 'no_null'
-            ],
-        ];
-
-        $form->add(
-            $field->getName(),
-            ChoiceType::class,
-            array_merge($defaultOptions, $options)
-        );
-    }
-
-    /**
-     * @param FormInterface $form
-     * @param FieldTypeInterface $field
-     * @param array $options
-     */
-    protected function buildBooleanForm(FormInterface $form, FieldTypeInterface $field, $options = [])
-    {
-        if ($field->hasOption('form_type')) {
-            return $form->add($field->getName(), $field->getOption('form_type'), $options);
-        }
-
-        $defaultOptions = [
-            'placeholder' => '',
-            'choices' => [
-                $this->translator->trans('datasource.form.choices.yes', [], 'DataSourceBundle') => '1',
-                $this->translator->trans('datasource.form.choices.no', [], 'DataSourceBundle') => '0'
-            ],
-        ];
-
-        $form->add(
-            $field->getName(),
-            ChoiceType::class,
-            array_merge($defaultOptions, $options)
-        );
-    }
-
     protected function getFormFactory(): FormFactoryInterface
     {
         return $this->formFactory;
-    }
-
-    private function getFieldFormType(FieldTypeInterface $field): string
-    {
-        if ($field->hasOption('form_type')) {
-            return $field->getOption('form_type');
-        }
-
-        $declaredType = $field->getType();
-        switch ($declaredType) {
-            case 'text':
-                return TextType::class;
-            case 'number':
-                return NumberType::class;
-            case 'date':
-                return DateType::class;
-            case 'time':
-                return TimeType::class;
-            case 'datetime':
-                return DateTimeType::class;
-            case 'entity':
-                return EntityType::class;
-            default:
-                throw new InvalidArgumentException("Unsupported field type \"{$declaredType}\"");
-        }
     }
 
     private function hasParameterValue(array $array, FieldTypeInterface $field): bool

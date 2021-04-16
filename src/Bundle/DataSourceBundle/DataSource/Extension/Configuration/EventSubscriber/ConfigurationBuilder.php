@@ -18,7 +18,7 @@ use RuntimeException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
-use Symfony\Component\Yaml\Parser;
+use Symfony\Component\Yaml\Yaml;
 
 class ConfigurationBuilder implements EventSubscriberInterface
 {
@@ -30,18 +30,12 @@ class ConfigurationBuilder implements EventSubscriberInterface
      */
     private $kernel;
 
-    /**
-     * @var Parser
-     */
-    private $yamlParser;
-
     public function __construct(KernelInterface $kernel)
     {
         $this->kernel = $kernel;
-        $this->yamlParser = new Parser();
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [DataSourceEvents::PRE_BIND_PARAMETERS => ['readConfiguration', 1024]];
     }
@@ -73,12 +67,7 @@ class ConfigurationBuilder implements EventSubscriberInterface
             return null;
         }
 
-        $configuration = $this->parseYamlFile($configurationFile);
-        if (false === is_array($configuration)) {
-            return null;
-        }
-
-        return $configuration;
+        return $this->parseYamlFile($configurationFile);
     }
 
     private function buildConfigurationFromRegisteredBundles(DataSourceInterface $dataSource): void
@@ -87,7 +76,7 @@ class ConfigurationBuilder implements EventSubscriberInterface
         $bundles = $this->kernel->getBundles();
         $eligibleBundles = array_filter(
             $bundles,
-            function (BundleInterface $bundle) use ($dataSourceName): bool {
+            static function (BundleInterface $bundle) use ($dataSourceName): bool {
                 return file_exists(sprintf(self::BUNDLE_CONFIG_PATH, $bundle->getPath(), $dataSourceName));
             }
         );
@@ -129,8 +118,8 @@ class ConfigurationBuilder implements EventSubscriberInterface
         }
     }
 
-    private function parseYamlFile(string $path)
+    private function parseYamlFile(string $path): array
     {
-        return $this->yamlParser->parse(file_get_contents($path));
+        return Yaml::parse(file_get_contents($path));
     }
 }

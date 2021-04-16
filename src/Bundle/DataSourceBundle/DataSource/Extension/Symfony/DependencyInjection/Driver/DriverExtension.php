@@ -25,20 +25,26 @@ class DriverExtension implements DriverExtensionInterface
     private $driverType;
 
     /**
-     * @var FieldTypeInterface[]
+     * @var array<FieldTypeInterface>
      */
     private $fieldTypes = [];
 
     /**
-     * @var FieldExtensionInterface[][]
+     * @var array<string, array<FieldExtensionInterface>>
      */
     private $fieldExtensions = [];
 
     /**
-     * @var EventSubscriberInterface[]
+     * @var array<EventSubscriberInterface>
      */
     private $eventSubscribers = [];
 
+    /**
+     * @param string $driverType
+     * @param array<FieldTypeInterface> $fieldTypes
+     * @param array<FieldExtensionInterface> $fieldExtensions
+     * @param array<EventSubscriberInterface> $eventSubscribers
+     */
     public function __construct(string $driverType, array $fieldTypes, array $fieldExtensions, array $eventSubscribers)
     {
         $this->driverType = $driverType;
@@ -60,17 +66,17 @@ class DriverExtension implements DriverExtensionInterface
         $this->eventSubscribers = $eventSubscribers;
     }
 
-    public function getExtendedDriverTypes()
+    public function getExtendedDriverTypes(): array
     {
         return [$this->driverType];
     }
 
-    public function hasFieldType($type)
+    public function hasFieldType(string $type): bool
     {
         return array_key_exists($type, $this->fieldTypes);
     }
 
-    public function getFieldType($type)
+    public function getFieldType(string $type): FieldTypeInterface
     {
         if (false === array_key_exists($type, $this->fieldTypes)) {
             throw new InvalidArgumentException(
@@ -81,12 +87,12 @@ class DriverExtension implements DriverExtensionInterface
         return $this->fieldTypes[$type];
     }
 
-    public function hasFieldTypeExtensions($type)
+    public function hasFieldTypeExtensions(string $type): bool
     {
         return array_key_exists($type, $this->fieldExtensions);
     }
 
-    public function getFieldTypeExtensions($type)
+    public function getFieldTypeExtensions(string $type): array
     {
         if (false === array_key_exists($type, $this->fieldExtensions)) {
             return [];
@@ -95,7 +101,7 @@ class DriverExtension implements DriverExtensionInterface
         return $this->fieldExtensions[$type];
     }
 
-    public function loadSubscribers()
+    public function loadSubscribers(): array
     {
         return $this->eventSubscribers;
     }

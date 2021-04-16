@@ -7,42 +7,32 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Event\DataSourceEvent;
 
 use FSi\Component\DataSource\DataSourceInterface;
+use FSi\Component\DataSource\Result;
 
-/**
- * Event class for DataSource.
- */
 class ResultEventArgs extends DataSourceEventArgs
 {
     /**
-     * @var mixed
+     * @var Result
      */
     private $result;
 
-    /**
-     * @param \FSi\Component\DataSource\DataSourceInterface $datasource
-     * @param mixed $result
-     */
-    public function __construct(DataSourceInterface $datasource, $result)
+    public function __construct(DataSourceInterface $datasource, Result $result)
     {
         parent::__construct($datasource);
         $this->setResult($result);
     }
 
-    /**
-     * @return mixed
-     */
-    public function getResult()
+    public function getResult(): Result
     {
         return $this->result;
     }
 
-    /**
-     * @param mixed $result
-     */
-    public function setResult($result)
+    public function setResult(Result $result): void
     {
         $this->result = $result;
     }

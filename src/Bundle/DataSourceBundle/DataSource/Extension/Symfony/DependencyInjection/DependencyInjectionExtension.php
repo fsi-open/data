@@ -16,27 +16,31 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class DependencyInjectionExtension implements DataSourceExtensionInterface
 {
     /**
-     * @var DriverExtensionInterface[]
+     * @var array<DriverExtensionInterface>
      */
     private $driverExtensions;
 
     /**
-     * @var EventSubscriberInterface[]
+     * @var array<EventSubscriberInterface>
      */
     private $eventSubscribers;
 
+    /**
+     * @param array<DriverExtensionInterface> $driverExtensions
+     * @param array<EventSubscriberInterface> $eventSubscribers
+     */
     public function __construct(array $driverExtensions, array $eventSubscribers)
     {
         $this->driverExtensions = $driverExtensions;
         $this->eventSubscribers = $eventSubscribers;
     }
 
-    public function loadDriverExtensions()
+    public function loadDriverExtensions(): array
     {
         return $this->driverExtensions;
     }
 
-    public function loadSubscribers()
+    public function loadSubscribers(): array
     {
         return $this->eventSubscribers;
     }

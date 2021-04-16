@@ -70,7 +70,8 @@ class FormExtensionTest extends TestCase
 
         $query = $this->getMockBuilder(AbstractQuery::class)
             ->setConstructorArgs([$objectManager])
-            ->setMethods(['execute', '_doExecute', 'getSql', 'setFirstResult', 'setMaxResults'])
+            ->onlyMethods(['execute', '_doExecute', 'getSql'])
+            ->addMethods(['setFirstResult', 'setMaxResults'])
             ->getMock();
         $query->method('execute')->willReturn($entities);
         $query->method('setFirstResult')->willReturn($query);

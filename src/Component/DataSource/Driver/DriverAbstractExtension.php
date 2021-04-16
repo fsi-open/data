@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver;
 
 use FSi\Component\DataSource\Exception\DataSourceException;
@@ -14,103 +16,101 @@ use FSi\Component\DataSource\Field\FieldExtensionInterface;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
+use function array_key_exists;
+
 abstract class DriverAbstractExtension implements DriverExtensionInterface, EventSubscriberInterface
 {
     /**
-     * @var array
+     * @var null|array<FieldTypeInterface>
      */
     private $fieldTypes;
 
     /**
-     * @var array
+     * @var null|array<string, array<FieldExtensionInterface>>
      */
     private $fieldTypesExtensions;
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [];
     }
 
-    public function hasFieldType($type)
+    public function hasFieldType(string $type): bool
     {
-        if (!isset($this->fieldTypes)) {
+        if (null === $this->fieldTypes) {
             $this->initFieldsTypes();
         }
 
-        return isset($this->fieldTypes[$type]);
+        return array_key_exists($type, $this->fieldTypes);
     }
 
-    public function getFieldType($type)
+    public function getFieldType(string $type): FieldTypeInterface
     {
-        if (!isset($this->fieldTypes)) {
+        if (null === $this->fieldTypes) {
             $this->initFieldsTypes();
         }
 
-        if (!isset($this->fieldTypes[$type])) {
+        if (false === array_key_exists($type, $this->fieldTypes)) {
             throw new DataSourceException(sprintf('Field with type "%s" can\'t be loaded.', $type));
         }
 
         return $this->fieldTypes[$type];
     }
 
-    public function hasFieldTypeExtensions($type)
+    public function hasFieldTypeExtensions(string $type): bool
     {
-        if (!isset($this->fieldTypesExtensions)) {
+        if (null === $this->fieldTypesExtensions) {
             $this->initFieldTypesExtensions();
         }
 
-        return isset($this->fieldTypesExtensions[$type]);
+        return array_key_exists($type, $this->fieldTypesExtensions);
     }
 
-    public function getFieldTypeExtensions($type)
+    public function getFieldTypeExtensions(string $type): array
     {
-        if (!isset($this->fieldTypesExtensions)) {
+        if (null === $this->fieldTypesExtensions) {
             $this->initFieldTypesExtensions();
         }
 
-        if (!isset($this->fieldTypesExtensions[$type])) {
+        if (false === array_key_exists($type, $this->fieldTypesExtensions)) {
             throw new DataSourceException(sprintf('Field extensions with type "%s" can\'t be loaded.', $type));
         }
 
         return $this->fieldTypesExtensions[$type];
     }
 
-    public function loadSubscribers()
+    public function loadSubscribers(): array
     {
         return [$this];
     }
 
-    protected function loadFieldTypesExtensions()
+    protected function loadFieldTypesExtensions(): array
     {
         return [];
     }
 
-    protected function loadFieldTypes()
+    protected function loadFieldTypes(): array
     {
         return [];
     }
 
     /**
-     * Initializes every field type in extension.
-     *
      * @throws DataSourceException
      */
-    private function initFieldsTypes()
+    private function initFieldsTypes(): void
     {
         $this->fieldTypes = [];
 
         $fieldTypes = $this->loadFieldTypes();
 
         foreach ($fieldTypes as $fieldType) {
-            if (!$fieldType instanceof FieldTypeInterface) {
-                throw new DataSourceException(sprintf(
-                    'Expected instance of %s, "%s" given.',
-                    FieldTypeInterface::class,
-                    get_class($fieldType)
-                ));
+            if (false === $fieldType instanceof FieldTypeInterface) {
+                throw new DataSourceException(
+                    sprintf('Expected instance of %s, "%s" given.', FieldTypeInterface::class, get_class($fieldType))
+                );
             }
 
-            if (isset($this->fieldTypes[$fieldType->getType()])) {
+            if (true === array_key_exists($fieldType->getType(), $this->fieldTypes)) {
                 throw new DataSourceException(
                     sprintf('Error during field types loading. Name "%s" already in use.', $fieldType->getType())
                 );
@@ -121,25 +121,23 @@ abstract class DriverAbstractExtension implements DriverExtensionInterface, Even
     }
 
     /**
-     * Initializes every field extension if extension.
-     *
      * @throws DataSourceException
      */
-    private function initFieldTypesExtensions()
+    private function initFieldTypesExtensions(): void
     {
+        $this->fieldTypesExtensions = [];
         $fieldTypesExtensions = $this->loadFieldTypesExtensions();
+
         foreach ($fieldTypesExtensions as $extension) {
-            if (!$extension instanceof FieldExtensionInterface) {
-                throw new DataSourceException(sprintf(
-                    "Expected instance of %s but %s got",
-                    FieldExtensionInterface::class,
-                    get_class($extension)
-                ));
+            if (false === $extension instanceof FieldExtensionInterface) {
+                throw new DataSourceException(
+                    sprintf("Expected instance of %s but %s got", FieldExtensionInterface::class, get_class($extension))
+                );
             }
 
             $types = $extension->getExtendedFieldTypes();
             foreach ($types as $type) {
-                if (!isset($this->fieldTypesExtensions)) {
+                if (false === array_key_exists($type, $this->fieldTypesExtensions)) {
                     $this->fieldTypesExtensions[$type] = [];
                 }
                 $this->fieldTypesExtensions[$type][] = $extension;

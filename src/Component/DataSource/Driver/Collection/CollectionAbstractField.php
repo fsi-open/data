@@ -7,98 +7,90 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver\Collection;
 
 use Doctrine\Common\Collections\Criteria;
 use FSi\Component\DataSource\Driver\Collection\Exception\CollectionDriverException;
 use FSi\Component\DataSource\Field\FieldAbstractType;
+use Symfony\Component\OptionsResolver\Options;
 
 use function count;
 
 abstract class CollectionAbstractField extends FieldAbstractType implements CollectionFieldInterface
 {
-    public function initOptions()
+    public function initOptions(): void
     {
-        $field = $this;
         $this->getOptionsResolver()
-            ->setDefined(['field'])
+            ->setDefault('field', null)
             ->setAllowedTypes('field', ['string', 'null'])
-            ->setNormalizer('field', function ($options, $value) use ($field) {
-                if (!isset($value) && $field->getName()) {
-                    return $field->getName();
-                } else {
-                    return $value;
-                }
-            });
+            ->setNormalizer('field', function (Options $options, ?string $value): ?string {
+                return $value ?? $this->getName();
+            })
         ;
     }
 
-    public function buildCriteria(Criteria $c)
+    public function buildCriteria(Criteria $c): void
     {
         $data = $this->getCleanParameter();
 
-        if (($data === []) || ($data === '') || ($data === null)) {
+        if (true === $this->isEmpty($data)) {
             return;
         }
 
         $type = $this->getPHPType();
-        $field = $this->hasOption('field') ? $this->getOption('field') : $this->getName();
+        $field = $this->getOption('field');
         $comparison = $this->getComparison();
-        $eb = Criteria::expr();
+        $expr = Criteria::expr();
 
         if ('between' === $comparison) {
             if (false === is_array($data)) {
-                throw new CollectionDriverException(
-                    'Fields with \'between\' comparison require to bind an array.'
-                );
+                throw new CollectionDriverException('Fields with \'between\' comparison require to bind an array.');
             }
 
             $from = array_shift($data);
             $to = count($data) ? array_shift($data) : null;
 
-            if (!$from && ($from !== 0)) {
+            if (true === $this->isEmpty($from)) {
                 $from = null;
             }
-
-            if (!$to && ($to !== 0)) {
+            if (true === $this->isEmpty($to)) {
                 $to = null;
             }
-
-            if ($from === null && $to === null) {
+            if (null === $from && null === $to) {
                 return;
-            } elseif ($from === null) {
+            }
+
+            if (null === $from) {
                 $comparison = 'lte';
                 $data = $to;
-            } elseif ($to === null) {
+            } elseif (null === $to) {
                 $comparison = 'gte';
                 $data = $from;
             } else {
-                if (isset($type)) {
+                if (null !== $type) {
                     settype($from, $type);
                     settype($to, $type);
                 }
-                $c->andWhere($eb->andX($eb->lte($field, $to), $eb->gte($field, $from)));
+                $c->andWhere($expr->andX($expr->lte($field, $to), $expr->gte($field, $from)));
                 return;
             }
         }
 
-        if ($comparison === 'nin') {
-            $comparison = 'notIn';
-        }
-
-        if (in_array($comparison, ['in', 'nin', 'notIn']) && !is_array($data)) {
+        if (true === in_array($comparison, ['in', 'notIn'], true) && false === is_array($data)) {
             throw new CollectionDriverException(
                 'Fields with \'in\' and \'notIn\' comparisons require to bind an array.'
             );
         }
 
-        if (isset($type)) {
+        if (null !== $type) {
             settype($data, $type);
         }
-        $c->andWhere($eb->$comparison($field, $data));
+        $c->andWhere($expr->$comparison($field, $data));
     }
 
-    public function getPHPType()
+    public function getPHPType(): ?string
     {
         return null;
     }

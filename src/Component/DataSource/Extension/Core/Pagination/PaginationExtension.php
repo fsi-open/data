@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Extension\Core\Pagination;
 
 use FSi\Component\DataSource\DataSourceAbstractExtension;
@@ -26,10 +28,7 @@ class PaginationExtension extends DataSourceAbstractExtension
      */
     public const PARAMETER_MAX_RESULTS = 'max_results';
 
-    /**
-     * {@inheritdoc}
-     */
-    public function loadSubscribers()
+    public function loadSubscribers(): array
     {
         return [
             new EventSubscriber\Events(),

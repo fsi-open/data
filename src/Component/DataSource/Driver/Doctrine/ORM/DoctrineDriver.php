@@ -7,25 +7,19 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver\Doctrine\ORM;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\Exception\DoctrineDriverException;
 use FSi\Component\DataSource\Driver\DriverAbstract;
+use FSi\Component\DataSource\Driver\DriverExtensionInterface;
+use FSi\Component\DataSource\Exception\DataSourceException;
+use IteratorAggregate;
 
 class DoctrineDriver extends DriverAbstract
 {
-    /**
-     * Default alias for entity during building query when no alias is specified.
-     */
-    public const DEFAULT_ENTITY_ALIAS = 'e';
-
-    /**
-     * @var EntityManagerInterface
-     */
-    private $em;
-
     /**
      * Alias, that can be used with preconfigured query when fetching one entity and field mappings
      * don't have mappings prefixed with aliases.
@@ -54,78 +48,62 @@ class DoctrineDriver extends DriverAbstract
     private $useOutputWalkers;
 
     /**
-     * @param array $extensions
-     * @param EntityManagerInterface $em
-     * @param string|QueryBuilder $entity
-     * @param string $alias
+     * @param array<DriverExtensionInterface> $extensions
+     * @param QueryBuilder $queryBuilder
      * @param bool|null $useOutputWalkers
-     *
-     * @throws DoctrineDriverException
+     * @throws DataSourceException
      */
     public function __construct(
-        $extensions,
-        EntityManagerInterface $em,
-        $entity,
-        $alias = null,
-        $useOutputWalkers = null
+        array $extensions,
+        QueryBuilder $queryBuilder,
+        ?bool $useOutputWalkers = null
     ) {
         parent::__construct($extensions);
 
-        $this->em = $em;
-
-        if (isset($alias)) {
-            $this->alias = (string) $alias;
-        } elseif (true === $entity instanceof QueryBuilder) {
-            $this->alias = $entity->getRootAlias();
-        } else {
-            $this->alias = self::DEFAULT_ENTITY_ALIAS;
-        }
-
-        if ($entity instanceof QueryBuilder) {
-            $this->query = $entity;
-        } else {
-            if (empty($entity)) {
-                throw new DoctrineDriverException('Name of entity can\'t be empty.');
-            }
-
-            $this->query = $this->em->createQueryBuilder();
-            $this->query
-                ->select($this->alias)
-                ->from((string) $entity, $this->alias)
-            ;
-        }
+        $rootAliases = $queryBuilder->getRootAliases();
+        $this->alias = reset($rootAliases);
+        $this->query = $queryBuilder;
 
         $this->useOutputWalkers = $useOutputWalkers;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getType()
+    public function getType(): string
     {
         return 'doctrine-orm';
     }
 
-    /**
-     * @return string
-     */
-    public function getAlias()
+    public function getAlias(): string
     {
         return $this->alias;
     }
 
     /**
-     * {@inheritdoc}
+     * Returns query builder.
+     *
+     * If current query is set to null (so when getResult method is NOT executed at the moment) exception is thrown.
      */
-    public function initResult()
+    public function getQueryBuilder(): QueryBuilder
+    {
+        if (null === $this->currentQuery) {
+            throw new DoctrineDriverException('Query is accessible only during preGetResult event.');
+        }
+
+        return $this->currentQuery;
+    }
+
+    protected function initResult(): void
     {
         $this->currentQuery = clone $this->query;
     }
 
     /**
-     * {@inheritdoc}
+     * @param array<DoctrineFieldInterface> $fields
+     * @param int|null $first
+     * @param int|null $max
+     * @return IteratorAggregate
+     * @throws DoctrineDriverException
      */
-    public function buildResult($fields, $first, $max)
+    protected function buildResult(array $fields, ?int $first, ?int $max): IteratorAggregate
     {
         foreach ($fields as $field) {
             if (false === $field instanceof DoctrineFieldInterface) {
@@ -138,7 +116,7 @@ class DoctrineDriver extends DriverAbstract
             $field->buildQuery($this->currentQuery, $this->alias);
         }
 
-        if ($max > 0) {
+        if (null !== $max || null !== $first) {
             $this->currentQuery->setMaxResults($max);
             $this->currentQuery->setFirstResult($first);
         }
@@ -149,21 +127,5 @@ class DoctrineDriver extends DriverAbstract
         $this->currentQuery = null;
 
         return $result;
-    }
-
-    /**
-     * Returns query builder.
-     *
-     * If query is set to null (so when getResult method is NOT executed at the moment) exception is throwed.
-     *
-     * @return QueryBuilder
-     */
-    public function getQueryBuilder()
-    {
-        if (!isset($this->currentQuery)) {
-            throw new DoctrineDriverException('Query is accessible only during preGetResult event.');
-        }
-
-        return $this->currentQuery;
     }
 }

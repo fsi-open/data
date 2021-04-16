@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace FSi\Tests\Component\DataSource\Extension\Core;
 
+use FSi\Component\DataSource\Event\DriverEvent;
 use FSi\Component\DataSource\Extension\Core\Ordering\Driver\DriverExtension;
 
 final class FakeDriverExtension extends DriverExtension
@@ -23,5 +24,9 @@ final class FakeDriverExtension extends DriverExtension
     public function sort(array $fields): array
     {
         return $this->sortFields($fields);
+    }
+
+    public function preGetResult(DriverEvent\DriverEventArgs $event): void
+    {
     }
 }

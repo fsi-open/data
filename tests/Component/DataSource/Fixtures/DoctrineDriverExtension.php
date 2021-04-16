@@ -7,8 +7,11 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Tests\Component\DataSource\Fixtures;
 
+use Doctrine\ORM\QueryBuilder;
 use FSi\Component\DataSource\Driver\DriverAbstractExtension;
 use FSi\Component\DataSource\Event\DriverEvents;
 
@@ -23,19 +26,11 @@ class DoctrineDriverExtension extends DriverAbstractExtension
     private $calls = [];
 
     /**
-     * @var \Doctrine\ORM\QueryBuilder
+     * @var QueryBuilder|null
      */
     private $queryBuilder;
 
-    public function getExtendedDriverTypes()
-    {
-        return ['doctrine', 'doctrine-orm'];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             DriverEvents::PRE_GET_RESULT => ['preGetResult', 128],
@@ -43,53 +38,37 @@ class DoctrineDriverExtension extends DriverAbstractExtension
         ];
     }
 
-    /**
-     * Returns array of calls.
-     *
-     * @return array
-     */
-    public function getCalls()
+    public function getExtendedDriverTypes(): array
+    {
+        return ['doctrine-orm'];
+    }
+
+    public function getCalls(): array
     {
         return $this->calls;
     }
 
-    /**
-     * Resets calls.
-     */
-    public function resetCalls()
+    public function resetCalls(): void
     {
         $this->calls = [];
     }
 
-    /**
-     * Catches called method.
-     *
-     * @param string $name
-     * @param array $arguments
-     */
-    public function __call($name, $arguments)
+    public function __call(string $name, array $arguments): void
     {
-        if ($name === 'preGetResult') {
+        if ('preGetResult' === $name) {
             $args = array_shift($arguments);
             $this->queryBuilder = $args->getDriver()->getQueryBuilder();
         }
+
         $this->calls[] = $name;
     }
 
-    /**
-     * Loads itself as subscriber.
-     *
-     * @return array
-     */
-    public function loadSubscribers()
+    public function loadSubscribers(): array
     {
         return [$this];
     }
 
-    /**
-     * @return \Doctrine\ORM\QueryBuilder
-     */
-    public function getQueryBuilder()
+    public function getQueryBuilder(): ?QueryBuilder
     {
         return $this->queryBuilder;
     }

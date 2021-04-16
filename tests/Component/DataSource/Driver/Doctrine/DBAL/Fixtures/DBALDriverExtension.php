@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Tests\Component\DataSource\Driver\Doctrine\DBAL\Fixtures;
 
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -21,14 +23,9 @@ class DBALDriverExtension extends DriverAbstractExtension
     private $calls = [];
 
     /**
-     * @var QueryBuilder
+     * @var QueryBuilder|null
      */
     private $queryBuilder;
-
-    public function getExtendedDriverTypes(): array
-    {
-        return ['doctrine-dbal'];
-    }
 
     public static function getSubscribedEvents(): array
     {
@@ -38,33 +35,28 @@ class DBALDriverExtension extends DriverAbstractExtension
         ];
     }
 
-    /**
-     * Returns array of calls.
-     *
-     * @return array
-     */
+    public function getExtendedDriverTypes(): array
+    {
+        return ['doctrine-dbal'];
+    }
+
     public function getCalls(): array
     {
         return $this->calls;
     }
 
-    /**
-     * Resets calls.
-     */
     public function resetCalls(): void
     {
         $this->calls = [];
     }
 
-    /**
-     * Catches called method.
-     */
-    public function __call(string $name, array $arguments)
+    public function __call(string $name, array $arguments): void
     {
         if ('preGetResult' === $name) {
             $event = array_shift($arguments);
             $this->queryBuilder = $event->getDriver()->getQueryBuilder();
         }
+
         $this->calls[] = $name;
     }
 
@@ -73,7 +65,7 @@ class DBALDriverExtension extends DriverAbstractExtension
         return [$this];
     }
 
-    public function getQueryBuilder(): QueryBuilder
+    public function getQueryBuilder(): ?QueryBuilder
     {
         return $this->queryBuilder;
     }

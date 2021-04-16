@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Util;
 
 /**
@@ -14,40 +16,21 @@ namespace FSi\Component\DataSource\Util;
  */
 interface AttributesContainerInterface
 {
-    /**
-     * Checks whether field has attribute with given name.
-     *
-     * @param string $name
-     * @return bool
-     */
-    public function hasAttribute($name);
+    public function hasAttribute(string $name): bool;
 
     /**
-     * Sets attribute.
-     *
      * @param string $name
      * @param mixed $value
      */
-    public function setAttribute($name, $value);
+    public function setAttribute(string $name, $value): void;
 
     /**
-     * Returns attribute with given name.
-     *
      * @param string $name
+     * @return mixed
      */
-    public function getAttribute($name);
+    public function getAttribute(string $name);
 
-    /**
-     * Returns array of attributes.
-     *
-     * @return array
-     */
-    public function getAttributes();
+    public function getAttributes(): array;
 
-    /**
-     * Removes attribute with given name.
-     *
-     * @param string $name
-     */
-    public function removeAttribute($name);
+    public function removeAttribute(string $name): void;
 }

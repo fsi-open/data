@@ -25,19 +25,20 @@ class ResultIndexer implements EventSubscriberInterface
      */
     private $registry;
 
+    public static function getSubscribedEvents(): array
+    {
+        return [DriverEvents::POST_GET_RESULT => ['postGetResult', 1024]];
+    }
+
     public function __construct(ManagerRegistry $registry)
     {
         $this->registry = $registry;
     }
 
-    public static function getSubscribedEvents()
-    {
-        return [DriverEvents::POST_GET_RESULT => ['postGetResult', 1024]];
-    }
-
     public function postGetResult(ResultEventArgs $event): void
     {
         $result = $event->getResult();
+
         if (true === $result instanceof Paginator) {
             $event->setResult(new DoctrineResult($this->registry, $result));
         }

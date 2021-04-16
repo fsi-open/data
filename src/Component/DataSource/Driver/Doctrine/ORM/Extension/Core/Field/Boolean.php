@@ -7,34 +7,24 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field;
 
+use Doctrine\DBAL\Types\Types;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineAbstractField;
-use Doctrine\DBAL\Types\Type;
 
-/**
- * Boolean field.
- */
 class Boolean extends DoctrineAbstractField
 {
-    /**
-     * {@inheritdoc}
-     */
     protected $comparisons = ['eq'];
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getType()
+    public function getType(): string
     {
         return 'boolean';
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getDBALType()
+    public function getDBALType(): string
     {
-        return Type::BOOLEAN;
+        return Types::BOOLEAN;
     }
 }

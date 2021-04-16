@@ -172,7 +172,7 @@ class DataGrid implements DataGridInterface
     public function setData(iterable $data): void
     {
         $event = new DataGridEvent($this, $data);
-        $this->eventDispatcher->dispatch(DataGridEvents::PRE_SET_DATA, $event);
+        $this->eventDispatcher->dispatch($event, DataGridEvents::PRE_SET_DATA);
         $data = $event->getData();
         if (!is_iterable($data)) {
             throw new InvalidArgumentException(sprintf(
@@ -184,13 +184,13 @@ class DataGrid implements DataGridInterface
         $this->rowset = new DataRowset($data);
 
         $event = new DataGridEvent($this, $this->rowset);
-        $this->eventDispatcher->dispatch(DataGridEvents::POST_SET_DATA, $event);
+        $this->eventDispatcher->dispatch($event, DataGridEvents::POST_SET_DATA);
     }
 
     public function bindData($data): void
     {
         $event = new DataGridEvent($this, $data);
-        $this->eventDispatcher->dispatch(DataGridEvents::PRE_BIND_DATA, $event);
+        $this->eventDispatcher->dispatch($event, DataGridEvents::PRE_BIND_DATA);
         $data = $event->getData();
 
         foreach ($data as $index => $values) {
@@ -206,7 +206,7 @@ class DataGrid implements DataGridInterface
         }
 
         $event = new DataGridEvent($this, $data);
-        $this->eventDispatcher->dispatch(DataGridEvents::POST_BIND_DATA, $event);
+        $this->eventDispatcher->dispatch($event, DataGridEvents::POST_BIND_DATA);
     }
 
     public function addEventListener(string $eventName, callable $listener, int $priority = 0): DataGridInterface
@@ -226,12 +226,12 @@ class DataGrid implements DataGridInterface
     public function createView(): DataGridViewInterface
     {
         $event = new DataGridEvent($this, null);
-        $this->eventDispatcher->dispatch(DataGridEvents::PRE_BUILD_VIEW, $event);
+        $this->eventDispatcher->dispatch($event, DataGridEvents::PRE_BUILD_VIEW);
 
         $view = new DataGridView($this->name, $this->columns, $this->getRowset());
 
         $event = new DataGridEvent($this, $view);
-        $this->eventDispatcher->dispatch(DataGridEvents::POST_BUILD_VIEW, $event);
+        $this->eventDispatcher->dispatch($event, DataGridEvents::POST_BUILD_VIEW);
         $view = $event->getData();
 
         return $view;

@@ -46,10 +46,7 @@ class BindRequest implements EventSubscriberInterface
                 break;
 
             default:
-                throw new DataGridException(sprintf(
-                    'The request method "%s" is not supported',
-                    $request->getMethod()
-                ));
+                throw new DataGridException(sprintf('The request method "%s" is not supported', $request->getMethod()));
         }
 
         $event->setData($data);

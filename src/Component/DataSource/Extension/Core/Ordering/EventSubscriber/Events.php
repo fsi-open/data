@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Extension\Core\Ordering\EventSubscriber;
 
 use FSi\Component\DataSource\Event\DataSourceEvent;
@@ -14,18 +16,19 @@ use FSi\Component\DataSource\Event\DataSourceEvents;
 use FSi\Component\DataSource\Exception\DataSourceException;
 use FSi\Component\DataSource\Extension\Core\Ordering\Field\FieldExtension;
 use FSi\Component\DataSource\Extension\Core\Ordering\OrderingExtension;
-use FSi\Component\DataSource\Field\FieldExtensionInterface;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+
+use function array_key_exists;
 
 class Events implements EventSubscriberInterface
 {
     /**
-     * @var array
+     * @var array<string, array<string, string>>
      */
     private $ordering = [];
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             DataSourceEvents::PRE_BIND_PARAMETERS => ['preBindParameters'],
@@ -33,7 +36,7 @@ class Events implements EventSubscriberInterface
         ];
     }
 
-    public function preBindParameters(DataSourceEvent\ParametersEventArgs $event)
+    public function preBindParameters(DataSourceEvent\ParametersEventArgs $event): void
     {
         $datasource = $event->getDataSource();
         $datasource_oid = spl_object_hash($datasource);
@@ -41,8 +44,9 @@ class Events implements EventSubscriberInterface
         $parameters = $event->getParameters();
 
         if (
-            isset($parameters[$datasourceName][OrderingExtension::PARAMETER_SORT])
-            && is_array($parameters[$datasourceName][OrderingExtension::PARAMETER_SORT])
+            true === array_key_exists($datasourceName, $parameters)
+            && true === array_key_exists(OrderingExtension::PARAMETER_SORT, $parameters[$datasourceName])
+            && true === is_array($parameters[$datasourceName][OrderingExtension::PARAMETER_SORT])
         ) {
             $priority = 0;
             foreach ($parameters[$datasourceName][OrderingExtension::PARAMETER_SORT] as $fieldName => $direction) {
@@ -60,26 +64,21 @@ class Events implements EventSubscriberInterface
         }
     }
 
-    public function postGetParameters(DataSourceEvent\ParametersEventArgs $event)
+    public function postGetParameters(DataSourceEvent\ParametersEventArgs $event): void
     {
         $datasource = $event->getDataSource();
         $datasource_oid = spl_object_hash($datasource);
         $datasourceName = $datasource->getName();
         $parameters = $event->getParameters();
 
-        if (isset($this->ordering[$datasource_oid])) {
+        if (true === array_key_exists($datasource_oid, $this->ordering)) {
             $parameters[$datasourceName][OrderingExtension::PARAMETER_SORT] = $this->ordering[$datasource_oid];
         }
 
         $event->setParameters($parameters);
     }
 
-    /**
-     * @param FieldTypeInterface $field
-     * @return FieldExtension
-     * @throws DataSourceException
-     */
-    protected function getFieldExtension(FieldTypeInterface $field)
+    private function getFieldExtension(FieldTypeInterface $field): FieldExtension
     {
         $extensions = $field->getExtensions();
         foreach ($extensions as $extension) {

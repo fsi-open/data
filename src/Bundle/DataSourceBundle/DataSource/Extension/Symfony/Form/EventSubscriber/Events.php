@@ -13,19 +13,16 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use FSi\Component\DataSource\Event\DataSourceEvents;
 use FSi\Component\DataSource\Event\DataSourceEvent;
 
-/**
- * Class contains method called during DataSource events.
- */
 class Events implements EventSubscriberInterface
 {
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             DataSourceEvents::POST_BUILD_VIEW => ['postBuildView'],
         ];
     }
 
-    public function postBuildView(DataSourceEvent\ViewEventArgs $event)
+    public function postBuildView(DataSourceEvent\ViewEventArgs $event): void
     {
         $fieldViews = $event->getView()->getFields();
 

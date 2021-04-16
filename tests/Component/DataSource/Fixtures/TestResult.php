@@ -7,21 +7,21 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Tests\Component\DataSource\Fixtures;
 
 use ArrayIterator;
+use FSi\Component\DataSource\Result;
 
-/**
- * Class for testing result returning.
- */
-class TestResult implements \Countable, \IteratorAggregate
+class TestResult implements Result
 {
-    public function count()
+    public function count(): int
     {
         return 0;
     }
 
-    public function getIterator()
+    public function getIterator(): ArrayIterator
     {
         return new ArrayIterator([]);
     }

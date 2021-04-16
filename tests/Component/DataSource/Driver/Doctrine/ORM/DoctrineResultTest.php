@@ -12,9 +12,9 @@ declare(strict_types=1);
 namespace FSi\Tests\Component\DataSource\Driver\Doctrine\ORM;
 
 use ArrayIterator;
-use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineResult;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Paginator;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -28,6 +28,7 @@ final class DoctrineResultTest extends TestCase
         /** @var MockObject&Paginator $paginator */
         $paginator = $this->createMock(Paginator::class);
         $paginator->method('getIterator')->willReturn(new ArrayIterator([]));
+        $paginator->method('count')->willReturn(0);
 
         $result = new DoctrineResult($registry, $paginator);
         self::assertCount(0, $result);
@@ -37,17 +38,15 @@ final class DoctrineResultTest extends TestCase
     {
         /** @var MockObject&ManagerRegistry $registry */
         $registry = $this->createMock(ManagerRegistry::class);
-        /** @var MockObject|Paginator $paginator */
+        /** @var MockObject&Paginator $paginator */
         $paginator = $this->createMock(Paginator::class);
 
         $paginator->method('getIterator')
             ->willReturn(
-                new ArrayIterator(
-                    [
-                        '0' => ['foo', 'bar'],
-                        '1' => ['foo1', 'bar1']
-                    ]
-                )
+                new ArrayIterator([
+                    '0' => ['foo', 'bar'],
+                    '1' => ['foo1', 'bar1']
+                ])
             );
 
         $result = new DoctrineResult($registry, $paginator);

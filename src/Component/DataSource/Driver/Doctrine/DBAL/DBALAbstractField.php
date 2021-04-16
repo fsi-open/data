@@ -7,21 +7,27 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
 use Doctrine\DBAL\Query\QueryBuilder;
+use Doctrine\DBAL\Types\Types;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Exception\DBALDriverException;
 use FSi\Component\DataSource\Field\FieldAbstractType;
+use Symfony\Component\OptionsResolver\Options;
+
+use function array_shift;
 
 abstract class DBALAbstractField extends FieldAbstractType implements DBALFieldInterface
 {
-    public function buildQuery(QueryBuilder $qb, $alias)
+    public function buildQuery(QueryBuilder $qb, string $alias): void
     {
         $data = $this->getCleanParameter();
         $fieldName = $this->getFieldName($alias);
         $name = $this->getName();
 
-        if (($data === []) || ($data === '') || ($data === null)) {
+        if (true === $this->isEmpty($data)) {
             return;
         }
 
@@ -31,28 +37,28 @@ abstract class DBALAbstractField extends FieldAbstractType implements DBALFieldI
         $clause = $this->getOption('clause');
         $func = sprintf('and%s', ucfirst($clause));
 
-        if ($comparison == 'between') {
-            if (!is_array($data)) {
+        if ('between' === $comparison) {
+            if (false === is_array($data)) {
                 throw new DBALDriverException('Fields with \'between\' comparison require to bind an array.');
             }
 
             $from = array_shift($data);
-            $to = array_shift($data);
+            $to = count($data) ? array_shift($data) : null;
 
-            if (empty($from) && ($from !== 0)) {
+            if (true === $this->isEmpty($from)) {
                 $from = null;
             }
-
-            if (empty($to) && ($to !== 0)) {
+            if (true === $this->isEmpty($to)) {
                 $to = null;
             }
-
-            if ($from === null && $to === null) {
+            if (null === $from && null === $to) {
                 return;
-            } elseif ($from === null) {
+            }
+
+            if (null === $from) {
                 $comparison = 'lte';
                 $data = $to;
-            } elseif ($to === null) {
+            } elseif (null === $to) {
                 $comparison = 'gte';
                 $data = $from;
             } else {
@@ -63,36 +69,35 @@ abstract class DBALAbstractField extends FieldAbstractType implements DBALFieldI
             }
         }
 
-        if ($comparison == 'isNull') {
-            $qb->$func($fieldName . ' IS ' . ($data === 'null' ? '' : 'NOT ') . 'NULL');
+        if ('isNull' === $comparison) {
+            $qb->$func($fieldName . ' IS ' . ('null' === $data ? '' : 'NOT ') . 'NULL');
             return;
         }
 
-        $expr = $qb->expr();
-        if (in_array($comparison, ['in', 'notIn'])) {
-            if (!is_array($data)) {
+        if (true === in_array($comparison, ['in', 'notIn'], true)) {
+            if (false === is_array($data)) {
                 throw new DBALDriverException('Fields with \'in\' and \'notIn\' comparisons require to bind an array.');
             }
             $placeholders = [];
             foreach ($data as $value) {
                 $placeholders[] = $qb->createNamedParameter($value, $type);
             }
-            //this is because "in" and "notIn" was added in DBAL 2.4
-            $comparison = $comparison === 'in' ? 'IN' : 'NOT IN';
-            $qb->$func($expr->comparison($fieldName, $comparison, '(' . implode(', ', $placeholders) . ')'));
+            $qb->$func($qb->expr()->$comparison($fieldName, implode(', ', $placeholders)));
+
             return;
-        } elseif (in_array($comparison, ['like', 'contains'])) {
+        }
+
+        if (true === in_array($comparison, ['like', 'contains'], true)) {
             $data = "%$data%";
             $comparison = 'like';
         }
 
-        $qb->$func($expr->$comparison($fieldName, ":$name"));
+        $qb->$func($qb->expr()->$comparison($fieldName, ":$name"));
         $qb->setParameter($this->getName(), $data, $type);
     }
 
-    public function initOptions()
+    public function initOptions(): void
     {
-        $field = $this;
         $this->getOptionsResolver()
             ->setDefaults([
                 'field' => null,
@@ -102,14 +107,10 @@ abstract class DBALAbstractField extends FieldAbstractType implements DBALFieldI
             ->setAllowedValues('clause', ['where', 'having'])
             ->setAllowedTypes('field', ['string', 'null'])
             ->setAllowedTypes('auto_alias', 'bool')
-            ->setNormalizer('field', function ($options, $value) use ($field) {
-                if (!isset($value) && $field->getName()) {
-                    return $field->getName();
-                } else {
-                    return $value;
-                }
+            ->setNormalizer('field', function (Options $options, ?string $value): ?string {
+                return $value ?? $this->getName();
             })
-            ->setNormalizer('clause', function ($options, $value) {
+            ->setNormalizer('clause', function (Options $options, string $value): string {
                 return strtolower($value);
             })
         ;
@@ -118,22 +119,19 @@ abstract class DBALAbstractField extends FieldAbstractType implements DBALFieldI
     /**
      * Constructs proper field name from field mapping or (if absent) from own name.
      * Optionally adds alias (if missing and auto_alias option is set to true).
-     *
-     * @param string $alias
-     * @return string
      */
-    protected function getFieldName($alias)
+    protected function getFieldName(string $alias): string
     {
         $name = $this->getOption('field');
 
-        if ($this->getOption('auto_alias') && !preg_match('/\./', $name)) {
+        if (true === $this->getOption('auto_alias') && false === strpos($name, ".")) {
             $name = "$alias.$name";
         }
 
         return $name;
     }
 
-    public function getDBALType()
+    public function getDBALType(): ?string
     {
         return null;
     }

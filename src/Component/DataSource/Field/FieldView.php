@@ -7,14 +7,13 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Field;
 
 use FSi\Component\DataSource\DataSourceViewInterface;
 use FSi\Component\DataSource\Util\AttributesContainer;
 
-/**
- * {@inheritdoc}
- */
 class FieldView extends AttributesContainer implements FieldViewInterface
 {
     /**
@@ -53,50 +52,32 @@ class FieldView extends AttributesContainer implements FieldViewInterface
         $this->parameter = $field->getCleanParameter();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getComparison()
+    public function getComparison(): string
     {
         return $this->comparison;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getParameter()
+    public function getParameter(): string
     {
         return $this->parameter;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function setDataSourceView(DataSourceViewInterface $dataSourceView)
+    public function setDataSourceView(DataSourceViewInterface $dataSourceView): void
     {
         $this->dataSourceView = $dataSourceView;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getDataSourceView()
+    public function getDataSourceView(): DataSourceViewInterface
     {
         return $this->dataSourceView;
     }

@@ -7,28 +7,20 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core;
 
-use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineFieldInterface;
 use FSi\Component\DataSource\Driver\DriverAbstractExtension;
 
-/**
- * Core extension for Doctrine driver.
- */
 class CoreExtension extends DriverAbstractExtension
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function getExtendedDriverTypes()
+    public function getExtendedDriverTypes(): array
     {
         return ['doctrine-orm'];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function loadFieldTypes()
+    protected function loadFieldTypes(): array
     {
         return [
             new Field\Text(),

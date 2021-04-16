@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver;
 
 /**
@@ -17,14 +19,8 @@ interface DriverFactoryInterface
     /**
      * Return driver type name.
      * For example if you are using Doctrine\DriverFactory this method will return 'doctrine' string.
-     *
-     * @return string
      */
-    public function getDriverType();
+    public function getDriverType(): string;
 
-    /**
-     * @param array $options
-     * @return \FSi\Component\DataSource\Driver\DriverInterface
-     */
-    public function createDriver($options = []);
+    public function createDriver(array $options = []): DriverInterface;
 }

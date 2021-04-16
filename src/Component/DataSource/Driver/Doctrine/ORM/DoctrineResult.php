@@ -7,15 +7,16 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver\Doctrine\ORM;
 
-use ArrayIterator;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\ManagerRegistry;
-use Doctrine\ORM\Tools\Pagination\Paginator;
 use FSi\Component\DataIndexer\DoctrineDataIndexer;
+use FSi\Component\DataSource\Result;
 
-class DoctrineResult extends ArrayCollection
+class DoctrineResult extends ArrayCollection implements Result
 {
     /**
      * @var int
@@ -25,7 +26,6 @@ class DoctrineResult extends ArrayCollection
     public function __construct(ManagerRegistry $registry, Paginator $paginator)
     {
         $this->count = $paginator->count();
-        /** @var ArrayIterator $data */
         $data = $paginator->getIterator();
         $data->rewind();
 
@@ -49,10 +49,7 @@ class DoctrineResult extends ArrayCollection
         parent::__construct($result);
     }
 
-    /**
-     * @return int
-     */
-    public function count()
+    public function count(): int
     {
         return $this->count;
     }

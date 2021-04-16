@@ -7,33 +7,26 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Event\DataSourceEvent;
 
-use Symfony\Component\EventDispatcher\Event;
 use FSi\Component\DataSource\DataSourceInterface;
+use Symfony\Contracts\EventDispatcher\Event;
 
-/**
- * Event class for DataSource.
- */
 class DataSourceEventArgs extends Event
 {
     /**
-     * @var \FSi\Component\DataSource\DataSourceInterface
+     * @var DataSourceInterface
      */
     private $datasource;
 
-    /**
-     * @param \FSi\Component\DataSource\DataSourceInterface $datasource
-     */
     public function __construct(DataSourceInterface $datasource)
     {
         $this->datasource = $datasource;
     }
 
-    /**
-     * @return \FSi\Component\DataSource\DataSourceInterface
-     */
-    public function getDataSource()
+    public function getDataSource(): DataSourceInterface
     {
         return $this->datasource;
     }

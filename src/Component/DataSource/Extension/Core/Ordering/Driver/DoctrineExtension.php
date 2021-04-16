@@ -7,13 +7,12 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Extension\Core\Ordering\Driver;
 
-use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineAbstractField;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineDriver;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineFieldInterface as DoctrineORMFieldInterface;
-use FSi\Component\DataSource\Extension\Core\Ordering\Field\FieldExtension;
-use FSi\Component\DataSource\Event\DriverEvents;
 use FSi\Component\DataSource\Event\DriverEvent;
 use InvalidArgumentException;
 
@@ -22,65 +21,14 @@ use InvalidArgumentException;
  */
 class DoctrineExtension extends DriverExtension
 {
-    /**
-     * {@inheritdoc}
-     */
-    public function getExtendedDriverTypes()
+    public function getExtendedDriverTypes(): array
     {
         return [
             'doctrine-orm'
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function loadFieldTypesExtensions()
-    {
-        return [
-            new FieldExtension(),
-        ];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public static function getSubscribedEvents()
-    {
-        return [
-            DriverEvents::PRE_GET_RESULT => ['preGetResult'],
-        ];
-    }
-
-    /**
-     * @param DoctrineAbstractField $field
-     * @param string $alias
-     * @throws InvalidArgumentException
-     * @return string
-     */
-    protected function getFieldName($field, $alias)
-    {
-        if (!$field instanceof DoctrineORMFieldInterface) {
-            throw new InvalidArgumentException("Field must be an instance of DoctrineField");
-        }
-
-        if ($field->hasOption('field')) {
-            $name = $field->getOption('field');
-        } else {
-            $name = $field->getName();
-        }
-
-        if ($field->getOption('auto_alias') && !preg_match('/\./', $name)) {
-            $name = "$alias.$name";
-        }
-
-        return $name;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function preGetResult(DriverEvent\DriverEventArgs $event)
+    public function preGetResult(DriverEvent\DriverEventArgs $event): void
     {
         $fields = $event->getFields();
         $sortedFields = $this->sortFields($fields);
@@ -92,5 +40,16 @@ class DoctrineExtension extends DriverExtension
             $field = $fields[$fieldName];
             $qb->addOrderBy($this->getFieldName($field, $driver->getAlias()), $direction);
         }
+    }
+
+    private function getFieldName(DoctrineORMFieldInterface $field, string $alias): string
+    {
+        $name = $field->getOption('field');
+
+        if (true === $field->getOption('auto_alias') && false === strpos($name, ".")) {
+            $name = "$alias.$name";
+        }
+
+        return $name;
     }
 }

@@ -181,7 +181,7 @@ class ConfigurationBuilderTest extends TestCase
     protected function setUp(): void
     {
         $kernelMockBuilder = $this->getMockBuilder(Kernel::class)->setConstructorArgs(['dev', true]);
-        $kernelMockBuilder->setMethods(
+        $kernelMockBuilder->onlyMethods(
             ['registerContainerConfiguration', 'registerBundles', 'getBundles', 'getContainer']
         );
 

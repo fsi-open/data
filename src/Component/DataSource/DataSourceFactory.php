@@ -7,19 +7,21 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource;
 
 use FSi\Component\DataSource\Driver\DriverFactoryManagerInterface;
 use FSi\Component\DataSource\Exception\DataSourceException;
 
+use function array_key_exists;
+
 class DataSourceFactory implements DataSourceFactoryInterface
 {
     /**
-     * Array of registered names for data sources.
-     *
-     * @var array
+     * @var array<DataSourceInterface>
      */
-    protected $datasources;
+    protected $datasources = [];
 
     /**
      * @var DriverFactoryManagerInterface
@@ -27,18 +29,16 @@ class DataSourceFactory implements DataSourceFactoryInterface
     protected $driverFactoryManager;
 
     /**
-     * Array of factory extensions.
-     *
-     * @var array
+     * @var array<DataSourceExtensionInterface>
      */
     protected $extensions = [];
 
     /**
      * @param DriverFactoryManagerInterface $driverFactoryManager
-     * @param array $extensions
+     * @param array<DataSourceExtensionInterface> $extensions
      * @throws DataSourceException
      */
-    public function __construct(DriverFactoryManagerInterface $driverFactoryManager, $extensions = [])
+    public function __construct(DriverFactoryManagerInterface $driverFactoryManager, array $extensions = [])
     {
         $this->driverFactoryManager = $driverFactoryManager;
 
@@ -55,18 +55,12 @@ class DataSourceFactory implements DataSourceFactoryInterface
         $this->extensions = $extensions;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function createDataSource($driver, $driverOptions = [], $name = 'datasource')
-    {
-        $name = (string) $name;
-
-        if (false === $this->driverFactoryManager->hasFactory($driver)) {
-            throw new DataSourceException(sprintf('Driver "%s" doesn\'t exist.', $driver));
-        }
-
-        $driverFactory = $this->driverFactoryManager->getFactory($driver);
+    public function createDataSource(
+        string $driverName,
+        array $driverOptions = [],
+        string $name = 'datasource'
+    ): DataSourceInterface {
+        $driverFactory = $this->driverFactoryManager->getFactory($driverName);
         $driver = $driverFactory->createDriver($driverOptions);
 
         $this->checkDataSourceName($name);
@@ -83,43 +77,31 @@ class DataSourceFactory implements DataSourceFactoryInterface
         return $datasource;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function addExtension(DataSourceExtensionInterface $extension)
+    public function addExtension(DataSourceExtensionInterface $extension): void
     {
         $this->extensions[] = $extension;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getExtensions()
+    public function getExtensions(): array
     {
         return $this->extensions;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getAllParameters()
+    public function getAllParameters(): array
     {
         $result = [];
         foreach ($this->datasources as $datasource) {
             $result[] = $datasource->getParameters();
         }
 
-        if ($result) {
-            return call_user_func_array('array_merge', $result);
+        if (0 !== count($result)) {
+            return array_merge(...$result);
         }
 
         return $result;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getOtherParameters(DataSourceInterface $except)
+    public function getOtherParameters(DataSourceInterface $except): array
     {
         $result = [];
         foreach ($this->datasources as $datasource) {
@@ -128,17 +110,14 @@ class DataSourceFactory implements DataSourceFactoryInterface
             }
         }
 
-        if ($result) {
-            return call_user_func_array('array_merge_recursive', $result);
+        if (0 !== count($result)) {
+            return array_merge_recursive(...$result);
         }
 
         return $result;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function addDataSource(DataSourceInterface $datasource)
+    public function addDataSource(DataSourceInterface $datasource): void
     {
         $name = $datasource->getName();
         $this->checkDataSourceName($name, $datasource);
@@ -146,25 +125,17 @@ class DataSourceFactory implements DataSourceFactoryInterface
         $datasource->setFactory($this);
     }
 
-    /**
-     * Method to checking datasources name.
-     *
-     * @throws DataSourceException
-     * @param string $name
-     * @param DataSourceInterface $datasource
-     *
-     */
-    private function checkDataSourceName($name, DataSourceInterface $datasource = null)
+    private function checkDataSourceName(string $name, ?DataSourceInterface $datasource = null): void
     {
-        if (empty($name)) {
+        if ('' === $name) {
             throw new DataSourceException('Name of data source can\'t be empty.');
         }
 
-        if (isset($this->datasources[$name]) && ($this->datasources[$name] !== $datasource)) {
+        if (true === array_key_exists($name, $this->datasources) && ($this->datasources[$name] !== $datasource)) {
             throw new DataSourceException('Name of data source must be unique.');
         }
 
-        if (!preg_match('/^[\w]+$/', $name)) {
+        if (1 !== preg_match('/^[\w]+$/', $name)) {
             throw new DataSourceException('Name of data source may contain only word characters and digits.');
         }
     }

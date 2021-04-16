@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Tests\Component\DataSource;
 
 use FSi\Component\DataSource\DataSourceFactory;
@@ -18,9 +20,6 @@ use FSi\Component\DataSource\Driver\DriverInterface;
 use FSi\Component\DataSource\DataSource;
 use FSi\Component\DataSource\Exception\DataSourceException;
 
-/**
- * Tests for DataSourceFactory.
- */
 class FactoryTest extends TestCase
 {
     /**
@@ -30,9 +29,11 @@ class FactoryTest extends TestCase
     {
         $extension1 = $this->createMock(DataSourceExtensionInterface::class);
         $extension1->method('loadDriverExtensions')->willReturn([]);
+        $extension1->method('loadSubscribers')->willReturn([]);
 
         $extension2 = $this->createMock(DataSourceExtensionInterface::class);
         $extension2->method('loadDriverExtensions')->willReturn([]);
+        $extension2->method('loadSubscribers')->willReturn([]);
 
         $driveFactoryManager = new DriverFactoryManager([new CollectionFactory()]);
 

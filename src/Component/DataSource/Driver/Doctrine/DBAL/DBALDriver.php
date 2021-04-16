@@ -7,28 +7,20 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
 use Closure;
-use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Exception\DBALDriverException;
 use FSi\Component\DataSource\Driver\DriverAbstract;
+use FSi\Component\DataSource\Driver\DriverExtensionInterface;
+use FSi\Component\DataSource\Exception\DataSourceException;
+use IteratorAggregate;
 
 class DBALDriver extends DriverAbstract
 {
-    public const DEFAULT_TABLE_ALIAS = 'e';
-
-    /**
-     * @var Connection
-     */
-    private $connection;
-
-    /**
-     * @var string
-     */
-    private $table;
-
     /**
      * Alias, that can be used with preconfigured query when fetching one entity and field mappings
      * don't have mappings prefixed with aliases.
@@ -50,74 +42,87 @@ class DBALDriver extends DriverAbstract
     private $currentQuery;
 
     /**
-     * @var string|Closure
+     * @var string|Closure|null
      */
     private $indexField;
 
+    /**
+     * @param array<DriverExtensionInterface> $extensions
+     * @param QueryBuilder $queryBuilder
+     * @param string $alias
+     * @param string|Closure|null $indexField
+     * @throws DataSourceException
+     */
     public function __construct(
         array $extensions,
-        Connection $connection,
-        $table,
-        $alias = null,
+        QueryBuilder $queryBuilder,
+        string $alias,
         $indexField = null
     ) {
         parent::__construct($extensions);
-        $this->connection = $connection;
-        $this->table = $table;
+
+        $this->initialQuery = $queryBuilder;
+        $this->alias = $alias;
         $this->indexField = $indexField;
-
-        if (is_string($alias)) {
-            $this->alias = (string) $alias;
-        } else {
-            $this->alias = self::DEFAULT_TABLE_ALIAS;
-        }
-
-        if ($table instanceof QueryBuilder) {
-            $this->initialQuery = $table;
-        } else {
-            if (empty($table)) {
-                throw new DBALDriverException('Name of table can\'t be empty.');
-            }
-
-            $this->initialQuery = $this->connection->createQueryBuilder();
-            $this->initialQuery
-                ->select(sprintf('%s.*', $this->alias))
-                ->from($this->table, $this->alias)
-            ;
-        }
     }
 
-    public function getType()
+    public function getType(): string
     {
         return 'doctrine-dbal';
     }
 
-    /**
-     * @return string
-     */
-    public function getAlias()
+    public function getAlias(): string
     {
         return $this->alias;
     }
 
-    protected function initResult()
+    /**
+     * Returns query builder.
+     *
+     * If query builder is set to null (so when getResult method is NOT executed at the moment) exception is thrown.
+     */
+    public function getQueryBuilder(): QueryBuilder
+    {
+        if (null === $this->currentQuery) {
+            throw new DBALDriverException('Query is accessible only during preGetResult event.');
+        }
+
+        return $this->currentQuery;
+    }
+
+    /**
+     * @return Closure|string|null
+     */
+    public function getIndexField()
+    {
+        return $this->indexField;
+    }
+
+    protected function initResult(): void
     {
         $this->currentQuery = clone $this->initialQuery;
     }
 
-    protected function buildResult($fields, $first, $max)
+    /**
+     * @param array<DBALFieldInterface> $fields
+     * @param int|null $first
+     * @param int|null $max
+     * @return IteratorAggregate
+     * @throws DBALDriverException
+     */
+    protected function buildResult(array $fields, ?int $first, ?int $max): IteratorAggregate
     {
         foreach ($fields as $field) {
-            if (!$field instanceof DBALFieldInterface) {
+            if (false === $field instanceof DBALFieldInterface) {
                 throw new DBALDriverException(
-                    'All fields must be instances of FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALFieldInterface.'
+                    sprintf('All fields must be instances of %s.', DBALFieldInterface::class)
                 );
             }
 
             $field->buildQuery($this->currentQuery, $this->alias);
         }
 
-        if ($max > 0) {
+        if (null !== $max || null !== $first) {
             $this->currentQuery->setMaxResults($max);
             $this->currentQuery->setFirstResult($first);
         }
@@ -127,29 +132,5 @@ class DBALDriver extends DriverAbstract
         $this->currentQuery = null;
 
         return $paginator;
-    }
-
-    /**
-     * Returns query builder.
-     *
-     * If query is set to null (so when getResult method is NOT executed at the moment) exception is thrown.
-     *
-     * @return QueryBuilder
-     */
-    public function getQueryBuilder()
-    {
-        if (!isset($this->currentQuery)) {
-            throw new DBALDriverException('Query is accessible only during preGetResult event.');
-        }
-
-        return $this->currentQuery;
-    }
-
-    /**
-     * @return Closure|string
-     */
-    public function getIndexField()
-    {
-        return $this->indexField;
     }
 }

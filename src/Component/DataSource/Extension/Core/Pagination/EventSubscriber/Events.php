@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Extension\Core\Pagination\EventSubscriber;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -14,15 +16,13 @@ use FSi\Component\DataSource\Event\DataSourceEvents;
 use FSi\Component\DataSource\Event\DataSourceEvent;
 use FSi\Component\DataSource\Extension\Core\Pagination\PaginationExtension;
 
-/**
- * Class contains method called during DataSource events.
- */
+use function ceil;
+use function count;
+use function floor;
+
 class Events implements EventSubscriberInterface
 {
-    /**
-     * {@inheritdoc}
-     */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             DataSourceEvents::PRE_BIND_PARAMETERS => 'preBindParameters',
@@ -31,51 +31,38 @@ class Events implements EventSubscriberInterface
         ];
     }
 
-    /**
-     * Method called at PreBindParameters event.
-     *
-     * Sets proper page.
-     *
-     * @param \FSi\Component\DataSource\Event\DataSourceEvent\ParametersEventArgs $event
-     */
-    public function preBindParameters(DataSourceEvent\ParametersEventArgs $event)
+    public function preBindParameters(DataSourceEvent\ParametersEventArgs $event): void
     {
         $datasource = $event->getDataSource();
         $parameters = $event->getParameters();
 
-        $resultsPerPage = isset($parameters[$datasource->getName()][PaginationExtension::PARAMETER_MAX_RESULTS])
-            ? (int) $parameters[$datasource->getName()][PaginationExtension::PARAMETER_MAX_RESULTS]
-            : $datasource->getMaxResults();
+        $resultsPerPage = $parameters[$datasource->getName()][PaginationExtension::PARAMETER_MAX_RESULTS]
+            ?? $datasource->getMaxResults();
+        if (null !== $resultsPerPage) {
+            $resultsPerPage = (int) $resultsPerPage;
+        }
 
         $datasource->setMaxResults($resultsPerPage);
 
-        $page = isset($parameters[$datasource->getName()][PaginationExtension::PARAMETER_PAGE])
-            ? (int) $parameters[$datasource->getName()][PaginationExtension::PARAMETER_PAGE]
-            : 1;
+        $page = (int) ($parameters[$datasource->getName()][PaginationExtension::PARAMETER_PAGE] ?? 1);
 
         $datasource->setFirstResult(($page - 1) * $datasource->getMaxResults());
     }
 
-    /**
-     * @param \FSi\Component\DataSource\Event\DataSourceEvent\ParametersEventArgs $event
-     */
-    public function postGetParameters(DataSourceEvent\ParametersEventArgs $event)
+    public function postGetParameters(DataSourceEvent\ParametersEventArgs $event): void
     {
         $datasource = $event->getDataSource();
         $datasourceName = $datasource->getName();
 
         $parameters = $event->getParameters();
-        $maxresults = $datasource->getMaxResults();
+        $maxResults = $datasource->getMaxResults();
 
-        if ($maxresults) {
-            $parameters[$datasourceName][PaginationExtension::PARAMETER_MAX_RESULTS] = $maxresults;
-        }
-
-        if ($maxresults == 0) {
-            $page = 1;
-        } else {
+        if (null !== $maxResults && 0 !== $maxResults) {
+            $parameters[$datasourceName][PaginationExtension::PARAMETER_MAX_RESULTS] = $maxResults;
             $current = $datasource->getFirstResult();
-            $page = (int) floor($current / $maxresults) + 1;
+            $page = (int) floor($current / $maxResults) + 1;
+        } else {
+            $page = 1;
         }
 
         unset($parameters[$datasourceName][PaginationExtension::PARAMETER_PAGE]);
@@ -86,26 +73,21 @@ class Events implements EventSubscriberInterface
         $event->setParameters($parameters);
     }
 
-    /**
-     * Method called at PostBuildView event.
-     *
-     * @param \FSi\Component\DataSource\Event\DataSourceEvent\ViewEventArgs $event
-     */
-    public function postBuildView(DataSourceEvent\ViewEventArgs $event)
+    public function postBuildView(DataSourceEvent\ViewEventArgs $event): void
     {
         $datasource = $event->getDataSource();
         $datasourceName = $datasource->getName();
         $view = $event->getView();
         $parameters = $view->getParameters();
-        $maxresults = $datasource->getMaxResults();
+        $maxResults = $datasource->getMaxResults();
 
-        if ($maxresults == 0) {
+        if (null === $maxResults || 0 === $maxResults) {
             $all = 1;
             $page = 1;
         } else {
-            $all = (int) ceil(count($datasource->getResult()) / $maxresults);
+            $all = (int) ceil(count($datasource->getResult()) / $maxResults);
             $current = $datasource->getFirstResult();
-            $page = (int) floor($current / $maxresults) + 1;
+            $page = (int) floor($current / $maxResults) + 1;
         }
 
         unset($parameters[$datasourceName][PaginationExtension::PARAMETER_PAGE]);
@@ -119,7 +101,7 @@ class Events implements EventSubscriberInterface
             $pages[$i] = $parameters;
         }
 
-        $view->setAttribute('max_results', $maxresults);
+        $view->setAttribute('max_results', $maxResults);
         $view->setAttribute('page', $page);
         $view->setAttribute('parameters_pages', $pages);
     }

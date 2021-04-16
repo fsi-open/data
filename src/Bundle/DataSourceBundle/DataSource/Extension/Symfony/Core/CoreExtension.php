@@ -15,7 +15,7 @@ use FSi\Component\DataSource\DataSourceAbstractExtension;
 
 class CoreExtension extends DataSourceAbstractExtension
 {
-    public function loadSubscribers()
+    public function loadSubscribers(): array
     {
         return [
             new EventSubscriber\BindParameters(),

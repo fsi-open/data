@@ -18,27 +18,21 @@ use RuntimeException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
-use Symfony\Component\Yaml\Parser;
+use Symfony\Component\Yaml\Yaml;
 
 class ConfigurationBuilder implements EventSubscriberInterface
 {
-    private const MAIN_CONFIG_DIRECTORY = 'datagrid.yaml.main_config';
     private const BUNDLE_CONFIG_PATH = '%s/Resources/config/datagrid/%s.yml';
+    private const MAIN_CONFIG_DIRECTORY = 'datagrid.yaml.main_config';
 
     /**
      * @var KernelInterface
      */
     private $kernel;
 
-    /**
-     * @var Parser
-     */
-    private $yamlParser;
-
     public function __construct(KernelInterface $kernel)
     {
         $this->kernel = $kernel;
-        $this->yamlParser = new Parser();
     }
 
     public static function getSubscribedEvents(): array
@@ -80,12 +74,7 @@ class ConfigurationBuilder implements EventSubscriberInterface
             return null;
         }
 
-        $configuration = $this->parseYamlFile($configurationFile);
-        if (false === is_array($configuration)) {
-            return null;
-        }
-
-        return $configuration;
+        return $this->parseYamlFile($configurationFile);
     }
 
     private function buildConfigurationFromRegisteredBundles(DataGridInterface $dataGrid): void
@@ -93,7 +82,7 @@ class ConfigurationBuilder implements EventSubscriberInterface
         $dataGridName = $dataGrid->getName();
         $eligibleBundles = array_filter(
             $this->kernel->getBundles(),
-            function (BundleInterface $bundle) use ($dataGridName): bool {
+            static function (BundleInterface $bundle) use ($dataGridName): bool {
                 return file_exists(sprintf(self::BUNDLE_CONFIG_PATH, $bundle->getPath(), $dataGridName));
             }
         );
@@ -123,8 +112,8 @@ class ConfigurationBuilder implements EventSubscriberInterface
         );
     }
 
-    private function parseYamlFile(string $path)
+    private function parseYamlFile(string $path): array
     {
-        return $this->yamlParser->parse(file_get_contents($path));
+        return Yaml::parse(file_get_contents($path));
     }
 }

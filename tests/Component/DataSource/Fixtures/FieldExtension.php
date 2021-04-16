@@ -7,15 +7,13 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Tests\Component\DataSource\Fixtures;
 
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use FSi\Component\DataSource\Field\FieldAbstractExtension;
 use FSi\Component\DataSource\Event\FieldEvents;
 
-/**
- * Class to test DoctrineDriver extensions calls.
- */
 class FieldExtension extends FieldAbstractExtension
 {
     /**
@@ -23,10 +21,7 @@ class FieldExtension extends FieldAbstractExtension
      */
     private $calls = [];
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             FieldEvents::PRE_BIND_PARAMETER => ['preBindParameter', 128],
@@ -36,42 +31,18 @@ class FieldExtension extends FieldAbstractExtension
         ];
     }
 
-    /**
-     * Returns array of calls.
-     *
-     * @return array
-     */
-    public function getCalls()
+    public function getCalls(): array
     {
         return $this->calls;
     }
 
-    /**
-     * Resets calls.
-     */
-    public function resetCalls()
+    public function resetCalls(): void
     {
         $this->calls = [];
     }
 
-    /**
-     * Catches called method.
-     *
-     * @param string $name
-     * @param array $arguments
-     */
-    public function __call($name, $arguments)
+    public function __call(string $name, array $arguments): void
     {
         $this->calls[] = $name;
-    }
-
-    /**
-     * Loads itself as subscriber.
-     *
-     * @return array
-     */
-    public function loadSubscribers()
-    {
-        return [$this];
     }
 }

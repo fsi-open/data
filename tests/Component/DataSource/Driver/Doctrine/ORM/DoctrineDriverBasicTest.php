@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Tests\Component\DataSource\Driver\Doctrine\ORM;
 
 use Doctrine\ORM\EntityManagerInterface;
@@ -46,8 +48,6 @@ class DoctrineDriverBasicTest extends TestCase
     }
 
     /**
-     * Returns mock of EntityManager.
-     *
      * @return MockObject&EntityManagerInterface
      */
     private function getEntityManagerMock(): EntityManagerInterface
@@ -64,6 +64,7 @@ class DoctrineDriverBasicTest extends TestCase
         $qb = $this->getMockBuilder(QueryBuilder::class)->setConstructorArgs([$em])->getMock();
         $qb->method('select')->willReturn($qb);
         $qb->method('from')->willReturn($qb);
+        $qb->method('getRootAliases')->willReturn(['e']);
 
         $em->method('createQueryBuilder')->willReturn($qb);
 
@@ -99,32 +100,19 @@ class DoctrineDriverBasicTest extends TestCase
     {
         $em = $this->getEntityManagerMock();
         $qb = $this->getQueryBuilderMock($em);
-        new DoctrineDriver([], $em, 'entity');
-        new DoctrineDriver([], $em, $qb);
+        $qb->method('getRootAliases')->willReturn(['e']);
+        new DoctrineDriver([], $qb);
     }
 
     /**
      * Checks creation exception.
      */
-    public function testCreationException3(): void
+    public function testCreationException(): void
     {
+        $em = $this->getEntityManagerMock();
+        $qb = $this->getQueryBuilderMock($em);
         $this->expectException(DataSourceException::class);
-        $em = $this->getEntityManagerMock();
-        $this->getQueryBuilderMock($em);
-        new DoctrineDriver([new stdClass()], $em, 'entity');
-    }
-
-    /**
-     * Checks creation exception.
-     */
-    public function testCreationException4(): void
-    {
-        $this->expectException(DoctrineDriverException::class);
-
-        $em = $this->getEntityManagerMock();
-        $this->getQueryBuilderMock($em);
-
-        new DoctrineDriver([], $em, null);
+        new DoctrineDriver([new stdClass()], $qb);
     }
 
     /**
@@ -145,7 +133,7 @@ class DoctrineDriverBasicTest extends TestCase
         $qb = $this->getQueryBuilderMock($em);
         $this->extendWithRootEntities($em, $qb);
 
-        $driver = new DoctrineDriver([], $em, 'entity');
+        $driver = new DoctrineDriver([], $qb);
         $driver->getResult($fields, 0, 20);
     }
 
@@ -158,11 +146,12 @@ class DoctrineDriverBasicTest extends TestCase
 
         $em = $this->getEntityManagerMock();
         $qb = $this->getMockBuilder(QueryBuilder::class)->setConstructorArgs([$em])->getMock();
+        $qb->method('select')->willReturn($qb);
+        $qb->method('getRootAliases')->willReturn(['e']);
 
         $em->method('createQueryBuilder')->willReturn($qb);
-        $qb->method('select')->willReturn($qb);
 
-        $driver = new DoctrineDriver([], $em, 'entity');
+        $driver = new DoctrineDriver([], $qb);
         $this->expectException(DoctrineDriverException::class);
         $driver->getResult($fields, 0, 20);
     }
@@ -173,9 +162,9 @@ class DoctrineDriverBasicTest extends TestCase
     public function testGetQueryException(): void
     {
         $em = $this->getEntityManagerMock();
-        $this->getQueryBuilderMock($em);
+        $qb = $this->getQueryBuilderMock($em);
 
-        $driver = new DoctrineDriver([], $em, 'entity');
+        $driver = new DoctrineDriver([], $qb);
         $this->expectException(DoctrineDriverException::class);
         $driver->getQueryBuilder();
     }
@@ -186,8 +175,8 @@ class DoctrineDriverBasicTest extends TestCase
     public function testCoreExtension(): void
     {
         $em = $this->getEntityManagerMock();
-        $this->getQueryBuilderMock($em);
-        $driver = new DoctrineDriver([new CoreExtension()], $em, 'entity');
+        $qb = $this->getQueryBuilderMock($em);
+        $driver = new DoctrineDriver([new CoreExtension()], $qb);
 
         self::assertTrue($driver->hasFieldType('text'));
         self::assertTrue($driver->hasFieldType('number'));
@@ -197,7 +186,6 @@ class DoctrineDriverBasicTest extends TestCase
         self::assertTrue($driver->hasFieldType('datetime'));
         self::assertTrue($driver->hasFieldType('boolean'));
         self::assertFalse($driver->hasFieldType('wrong'));
-        self::assertFalse($driver->hasFieldType(null));
 
         $driver->getFieldType('text');
         $this->expectException(DataSourceException::class);
@@ -215,10 +203,9 @@ class DoctrineDriverBasicTest extends TestCase
         $qb = $this->getQueryBuilderMock($em);
         $this->extendWithRootEntities($em, $qb);
 
-        $driver = new DoctrineDriver([new CoreExtension()], $em, 'entity');
+        $driver = new DoctrineDriver([new CoreExtension()], $qb);
         self::assertTrue($driver->hasFieldType($type));
         $field = $driver->getFieldType($type);
-        self::assertInstanceOf(FieldTypeInterface::class, $field);
         self::assertInstanceOf(DoctrineFieldInterface::class, $field);
 
         self::assertTrue($field->getOptionsResolver()->isDefined('field'));
@@ -250,7 +237,7 @@ class DoctrineDriverBasicTest extends TestCase
         $this->extendWithRootEntities($em, $qb);
 
         $extension = new DoctrineDriverExtension();
-        $driver = new DoctrineDriver([], $em, 'entity');
+        $driver = new DoctrineDriver([], $qb);
         $driver->addExtension($extension);
 
         $driver->getResult([], 0, 20);

@@ -17,7 +17,7 @@ use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormFactoryInterface;
-use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class BooleanColumnExtensionTest extends TestCase
 {

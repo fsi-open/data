@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Field;
 
 use FSi\Component\DataSource\DataSourceInterface;
@@ -16,54 +18,44 @@ use FSi\Component\DataSource\Exception\FieldException;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+use function array_key_exists;
+
 abstract class FieldAbstractType implements FieldTypeInterface
 {
     /**
-     * Array of allowed comparisons.
-     *
-     * @var array
+     * @var array<string>
      */
     protected $comparisons = [];
 
     /**
-     * Name of element.
-     *
-     * @var string
+     * @var string|null
      */
     protected $name;
 
     /**
-     * Set comparison.
-     *
-     * @var string
+     * @var string|null
      */
     protected $comparison;
 
     /**
-     * Given options.
-     *
-     * @var array
-     */
-    private $options = [];
-
-    /**
-     * Given parameter.
-     *
      * @var mixed
      */
     protected $parameter;
 
     /**
-     * Flag to determine if inner state has changed.
-     *
      * @var bool
      */
-    protected $dirty = true;
+    private $dirty = true;
 
     /**
-     * @var DataSourceInterface
+     * @var DataSourceInterface|null
      */
-    protected $datasource;
+    private $datasource;
+
+    /**
+     * @var array<string, mixed>
+     */
+    private $options = [];
 
     /**
      * @var EventDispatcher|null
@@ -80,12 +72,12 @@ abstract class FieldAbstractType implements FieldTypeInterface
      */
     private $extensions = [];
 
-    public function setName($name)
+    public function setName(string $name): void
     {
         $this->name = $name;
     }
 
-    public function getName()
+    public function getName(): ?string
     {
         return $this->name;
     }
@@ -96,12 +88,9 @@ abstract class FieldAbstractType implements FieldTypeInterface
         $this->optionsResolver = null;
     }
 
-    /**
-     * @throws FieldException
-     */
-    public function setComparison($comparison)
+    public function setComparison(string $comparison): void
     {
-        if (false === in_array($comparison, $this->getAvailableComparisons())) {
+        if (false === in_array($comparison, $this->getAvailableComparisons(), true)) {
             throw new FieldException(sprintf(
                 'Comparison "%s" not allowed for this type of field ("%s").',
                 $comparison,
@@ -112,76 +101,77 @@ abstract class FieldAbstractType implements FieldTypeInterface
         $this->comparison = $comparison;
     }
 
-    public function getComparison()
+    public function getComparison(): ?string
     {
         return $this->comparison;
     }
 
-    public function getAvailableComparisons()
+    /**
+     * @return array<string>
+     */
+    public function getAvailableComparisons(): array
     {
         return $this->comparisons;
     }
 
-    public function setOptions($options)
+    /**
+     * @param array<string, mixed> $options
+     */
+    public function setOptions(array $options): void
     {
         $this->options = $this->getOptionsResolver()->resolve($options);
     }
 
-    public function hasOption($name)
+    public function hasOption(string $name): bool
     {
-        return isset($this->options[$name]);
+        return array_key_exists($name, $this->options) && null !== $this->options[$name];
     }
 
     /**
-     * @throws FieldException
+     * @param string $name
+     * @return mixed
      */
-    public function getOption($name)
+    public function getOption(string $name)
     {
         if (false === $this->hasOption($name)) {
-            throw new FieldException(sprintf(
-                'There\'s no option named "%s"',
-                is_scalar($name) ? $name : gettype($name)
-            ));
+            throw new FieldException(sprintf('There\'s no option named "%s"', $name));
         }
 
         return $this->options[$name];
     }
 
-    public function getOptions()
+    public function getOptions(): array
     {
         return $this->options;
     }
 
-    public function bindParameter($parameter)
+    public function bindParameter($parameter): void
     {
         $this->setDirty();
 
-        //PreBindParameter event.
+        // PreBindParameter event.
         $event = new FieldEvent\ParameterEventArgs($this, $parameter);
-        $this->getEventDispatcher()->dispatch(FieldEvents::PRE_BIND_PARAMETER, $event);
+        $this->getEventDispatcher()->dispatch($event, FieldEvents::PRE_BIND_PARAMETER);
         $parameter = $event->getParameter();
 
-        $datasourceName = $this->getDataSource() ? $this->getDataSource()->getName() : null;
-        if (
-            !empty($datasourceName)
-            && isset($parameter[$datasourceName][DataSourceInterface::PARAMETER_FIELDS][$this->getName()])
-        ) {
-            $parameter = $parameter[$datasourceName][DataSourceInterface::PARAMETER_FIELDS][$this->getName()];
+        $datasourceName = null !== $this->getDataSource() ? $this->getDataSource()->getName() : null;
+        if (null !== $datasourceName) {
+            $parameter = $parameter[$datasourceName][DataSourceInterface::PARAMETER_FIELDS][$this->getName()] ?? null;
         } else {
             $parameter = null;
         }
 
         $this->parameter = $parameter;
 
-        //PreBindParameter event.
+        // PreBindParameter event.
         $event = new FieldEvent\FieldEventArgs($this);
-        $this->getEventDispatcher()->dispatch(FieldEvents::POST_BIND_PARAMETER, $event);
+        $this->getEventDispatcher()->dispatch($event, FieldEvents::POST_BIND_PARAMETER);
     }
 
-    public function getParameter(&$parameters)
+    public function getParameter(array &$parameters): void
     {
-        $datasourceName = $this->getDataSource() ? $this->getDataSource()->getName() : null;
-        if (!empty($datasourceName)) {
+        $datasourceName = null !== $this->getDataSource() ? $this->getDataSource()->getName() : null;
+        if (null !== $datasourceName) {
             $parameter = [
                 $datasourceName => [
                     DataSourceInterface::PARAMETER_FIELDS => [
@@ -195,7 +185,7 @@ abstract class FieldAbstractType implements FieldTypeInterface
 
         //PostGetParameter event.
         $event = new FieldEvent\ParameterEventArgs($this, $parameter);
-        $this->getEventDispatcher()->dispatch(FieldEvents::POST_GET_PARAMETER, $event);
+        $this->getEventDispatcher()->dispatch($event, FieldEvents::POST_GET_PARAMETER);
         $parameter = $event->getParameter();
 
         $parameters = array_merge_recursive($parameters, $parameter);
@@ -206,9 +196,9 @@ abstract class FieldAbstractType implements FieldTypeInterface
         return $this->parameter;
     }
 
-    public function addExtension(FieldExtensionInterface $extension)
+    public function addExtension(FieldExtensionInterface $extension): void
     {
-        if (in_array($extension, $this->extensions, true)) {
+        if (true === in_array($extension, $this->extensions, true)) {
             return;
         }
 
@@ -219,15 +209,13 @@ abstract class FieldAbstractType implements FieldTypeInterface
         $this->options = $this->getOptionsResolver()->resolve($this->options);
     }
 
-    public function setExtensions(array $extensions)
+    public function setExtensions(array $extensions): void
     {
         foreach ($extensions as $extension) {
             if (false === $extension instanceof FieldExtensionInterface) {
-                throw new FieldException(sprintf(
-                    'Expected instance of %s, %s given',
-                    FieldExtensionInterface::class,
-                    get_class($extension)
-                ));
+                throw new FieldException(
+                    sprintf('Expected instance of %s, %s given', FieldExtensionInterface::class, get_class($extension))
+                );
             }
 
             $this->getEventDispatcher()->addSubscriber($extension);
@@ -237,61 +225,70 @@ abstract class FieldAbstractType implements FieldTypeInterface
         $this->extensions = $extensions;
     }
 
-    public function getExtensions()
+    public function getExtensions(): array
     {
         return $this->extensions;
     }
 
-    public function createView()
+    public function createView(): FieldViewInterface
     {
         $view = new FieldView($this);
 
-        //PostBuildView event.
+        // PostBuildView event.
         $event = new FieldEvent\ViewEventArgs($this, $view);
-        $this->getEventDispatcher()->dispatch(FieldEvents::POST_BUILD_VIEW, $event);
+        $this->getEventDispatcher()->dispatch($event, FieldEvents::POST_BUILD_VIEW);
 
         return $view;
     }
 
-    public function isDirty()
+    public function isDirty(): bool
     {
         return $this->dirty;
     }
 
-    public function setDirty($dirty = true)
+    public function setDirty(bool $dirty = true): void
     {
-        $this->dirty = (bool) $dirty;
+        $this->dirty = $dirty;
     }
 
-    public function setDataSource(DataSourceInterface $datasource)
+    public function setDataSource(DataSourceInterface $datasource): void
     {
         $this->datasource = $datasource;
     }
 
-    public function getDataSource()
+    public function getDataSource(): ?DataSourceInterface
     {
         return $this->datasource;
     }
 
-    public function initOptions()
+    public function initOptions(): void
     {
     }
 
-    public function getOptionsResolver()
+    public function getOptionsResolver(): OptionsResolver
     {
-        if (!isset($this->optionsResolver)) {
+        if (null === $this->optionsResolver) {
             $this->optionsResolver = new OptionsResolver();
         }
 
         return $this->optionsResolver;
     }
 
-    protected function getEventDispatcher()
+    protected function getEventDispatcher(): EventDispatcher
     {
-        if (!isset($this->eventDispatcher)) {
+        if (null === $this->eventDispatcher) {
             $this->eventDispatcher = new EventDispatcher();
         }
 
         return $this->eventDispatcher;
+    }
+
+    /**
+     * @param mixed $data
+     * @return bool
+     */
+    protected function isEmpty($data): bool
+    {
+        return ([] === $data) || ('' === $data) || (null === $data);
     }
 }

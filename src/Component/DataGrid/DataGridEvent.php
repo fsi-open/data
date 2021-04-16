@@ -11,9 +11,7 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid;
 
-use FSi\Component\DataGrid\DataGridInterface;
-use FSi\Component\DataGrid\DataGridEventInterface;
-use Symfony\Component\EventDispatcher\Event;
+use Symfony\Contracts\EventDispatcher\Event;
 
 class DataGridEvent extends Event implements DataGridEventInterface
 {

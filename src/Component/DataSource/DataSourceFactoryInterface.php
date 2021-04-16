@@ -7,40 +7,31 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource;
 
 interface DataSourceFactoryInterface
 {
-    /**
-     * Creates instance of data source with given driver and name.
-     *
-     * @param string $driver
-     * @param array $driverOptions
-     * @param string $name
-     * @return DataSourceInterface
-     */
-    public function createDataSource($driver, $driverOptions = [], $name = 'datasource');
+    public function createDataSource(
+        string $driverName,
+        array $driverOptions = [],
+        string $name = 'datasource'
+    ): DataSourceInterface;
+
+    public function addExtension(DataSourceExtensionInterface $extension): void;
 
     /**
-     * Adds extension to list.
-     *
-     * @param DataSourceExtensionInterface $extension
-     */
-    public function addExtension(DataSourceExtensionInterface $extension);
-
-    /**
-     * Return array of loaded extensions.
-     *
      * @return array<DataSourceExtensionInterface>
      */
-    public function getExtensions();
+    public function getExtensions(): array;
 
     /**
      * Return array of all parameters from all datasources.
      *
      * @return array
      */
-    public function getAllParameters();
+    public function getAllParameters(): array;
 
     /**
      * Return array of all parameters form all datasources except given.
@@ -48,7 +39,7 @@ interface DataSourceFactoryInterface
      * @param DataSourceInterface $datasource
      * @return array
      */
-    public function getOtherParameters(DataSourceInterface $datasource);
+    public function getOtherParameters(DataSourceInterface $datasource): array;
 
     /**
      * Adds given datasource to list of known datasources, so its data will be fetched
@@ -58,5 +49,5 @@ interface DataSourceFactoryInterface
      *
      * @param DataSourceInterface $datasource
      */
-    public function addDataSource(DataSourceInterface $datasource);
+    public function addDataSource(DataSourceInterface $datasource): void;
 }

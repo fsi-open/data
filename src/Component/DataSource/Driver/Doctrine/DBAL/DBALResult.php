@@ -7,16 +7,18 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
 use Closure;
 use Doctrine\Common\Collections\ArrayCollection;
-use FSi\Component\DataSource\Driver\Doctrine\DBAL\Paginator;
+use FSi\Component\DataSource\Result;
 use InvalidArgumentException;
 use RuntimeException;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 
-class DBALResult extends ArrayCollection
+class DBALResult extends ArrayCollection implements Result
 {
     /**
      * @var int
@@ -44,7 +46,7 @@ class DBALResult extends ArrayCollection
         $propertyAccessor = new PropertyAccessor();
         if (0 !== $data->count()) {
             foreach ($data as $element) {
-                if (is_string($indexField)) {
+                if (true === is_string($indexField)) {
                     $index = $propertyAccessor->getValue($element, $indexField);
                 } else {
                     $index = $indexField($element);
@@ -65,10 +67,7 @@ class DBALResult extends ArrayCollection
         parent::__construct($result);
     }
 
-    /**
-     * @return int
-     */
-    public function count()
+    public function count(): int
     {
         return $this->count;
     }

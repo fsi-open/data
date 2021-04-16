@@ -18,12 +18,9 @@ use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Type\BetweenTy
 use FSi\Tests\Bundle\DataSourceBundle\Fixtures\Form as TestForm;
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\DataSourceViewInterface;
-use FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\Boolean;
-use FSi\Component\DataSource\Driver\DriverInterface;
 use FSi\Component\DataSource\Event\DataSourceEvent\ViewEventArgs;
 use FSi\Component\DataSource\Event\FieldEvent;
 use FSi\Component\DataSource\Exception\DataSourceException;
-use FSi\Component\DataSource\Field\FieldAbstractExtension;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
 use FSi\Component\DataSource\Field\FieldView;
 use FSi\Component\DataSource\Field\FieldViewInterface;
@@ -35,7 +32,7 @@ use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\Security\Csrf\CsrfTokenManager;
-use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class FormExtensionTest extends TestCase
 {
@@ -208,36 +205,6 @@ class FormExtensionTest extends TestCase
         $datasource = $this->createMock(DataSourceInterface::class);
         $datasource->method('getName')->willReturn('datasource');
 
-        $field = $this->createMock(FieldTypeInterface::class);
-        $field->expects(self::atLeastOnce())->method('getName')->willReturn('name');
-        $field->method('getDataSource')->willReturn($datasource);
-        $field->method('getType')->willReturn($type);
-        $field->method('hasOption')->willReturn(false);
-
-        $field
-            ->method('getOption')
-            ->willReturnCallback(
-                function (string $option) use ($type) {
-                    switch ($option) {
-                        case 'form_filter':
-                            return true;
-                        case 'form_from_options':
-                        case 'form_to_options':
-                            return [];
-                        case 'form_options':
-                            return true === in_array($type, ['date', 'datetime'], true)
-                                // By default the year range for the date select widget
-                                // is 5 years into past.
-                                ? ['years' => range(2012, (int) date('Y'))]
-                                : [];
-                    }
-
-                    return null;
-                }
-            )
-        ;
-
-        $extensions = $extension->getFieldTypeExtensions($type);
         if ($type === 'datetime') {
             $parameters = [
                 'datasource' => [
@@ -294,9 +261,18 @@ class FormExtensionTest extends TestCase
             $parameters2 = $parameters;
         }
 
+        $field = new TestForm\Extension\TestCore\TestFieldType($datasource, $type, 'eq');
         $args = new FieldEvent\ParameterEventArgs($field, $parameters);
+
+        $extensions = $extension->getFieldTypeExtensions($type);
         foreach ($extensions as $ext) {
             self::assertInstanceOf(FormFieldExtension::class, $ext);
+            $field->addExtension($ext);
+            $field->setOptions([
+                'form_options' => true === in_array($type, ['date', 'datetime'], true)
+                    ? ['years' => range(2012, (int) date('Y'))]
+                    : [],
+            ]);
             $ext->preBindParameter($args);
         }
 
@@ -328,42 +304,16 @@ class FormExtensionTest extends TestCase
     /**
      * @dataProvider fieldTypesProvider
      */
-    public function testFormFields(string $type, string $comparison, $expected): void
+    public function testFormFields(string $type, string $comparison, string $expected): void
     {
         $formFactory = $this->getFormFactory();
         $translator = $this->getTranslator();
         $extension = new DriverExtension($formFactory, $translator);
-        $driver = $this->createMock(DriverInterface::class);
         $datasource = $this->createMock(DataSourceInterface::class);
         $datasource->method('getName')->willReturn('datasource');
 
-        $field = $this->createMock(FieldTypeInterface::class);
-        $field->expects(self::atLeastOnce())->method('getName')->willReturn('name');
-        $field->method('getDataSource')->willReturn($datasource);
-        $field->method('getType')->willReturn($type);
-        $field->method('hasOption')->willReturn(false);
-        $field->method('getComparison')->willReturn($comparison);
-        $field
-            ->method('getOption')
-            ->willReturnCallback(
-                function (string $option) {
-                    switch ($option) {
-                        case 'form_filter':
-                            return true;
+        $field = new TestForm\Extension\TestCore\TestFieldType($datasource, $type, $comparison);
 
-                        case 'form_type':
-                            return null;
-
-                        case 'form_from_options':
-                        case 'form_to_options':
-                        case 'form_options':
-                            return [];
-                    }
-
-                    return null;
-                }
-            )
-        ;
         $extensions = $extension->getFieldTypeExtensions($type);
 
         $parameters = ['datasource' => [DataSourceInterface::PARAMETER_FIELDS => ['name' => 'null']]];
@@ -374,6 +324,7 @@ class FormExtensionTest extends TestCase
 
         foreach ($extensions as $ext) {
             self::assertInstanceOf(FormFieldExtension::class, $ext);
+            $field->addExtension($ext);
             $ext->preBindParameter($args);
             $ext->postBuildView($viewEventArgs);
         }
@@ -382,7 +333,7 @@ class FormExtensionTest extends TestCase
 
         self::assertEquals($expected, $form['fields']['name']->vars['block_prefixes'][1]);
 
-        if ($comparison === 'isNull') {
+        if ('isNull' === $comparison) {
             self::assertEquals(
                 'is_null_translated',
                 $form['fields']['name']->vars['choices'][0]->label
@@ -399,26 +350,14 @@ class FormExtensionTest extends TestCase
         $formFactory = $this->getFormFactory();
         $translator = $this->getTranslator();
         $formFieldExtension = new FormFieldExtension($formFactory, $translator);
-        $driver = $this->createMock(DriverInterface::class);
         $datasource = $this->createMock(DataSourceInterface::class);
         $datasource->method('getName')->willReturn('datasource');
 
-        $field = $this->createMock(Boolean::class);
-        $field->expects(self::atLeastOnce())->method('getName')->willReturn('name');
-        $field->expects(self::atLeastOnce())->method('getDataSource')->willReturn($datasource);
-        $field->expects(self::atLeastOnce())->method('getType')->willReturn('boolean');
-        $field->expects(self::atLeastOnce())
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'form_filter':
-                            return true;
-                        case 'form_options':
-                            return ['choices' => ['tak' => '1', 'nie' => '0']];
-                    }
-                }
-            );
+        $field = new TestForm\Extension\TestCore\TestFieldType($datasource, 'boolean', 'eq');
+        $field->addExtension($formFieldExtension);
+        $field->setOptions([
+            'form_options' => ['choices' => ['tak' => '1', 'nie' => '0']]
+        ]);
 
         $parameters = ['datasource' => [DataSourceInterface::PARAMETER_FIELDS => ['name' => 'null']]];
         $args = new FieldEvent\ParameterEventArgs($field, $parameters);
@@ -431,10 +370,10 @@ class FormExtensionTest extends TestCase
 
         $form = $viewEventArgs->getView()->getAttribute('form');
         $choices = $form['fields']['name']->vars['choices'];
-        self::assertEquals($choices[0]->value, '1');
-        self::assertEquals($choices[0]->label, 'tak');
-        self::assertEquals($choices[1]->value, '0');
-        self::assertEquals($choices[1]->label, 'nie');
+        self::assertEquals('1', $choices[0]->value);
+        self::assertEquals('tak', $choices[0]->label);
+        self::assertEquals('0', $choices[1]->value);
+        self::assertEquals('nie', $choices[1]->label);
     }
 
     public function testBuildBooleanFormWhenOptionsNotProvided(): void
@@ -445,22 +384,8 @@ class FormExtensionTest extends TestCase
         $datasource = $this->createMock(DataSourceInterface::class);
         $datasource->method('getName')->willReturn('datasource');
 
-        $field = $this->createMock(Boolean::class);
-        $field->expects(self::atLeastOnce())->method('getName')->willReturn('name');
-        $field->expects(self::atLeastOnce())->method('getDataSource')->willReturn($datasource);
-        $field->expects(self::atLeastOnce())->method('getType')->willReturn('boolean');
-        $field->expects(self::atLeastOnce())
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'form_filter':
-                            return true;
-                        case 'form_options':
-                            return [];
-                    }
-                }
-            );
+        $field = new TestForm\Extension\TestCore\TestFieldType($datasource, 'boolean', 'eq');
+        $field->addExtension($formFieldExtension);
 
         $args = new FieldEvent\ParameterEventArgs(
             $field,
@@ -475,10 +400,10 @@ class FormExtensionTest extends TestCase
 
         $form = $viewEventArgs->getView()->getAttribute('form');
         $choices = $form['fields']['name']->vars['choices'];
-        self::assertEquals($choices[0]->value, '1');
-        self::assertEquals($choices[0]->label, 'yes_translated');
-        self::assertEquals($choices[1]->value, '0');
-        self::assertEquals($choices[1]->label, 'no_translated');
+        self::assertEquals('1', $choices[0]->value);
+        self::assertEquals('yes_translated', $choices[0]->label);
+        self::assertEquals('0', $choices[1]->value);
+        self::assertEquals('no_translated', $choices[1]->label);
     }
 
     /**
@@ -486,41 +411,19 @@ class FormExtensionTest extends TestCase
      */
     public function testCreateDataSourceFieldWithCustomFormType(
         string $dataSourceFieldType,
-        string $comparison = null
+        string $comparison = 'eq'
     ): void {
         $formFactory = $this->getFormFactory();
         $translator = $this->getTranslator();
         $formFieldExtension = new FormFieldExtension($formFactory, $translator);
-        $field = $this->createMock(FieldTypeInterface::class);
         $datasource = $this->createMock(DataSourceInterface::class);
         $datasource->method('getName')->willReturn('datasource');
 
-        $field->expects(self::atLeastOnce())->method('getName')->willReturn('name');
-        $field->expects(self::atLeastOnce())->method('getDataSource')->willReturn($datasource);
-        $field->expects(self::atLeastOnce())->method('getType')->willReturn($dataSourceFieldType);
-        $field->expects(self::atLeastOnce())->method('getComparison')->willReturn($comparison);
-
-        $options = [
-            'form_filter' => true,
-            'form_options' => [],
+        $field = new TestForm\Extension\TestCore\TestFieldType($datasource, $dataSourceFieldType, $comparison);
+        $field->addExtension($formFieldExtension);
+        $field->setOptions([
             'form_type' => HiddenType::class
-        ];
-
-        $field->expects(self::atLeastOnce())
-            ->method('hasOption')
-            ->willReturnCallback(
-                function ($option) use ($options) {
-                    return isset($options[$option]);
-                }
-            );
-
-        $field->expects(self::atLeastOnce())
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) use ($options) {
-                    return $options[$option];
-                }
-            );
+        ]);
 
         $args = new FieldEvent\ParameterEventArgs(
             $field,
@@ -540,10 +443,7 @@ class FormExtensionTest extends TestCase
     public function getDatasourceFieldTypes(): array
     {
         return [
-            [
-                'text',  //datasource field type
-                'isNull', //comparison
-            ],
+            ['text', 'isNull'],
             ['text'],
             ['number'],
             ['date'],

@@ -7,33 +7,23 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Field;
 
-/**
- * {@inheritdoc}
- */
 class FieldAbstractExtension implements FieldExtensionInterface
 {
-    /**
-     * {@inheritdoc}
-     */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getExtendedFieldTypes()
+    public function getExtendedFieldTypes(): array
     {
         return [];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function initOptions(FieldTypeInterface $field)
+    public function initOptions(FieldTypeInterface $field): void
     {
     }
 }

@@ -7,23 +7,18 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver\Collection;
 
 use ArrayAccess;
 use ArrayIterator;
-use Countable;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Selectable;
-use InvalidArgumentException;
-use IteratorAggregate;
-use Traversable;
+use FSi\Component\DataSource\Result;
 
-use function get_class;
-use function is_array;
-
-class CollectionResult implements Countable, IteratorAggregate, ArrayAccess
+class CollectionResult implements Result, ArrayAccess
 {
     /**
      * @var int
@@ -35,29 +30,8 @@ class CollectionResult implements Countable, IteratorAggregate, ArrayAccess
      */
     private $collection;
 
-    /**
-     * @param array|Traversable|Selectable $collection
-     * @param Criteria $criteria
-     */
-    public function __construct($collection, Criteria $criteria)
+    public function __construct(Selectable $collection, Criteria $criteria)
     {
-        if (false === $collection instanceof Selectable) {
-            if ($collection instanceof Traversable) {
-                $collection = new ArrayCollection(iterator_to_array($collection));
-            } elseif (is_array($collection)) {
-                $collection = new ArrayCollection($collection);
-            } else {
-                throw new InvalidArgumentException(
-                    sprintf(
-                        'Provided collection type "%s" should be %s or %s or array',
-                        get_class($collection),
-                        Selectable::class,
-                        Traversable::class
-                    )
-                );
-            }
-        }
-
         $this->collection = $collection->matching($criteria);
 
         $countCriteria = clone $criteria;
@@ -66,17 +40,17 @@ class CollectionResult implements Countable, IteratorAggregate, ArrayAccess
         $this->count = $collection->matching($countCriteria)->count();
     }
 
-    public function count()
+    public function count(): int
     {
         return $this->count;
     }
 
-    public function getIterator()
+    public function getIterator(): ArrayIterator
     {
         return new ArrayIterator($this->collection->toArray());
     }
 
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return $this->collection->containsKey($offset);
     }
@@ -86,7 +60,7 @@ class CollectionResult implements Countable, IteratorAggregate, ArrayAccess
         return $this->collection->get($offset);
     }
 
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         if ($offset === null) {
             $this->collection->add($value);
@@ -96,7 +70,7 @@ class CollectionResult implements Countable, IteratorAggregate, ArrayAccess
         $this->collection->set($offset, $value);
     }
 
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         $this->collection->remove($offset);
     }

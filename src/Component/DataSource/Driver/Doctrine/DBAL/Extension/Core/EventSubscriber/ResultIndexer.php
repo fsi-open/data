@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\EventSubscriber;
 
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALDriver;
@@ -16,32 +18,26 @@ use FSi\Component\DataSource\Event\DriverEvent\ResultEventArgs;
 use FSi\Component\DataSource\Event\DriverEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-/**
- * Class contains method called at BindParameters events.
- */
 class ResultIndexer implements EventSubscriberInterface
 {
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [DriverEvents::POST_GET_RESULT => ['postGetResult', 1024]];
     }
 
-    /**
-     * @param ResultEventArgs $event
-     */
-    public function postGetResult(ResultEventArgs $event)
+    public function postGetResult(ResultEventArgs $event): void
     {
         /** @var DBALDriver $driver */
         $driver = $event->getDriver();
         $indexField = $driver->getIndexField();
 
-        if (empty($indexField)) {
+        if (null === $indexField) {
             return;
         }
 
         $result = $event->getResult();
 
-        if ($result instanceof Paginator) {
+        if (true === $result instanceof Paginator) {
             $event->setResult(new DBALResult($result, $indexField));
         }
     }

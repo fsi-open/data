@@ -7,43 +7,38 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Event\DriverEvent;
 
 use FSi\Component\DataSource\Driver\DriverInterface;
+use FSi\Component\DataSource\Field\FieldTypeInterface;
+use FSi\Component\DataSource\Result;
 
-/**
- * Event class for Driver.
- */
 class ResultEventArgs extends DriverEventArgs
 {
     /**
-     * @var mixed
+     * @var Result
      */
     private $result;
 
     /**
-     * @param \FSi\Component\DataSource\Driver\DriverInterface $driver
-     * @param array $fields
-     * @param mixed $result
+     * @param DriverInterface $driver
+     * @param array<FieldTypeInterface> $fields
+     * @param Result $result
      */
-    public function __construct(DriverInterface $driver, array $fields, $result)
+    public function __construct(DriverInterface $driver, array $fields, Result $result)
     {
         parent::__construct($driver, $fields);
         $this->setResult($result);
     }
 
-    /**
-     * @param mixed $result
-     */
-    public function setResult($result)
+    public function setResult(Result $result): void
     {
         $this->result = $result;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getResult()
+    public function getResult(): Result
     {
         return $this->result;
     }

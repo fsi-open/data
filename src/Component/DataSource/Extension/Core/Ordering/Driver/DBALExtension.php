@@ -7,63 +7,24 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Extension\Core\Ordering\Driver;
 
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALDriver;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALFieldInterface;
 use FSi\Component\DataSource\Event\DriverEvent;
-use FSi\Component\DataSource\Event\DriverEvents;
-use FSi\Component\DataSource\Extension\Core\Ordering\Field\FieldExtension;
-use FSi\Component\DataSource\Field\FieldTypeInterface;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-/**
- * Driver extension for ordering that loads fields extension.
- */
-class DBALExtension extends DriverExtension implements EventSubscriberInterface
+class DBALExtension extends DriverExtension
 {
-    public function getExtendedDriverTypes()
+    public function getExtendedDriverTypes(): array
     {
         return [
             'doctrine-dbal'
         ];
     }
 
-    protected function loadFieldTypesExtensions()
-    {
-        return [
-            new FieldExtension(),
-        ];
-    }
-
-    public static function getSubscribedEvents()
-    {
-        return [
-            DriverEvents::PRE_GET_RESULT => ['preGetResult'],
-        ];
-    }
-
-    /**
-     * @param FieldTypeInterface $field
-     */
-    protected function getFieldName($field, $alias)
-    {
-        if (!$field instanceof DBALFieldInterface) {
-            throw new \InvalidArgumentException("Field must be an instance of DoctrineField");
-        }
-
-        $name = $field->hasOption('field')
-            ? $field->getOption('field')
-            : $field->getName();
-
-        if ($field->getOption('auto_alias') && !preg_match('/\./', $name)) {
-            $name = "$alias.$name";
-        }
-
-        return $name;
-    }
-
-    public function preGetResult(DriverEvent\DriverEventArgs $event)
+    public function preGetResult(DriverEvent\DriverEventArgs $event): void
     {
         $fields = $event->getFields();
         $sortedFields = $this->sortFields($fields);
@@ -76,5 +37,16 @@ class DBALExtension extends DriverExtension implements EventSubscriberInterface
             $field = $fields[$fieldName];
             $qb->addOrderBy($this->getFieldName($field, $driver->getAlias()), $direction);
         }
+    }
+
+    private function getFieldName(DBALFieldInterface $field, string $alias): string
+    {
+        $name = $field->getOption('field');
+
+        if (true === $field->getOption('auto_alias') && false === strpos($name, ".")) {
+            $name = "$alias.$name";
+        }
+
+        return $name;
     }
 }

@@ -12,11 +12,8 @@ namespace FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Driver;
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Field;
 use FSi\Component\DataSource\Driver\DriverAbstractExtension;
 use Symfony\Component\Form\FormFactory;
-use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
-/**
- * Driver extension for form that loads fields extension.
- */
 class DriverExtension extends DriverAbstractExtension
 {
     /**
@@ -29,21 +26,18 @@ class DriverExtension extends DriverAbstractExtension
      */
     private $translator;
 
-    /**
-     * @param FormFactory $formFactory
-     */
     public function __construct(FormFactory $formFactory, TranslatorInterface $translator)
     {
         $this->formFactory = $formFactory;
         $this->translator = $translator;
     }
 
-    public function getExtendedDriverTypes()
+    public function getExtendedDriverTypes(): array
     {
         return ['doctrine-orm'];
     }
 
-    protected function loadFieldTypesExtensions()
+    protected function loadFieldTypesExtensions(): array
     {
         return [new Field\FormFieldExtension($this->formFactory, $this->translator)];
     }

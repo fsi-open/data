@@ -7,9 +7,11 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Tests\Component\DataSource\Driver\Doctrine\ORM;
 
-use DateTime;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\Tools\Setup;
@@ -17,7 +19,6 @@ use Doctrine\Persistence\ManagerRegistry;
 use FSi\Component\DataSource\DataSourceFactory;
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineFactory;
-use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineResult;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\CoreExtension;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\Paginator;
 use FSi\Component\DataSource\Driver\DriverFactoryManager;
@@ -186,7 +187,7 @@ class DoctrineDriverTest extends TestCase
                     DataSourceInterface::PARAMETER_FIELDS => [
                         'author' => 'domain1.com',
                         'title' => ['title44', 'title58'],
-                        'created' => ['from' => new DateTime(date('Y:m:d H:i:s', 35 * 24 * 60 * 60))],
+                        'created' => ['from' => new DateTimeImmutable(date('Y:m:d H:i:s', 35 * 24 * 60 * 60))],
                     ],
                 ],
             ];
@@ -779,8 +780,8 @@ class DoctrineDriverTest extends TestCase
             }
 
             // Each entity has different date of creation and one of four hours of creation.
-            $createDate = new DateTime(date('Y:m:d H:i:s', $i * 24 * 60 * 60));
-            $createTime = new DateTime(date('H:i:s', (($i % 4) + 1 ) * 60 * 60));
+            $createDate = new DateTimeImmutable(date('Y:m:d H:i:s', $i * 24 * 60 * 60));
+            $createTime = new DateTimeImmutable(date('H:i:s', (($i % 4) + 1 ) * 60 * 60));
 
             $news->setCreateDate($createDate);
             $news->setCreateTime($createTime);

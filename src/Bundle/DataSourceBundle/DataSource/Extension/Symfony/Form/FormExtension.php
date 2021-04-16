@@ -11,7 +11,7 @@ namespace FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form;
 
 use FSi\Component\DataSource\DataSourceAbstractExtension;
 use Symfony\Component\Form\FormFactory;
-use Symfony\Component\Translation\TranslatorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Form extension builds Symfony form for given datasource fields.
@@ -38,14 +38,14 @@ class FormExtension extends DataSourceAbstractExtension
         $this->translator = $translator;
     }
 
-    public function loadDriverExtensions()
+    public function loadDriverExtensions(): array
     {
         return [
             new Driver\DriverExtension($this->formFactory, $this->translator),
         ];
     }
 
-    public function loadSubscribers()
+    public function loadSubscribers(): array
     {
         return [
             new EventSubscriber\Events(),

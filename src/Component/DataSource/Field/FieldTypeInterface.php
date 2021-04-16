@@ -7,163 +7,84 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Field;
 
 use FSi\Component\DataSource\DataSourceInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-/**
- * Field of DataSource.
- */
 interface FieldTypeInterface
 {
-    /**
-     * Returns type of given field.
-     *
-     * @return string
-     */
-    public function getType();
+    public function getType(): string;
+
+    public function setName(string $name): void;
+
+    public function getName(): ?string;
+
+    public function setComparison(string $comparison): void;
+
+    public function getComparison(): ?string;
 
     /**
-     * Sets name for field.
-     *
-     * @param string $name
+     * @return array<string>
      */
-    public function setName($name);
+    public function getAvailableComparisons(): array;
 
     /**
-     * Returns name of field.
-     *
-     * @return string
+     * @param array<string, mixed> $options
      */
-    public function getName();
+    public function setOptions(array $options): void;
+
+    public function hasOption(string $name): bool;
 
     /**
-     * Sets comparison for field.
-     *
-     * @param string $comparison
-     */
-    public function setComparison($comparison);
-
-    /**
-     * Returns comparison.
-     *
-     * @return string
-     */
-    public function getComparison();
-
-    /**
-     * Return array of available comparisons.
-     *
-     * @return array
-     */
-    public function getAvailableComparisons();
-
-    /**
-     * Sets options for field. All previously set options will be overwritten.
-     *
-     * @param array $options
-     */
-    public function setOptions($options);
-
-    /**
-     * Checks whether field has option with given name.
-     *
-     * @param string $name
-     * @return bool
-     */
-    public function hasOption($name);
-
-    /**
-     * Return option with given name.
-     *
      * @param string $name
      * @return mixed
      */
-    public function getOption($name);
+    public function getOption(string $name);
 
     /**
-     * Returns previously set options (or empty array otherwise).
-     *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function getOptions();
+    public function getOptions(): array;
 
     /**
-     * Sets parameter for field.
-     *
-     * @param mixed $data
+     * @param mixed $parameter
      */
-    public function bindParameter($data);
+    public function bindParameter($parameter): void;
+
+    public function getParameter(array &$parameters): void;
 
     /**
-     * Assigns parameter to proper place.
-     *
-     * @apram array &$parameters
-     */
-    public function getParameter(&$parameters);
-
-    /**
-     * Returns parameter.
-     *
      * @return mixed
      */
     public function getCleanParameter();
 
     /**
-     * Adds extension to field.
-     *
-     * @param \FSi\Component\DataSource\Field\FieldExtensionInterface $extension
+     * @param FieldExtensionInterface $extension
      */
-    public function addExtension(FieldExtensionInterface $extension);
+    public function addExtension(FieldExtensionInterface $extension): void;
 
     /**
-     * Replace field extensions with specified ones.
-     *
-     * @param array $extensions
+     * @param array<FieldExtensionInterface> $extensions
      */
-    public function setExtensions(array $extensions);
+    public function setExtensions(array $extensions): void;
 
     /**
-     * Returns array of registered extensions.
-     *
-     * @return array
+     * @return array<FieldExtensionInterface>
      */
-    public function getExtensions();
+    public function getExtensions(): array;
 
-    /**
-     * Builds view.
-     *
-     * @return \FSi\Component\DataSource\Field\FieldViewInterface
-     */
-    public function createView();
+    public function createView(): FieldViewInterface;
 
-    /**
-     * Checks if data of field has changed in any way since last time, when field was set as clean.
-     *
-     * @return bool
-     */
-    public function isDirty();
+    public function isDirty(): bool;
 
-    /**
-     * Sets dirty flag.
-     *
-     * @param bool $dirty
-     */
-    public function setDirty($dirty = true);
+    public function setDirty(bool $dirty = true): void;
 
-    /**
-     * Sets reference to datasource.
-     *
-     * @param \FSi\Component\DataSource\DataSourceInterface $datasource
-     */
-    public function setDataSource(DataSourceInterface $datasource);
+    public function setDataSource(DataSourceInterface $datasource): void;
 
-    /**
-     * Returns datasource.
-     *
-     * @return \FSi\Component\DataSource\DataSourceInterface|null
-     */
-    public function getDataSource();
+    public function getDataSource(): ?DataSourceInterface;
 
     /**
      * Sets the default options for this type.
@@ -172,12 +93,7 @@ interface FieldTypeInterface
      * in inherited classes. This method is called in DataSource after loading the field type
      * from factory.
      */
-    public function initOptions();
+    public function initOptions(): void;
 
-    /**
-     * Returns the configured options resolver used for this field's type.
-     *
-     * @return \Symfony\Component\OptionsResolver\OptionsResolver
-     */
-    public function getOptionsResolver();
+    public function getOptionsResolver(): OptionsResolver;
 }

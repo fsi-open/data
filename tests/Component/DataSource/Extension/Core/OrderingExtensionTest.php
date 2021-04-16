@@ -17,6 +17,7 @@ use FSi\Component\DataSource\Driver\DriverInterface;
 use FSi\Component\DataSource\Event\DataSourceEvent;
 use FSi\Component\DataSource\Event\FieldEvent;
 use FSi\Component\DataSource\Extension\Core\Ordering\Driver\DriverExtension;
+use FSi\Component\DataSource\Extension\Core\Ordering\EventSubscriber\Events;
 use FSi\Component\DataSource\Extension\Core\Ordering\Field\FieldExtension;
 use FSi\Component\DataSource\Extension\Core\Ordering\OrderingExtension;
 use FSi\Component\DataSource\Field\FieldAbstractType;
@@ -33,10 +34,9 @@ final class OrderingExtensionTest extends TestCase
     public function testStoringParameters(): void
     {
         $extension = new OrderingExtension();
-        /** @var MockObject|DataSourceInterface $datasource */
-        $datasource = $this->getMockBuilder(DataSourceInterface::class)
-            ->getMock();
-        /** @var MockObject|FieldTypeInterface $field */
+        /** @var MockObject&DataSourceInterface $datasource */
+        $datasource = $this->getMockBuilder(DataSourceInterface::class)->getMock();
+        /** @var MockObject&FieldTypeInterface $field */
         $field = $this->createMock(FieldTypeInterface::class);
         $fieldExtension = new FieldExtension();
 
@@ -48,6 +48,7 @@ final class OrderingExtensionTest extends TestCase
 
         $subscribers = $extension->loadSubscribers();
         $subscriber = array_shift($subscribers);
+        self::assertInstanceOf(Events::class, $subscriber);
 
         $parameters = ['ds' => [OrderingExtension::PARAMETER_SORT => ['test' => 'asc']]];
         $subscriber->preBindParameters(new DataSourceEvent\ParametersEventArgs($datasource, $parameters));
@@ -318,6 +319,8 @@ final class OrderingExtensionTest extends TestCase
         $extension = new OrderingExtension();
         $subscribers = $extension->loadSubscribers();
         $subscriber = array_shift($subscribers);
+        self::assertInstanceOf(Events::class, $subscriber);
+
         $subscriber->preBindParameters(new DataSourceEvent\ParametersEventArgs(
             $datasource,
             ['ds' => [OrderingExtension::PARAMETER_SORT => $parameters]]

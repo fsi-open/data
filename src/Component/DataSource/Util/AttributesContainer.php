@@ -7,60 +7,44 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Util;
 
-/**
- * {@inheritdoc}
- */
+use function array_key_exists;
+
 class AttributesContainer implements AttributesContainerInterface
 {
     /**
-     * Attributes.
-     *
      * @var array
      */
     protected $attributes = [];
 
-    /**
-     * {@inheritdoc}
-     */
-    public function hasAttribute($name)
+    public function hasAttribute(string $name): bool
     {
-        return isset($this->attributes[$name]);
+        return array_key_exists($name, $this->attributes);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function setAttribute($name, $value)
+    public function setAttribute(string $name, $value): void
     {
-        if (isset($value)) {
-            $this->attributes[$name] = $value;
+        $this->attributes[$name] = $value;
+    }
+
+    public function getAttribute(string $name)
+    {
+        if (false === $this->hasAttribute($name)) {
+            return null;
         }
+
+        return $this->attributes[$name];
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getAttribute($name)
-    {
-        if ($this->hasAttribute($name)) {
-            return $this->attributes[$name];
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getAttributes()
+    public function getAttributes(): array
     {
         return $this->attributes;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function removeAttribute($name)
+    public function removeAttribute($name): void
     {
         unset($this->attributes[$name]);
     }

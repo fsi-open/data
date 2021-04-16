@@ -7,26 +7,21 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Field;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-/**
- * Extension of DataSources field.
- */
 interface FieldExtensionInterface extends EventSubscriberInterface
 {
     /**
-     * Returns array of extended types.
-     *
-     * @return array
+     * @return array<string>
      */
-    public function getExtendedFieldTypes();
+    public function getExtendedFieldTypes(): array;
 
     /**
-     * Allows extension to load options' constraints to fields OptionsResolver. Called by field.
-     *
-     * @param \FSi\Component\DataSource\Field\FieldTypeInterface $field
+     * @param FieldTypeInterface $field
      */
-    public function initOptions(FieldTypeInterface $field);
+    public function initOptions(FieldTypeInterface $field): void;
 }

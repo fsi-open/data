@@ -7,9 +7,11 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Tests\Component\DataSource\Driver;
 
-use DateTime;
+use DateTimeImmutable;
 use FSi\Component\DataSource\Driver\Collection\CollectionFactory;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALFactory;
 use FSi\Component\DataSource\Driver\Doctrine\ORM;
@@ -35,10 +37,6 @@ class DriverFactoryManagerTest extends TestCase
 
         $manager = new DriverFactoryManager([$doctrineDbalFactory, $doctrineOrmFactory, $collectionFactory]);
 
-        self::assertTrue($manager->hasFactory('doctrine-dbal'));
-        self::assertTrue($manager->hasFactory('doctrine-orm'));
-        self::assertTrue($manager->hasFactory('collection'));
-
         self::assertSame($doctrineDbalFactory, $manager->getFactory('doctrine-dbal'));
         self::assertSame($doctrineOrmFactory, $manager->getFactory('doctrine-orm'));
         self::assertSame($collectionFactory, $manager->getFactory('collection'));
@@ -48,6 +46,6 @@ class DriverFactoryManagerTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        new DriverFactoryManager([new DateTime()]);
+        new DriverFactoryManager([new DateTimeImmutable()]);
     }
 }

@@ -7,11 +7,14 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver;
 
 use Countable;
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
+use FSi\Component\DataSource\Result;
 use IteratorAggregate;
 
 /**
@@ -21,40 +24,28 @@ interface DriverInterface
 {
     /**
      * Returns type (name) of this driver.
-     *
-     * @return string
      */
-    public function getType();
+    public function getType(): string;
 
     /**
      * Sets reference to DataSource.
-     *
-     * @param DataSourceInterface $datasource
      */
-    public function setDataSource(DataSourceInterface $datasource);
+    public function setDataSource(DataSourceInterface $datasource): void;
 
     /**
      * Return reference to assigned DataSource.
-     *
-     * @return DataSourceInterface
      */
-    public function getDataSource();
+    public function getDataSource(): DataSourceInterface;
 
     /**
      * Checks if driver has field for given type.
-     *
-     * @param string $type
-     * @return bool
      */
-    public function hasFieldType($type);
+    public function hasFieldType(string $type): bool;
 
     /**
      * Return field for given type.
-     *
-     * @param string $type
-     * @return FieldTypeInterface
      */
-    public function getFieldType($type);
+    public function getFieldType(string $type): FieldTypeInterface;
 
     /**
      * Returns collection with result.
@@ -63,24 +54,22 @@ interface DriverInterface
      * Count on this object must return amount
      * of all available results.
      *
-     * @param array $fields
-     * @param int $first
-     * @param int $max
-     * @return Countable&IteratorAggregate
+     * @param array<FieldTypeInterface> $fields
+     * @param int|null $first
+     * @param int|null $max
+     * @return Result
      */
-    public function getResult($fields, $first, $max);
+    public function getResult(array $fields, ?int $first, ?int $max): Result;
 
     /**
      * Returns loaded extensions.
      *
      * @return array<DriverExtensionInterface>
      */
-    public function getExtensions();
+    public function getExtensions(): array;
 
     /**
      * Adds extension to driver.
-     *
-     * @param DriverExtensionInterface $extension
      */
-    public function addExtension(DriverExtensionInterface $extension);
+    public function addExtension(DriverExtensionInterface $extension): void;
 }

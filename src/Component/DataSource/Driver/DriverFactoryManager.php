@@ -7,9 +7,14 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver;
 
+use FSi\Component\DataSource\Exception\DataSourceException;
 use InvalidArgumentException;
+
+use function array_key_exists;
 
 class DriverFactoryManager implements DriverFactoryManagerInterface
 {
@@ -19,7 +24,7 @@ class DriverFactoryManager implements DriverFactoryManagerInterface
     private $factories;
 
     /**
-     * @param array $factories
+     * @param array<DriverFactoryInterface> $factories
      * @throws InvalidArgumentException
      */
     public function __construct($factories = [])
@@ -33,34 +38,16 @@ class DriverFactoryManager implements DriverFactoryManagerInterface
                 );
             }
 
-            $this->addFactory($factory);
+            $this->factories[$factory->getDriverType()] = $factory;
         }
     }
 
-    public function addFactory(DriverFactoryInterface $factory)
+    public function getFactory(string $driverType): DriverFactoryInterface
     {
-        $this->factories[$factory->getDriverType()] = $factory;
-    }
-
-    /**
-     * @param string $driverType
-     * @return DriverFactoryInterface|null
-     */
-    public function getFactory($driverType)
-    {
-        if ($this->hasFactory($driverType)) {
-            return $this->factories[$driverType];
+        if (false === array_key_exists($driverType, $this->factories)) {
+            throw new DataSourceException("Driver \"{$driverType}\" doesn't exist.");
         }
 
-        return null;
-    }
-
-    /**
-     * @param string $driverType
-     * @return bool
-     */
-    public function hasFactory($driverType)
-    {
-        return array_key_exists($driverType, $this->factories);
+        return $this->factories[$driverType];
     }
 }

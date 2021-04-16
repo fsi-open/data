@@ -7,15 +7,26 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
 use Closure;
+use Doctrine\DBAL\Connection;
 use Doctrine\Persistence\ConnectionRegistry;
 use Doctrine\DBAL\Query\QueryBuilder;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Exception\DBALDriverException;
+use FSi\Component\DataSource\Driver\DriverExtensionInterface;
 use FSi\Component\DataSource\Driver\DriverFactoryInterface;
+use FSi\Component\DataSource\Driver\DriverInterface;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+
+use function get_class;
+use function is_object;
+use function is_string;
+use function sprintf;
 
 class DBALFactory implements DriverFactoryInterface
 {
@@ -25,7 +36,7 @@ class DBALFactory implements DriverFactoryInterface
     private $registry;
 
     /**
-     * @var array
+     * @var array<DriverExtensionInterface>
      */
     private $extensions;
 
@@ -34,7 +45,11 @@ class DBALFactory implements DriverFactoryInterface
      */
     private $optionsResolver;
 
-    public function __construct(ConnectionRegistry $registry, $extensions = [])
+    /**
+     * @param ConnectionRegistry $registry
+     * @param array<DriverExtensionInterface> $extensions
+     */
+    public function __construct(ConnectionRegistry $registry, array $extensions = [])
     {
         $this->registry = $registry;
         $this->extensions = $extensions;
@@ -42,32 +57,24 @@ class DBALFactory implements DriverFactoryInterface
         $this->initOptions();
     }
 
-    public function getDriverType()
+    public function getDriverType(): string
     {
         return 'doctrine-dbal';
     }
 
-    public function createDriver($options = [])
+    public function createDriver(array $options = []): DriverInterface
     {
         $options = $this->optionsResolver->resolve($options);
 
-        if (empty($options['connection'])) {
-            $connection = $this->registry->getConnection($this->registry->getDefaultConnectionName());
-        } else {
-            $connection = $this->registry->getConnection($options['connection']);
-        }
-
-        $table = isset($options['table']) ? $options['table'] : $options['qb'];
-
-        return new DBALDriver($this->extensions, $connection, $table, $options['alias'], $options['indexField']);
+        return new DBALDriver($this->extensions, $options['qb'], $options['alias'], $options['indexField']);
     }
 
-    private function initOptions()
+    private function initOptions(): void
     {
         $this->optionsResolver->setDefaults([
             'qb' => null,
             'table' => null,
-            'alias' => null,
+            'alias' => 'e',
             'connection' => null,
             'indexField' => null,
         ]);
@@ -75,17 +82,54 @@ class DBALFactory implements DriverFactoryInterface
         $this->optionsResolver->setAllowedTypes('qb', [QueryBuilder::class, 'null']);
         $this->optionsResolver->setAllowedTypes('table', ['string', 'null']);
         $this->optionsResolver->setAllowedTypes('alias', ['null', 'string']);
-        $this->optionsResolver->setAllowedTypes('connection', ['null', 'string']);
+        $this->optionsResolver->setAllowedTypes('connection', ['null', 'string', Connection::class]);
         $this->optionsResolver->setAllowedTypes('indexField', ['null', 'string', Closure::class]);
 
-        $tableNormalizer = function (Options $options, $value) {
-            if (is_null($options['qb']) && is_null($value)) {
-                throw new InvalidOptionsException('You must specify at least one option, "qb" or "table".');
+        $this->optionsResolver->setNormalizer('connection', function (Options $options, $connection): Connection {
+            if (true === $connection instanceof Connection) {
+                return $connection;
             }
 
-            return $value;
-        };
+            if (null === $connection || true === is_string($connection)) {
+                $connection = $this->registry->getConnection($connection);
 
-        $this->optionsResolver->setNormalizer('table', $tableNormalizer);
+                if (false === $connection instanceof Connection) {
+                    throw new DBALDriverException(
+                        sprintf(
+                            "Connection registry should return an instance of %s but returned instance of %s",
+                            Connection::class,
+                            get_class($connection)
+                        )
+                    );
+                }
+
+                return $connection;
+            }
+
+            throw new DBALDriverException(
+                sprintf(
+                    "Option \"connection\" should contain an instance of %s or a string but %s given",
+                    Connection::class,
+                    is_object($connection) ? get_class($connection) : gettype($connection)
+                )
+            );
+        });
+        $this->optionsResolver->setNormalizer(
+            'qb',
+            function (Options $options, ?QueryBuilder $queryBuilder): QueryBuilder {
+                if (true === $queryBuilder instanceof QueryBuilder) {
+                    return $queryBuilder;
+                }
+
+                if (null === $options['table'] || false === $options['connection'] instanceof Connection) {
+                    throw new InvalidOptionsException('You must specify at least one option, "qb" or "table".');
+                }
+
+                return $options['connection']->createQueryBuilder()
+                    ->select(sprintf('%s.*', $options['alias']))
+                    ->from($options['table'], $options['alias'])
+                ;
+            }
+        );
     }
 }
