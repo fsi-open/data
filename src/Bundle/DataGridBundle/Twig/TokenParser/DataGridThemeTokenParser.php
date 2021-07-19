@@ -25,10 +25,10 @@ class DataGridThemeTokenParser extends AbstractTokenParser
         $theme = $this->parser->getExpressionParser()->parseExpression();
         $vars = new ArrayExpression([], $stream->getCurrent()->getLine());
 
-        if ($this->parser->getStream()->test(Token::NAME_TYPE, 'with')) {
+        if (true === $this->parser->getStream()->test(Token::NAME_TYPE, 'with')) {
             $this->parser->getStream()->next();
 
-            if ($this->parser->getStream()->test(Token::PUNCTUATION_TYPE)) {
+            if (true === $this->parser->getStream()->test(Token::PUNCTUATION_TYPE)) {
                 $vars = $this->parser->getExpressionParser()->parseExpression();
             }
         }

@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid\Extension\Doctrine\ColumnTypeExtension;
+namespace Tests\FSi\Component\DataGrid\Extension\Doctrine\ColumnTypeExtension;
 
 use ArgumentCountError;
 use FSi\Component\DataGrid\Exception\DataGridException;
@@ -29,7 +29,7 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
         $view = $this->createMock(CellViewInterface::class);
         $column = $this->createMock(ColumnTypeInterface::class);
 
-        $view->expects(self::at(0))
+        $view->expects(self::atLeastOnce())
             ->method('getValue')
             ->willReturn(
                 [
@@ -40,27 +40,24 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
                 ]
             );
 
-        $column->expects(self::at(0))
+        $column->expects(self::atLeast(4))
             ->method('getOption')
-            ->with('empty_value')
-            ->willReturn('no');
+            ->willReturnCallback(
+                function ($option) {
+                    switch ($option) {
+                        case 'value_glue':
+                        case 'glue_multiple':
+                            return ' ';
 
-        $column->expects(self::at(1))
-            ->method('getOption')
-            ->with('value_glue')
-            ->willReturn(' ');
+                        case 'empty_value':
+                            return 'no';
+                    }
 
-        $column->expects(self::at(2))
-            ->method('getOption')
-            ->with('value_format')
-            ->willReturn(null);
+                    return null;
+                }
+            );
 
-        $column->expects(self::at(3))
-            ->method('getOption')
-            ->with('glue_multiple')
-            ->willReturn(' ');
-
-        $view->expects(self::at(1))
+        $view->expects(self::once())
             ->method('setValue')
             ->with('no Foo');
 
@@ -73,7 +70,7 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
         $view = $this->createMock(CellViewInterface::class);
         $column = $this->createMock(ColumnTypeInterface::class);
 
-        $view->expects(self::at(0))
+        $view->expects(self::atLeastOnce())
             ->method('getValue')
             ->willReturn(
                 [
@@ -84,27 +81,24 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
                 ]
             );
 
-        $column->expects(self::at(0))
+        $column->expects(self::atLeast(4))
             ->method('getOption')
-            ->with('empty_value')
-            ->willReturn('no');
+            ->willReturnCallback(
+                function ($option) {
+                    switch ($option) {
+                        case 'value_glue':
+                        case 'glue_multiple':
+                            return ' ';
 
-        $column->expects(self::at(1))
-            ->method('getOption')
-            ->with('value_glue')
-            ->willReturn(' ');
+                        case 'empty_value':
+                            return 'no';
+                    }
 
-        $column->expects(self::at(2))
-            ->method('getOption')
-            ->with('value_format')
-            ->willReturn(null);
+                    return null;
+                }
+            );
 
-        $column->expects(self::at(3))
-            ->method('getOption')
-            ->with('glue_multiple')
-            ->willReturn(' ');
-
-        $view->expects(self::at(1))
+        $view->expects(self::once())
             ->method('setValue')
             ->with('no no');
 
@@ -117,7 +111,7 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
         $view = $this->createMock(CellViewInterface::class);
         $column = $this->createMock(ColumnTypeInterface::class);
 
-        $view->expects(self::at(0))
+        $view->expects(self::atLeastOnce())
             ->method('getValue')
             ->willReturn(
                 [
@@ -128,27 +122,24 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
                 ]
             );
 
-        $column->expects(self::at(0))
+        $column->expects(self::atLeast(4))
             ->method('getOption')
-            ->with('empty_value')
-            ->willReturn(['name' => 'no']);
+            ->willReturnCallback(
+                function ($option) {
+                    switch ($option) {
+                        case 'value_glue':
+                        case 'glue_multiple':
+                            return ' ';
 
-        $column->expects(self::at(1))
-            ->method('getOption')
-            ->with('value_glue')
-            ->willReturn(' ');
+                        case 'empty_value':
+                            return ['name' => 'no'];
+                    }
 
-        $column->expects(self::at(2))
-            ->method('getOption')
-            ->with('value_format')
-            ->willReturn(null);
+                    return null;
+                }
+            );
 
-        $column->expects(self::at(3))
-            ->method('getOption')
-            ->with('glue_multiple')
-            ->willReturn(' ');
-
-        $view->expects(self::at(1))
+        $view->expects(self::once())
             ->method('setValue')
             ->with('1 no');
 
@@ -161,7 +152,7 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
         $view = $this->createMock(CellViewInterface::class);
         $column = $this->createMock(ColumnTypeInterface::class);
 
-        $view->expects(self::at(0))
+        $view->expects(self::atLeastOnce())
             ->method('getValue')
             ->willReturn(
                 [
@@ -172,27 +163,24 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
                 ]
             );
 
-        $column->expects(self::at(0))
+        $column->expects(self::atLeast(4))
             ->method('getOption')
-            ->with('empty_value')
-            ->willReturn(['id' => 'no', 'name' => 'no']);
+            ->willReturnCallback(
+                function ($option) {
+                    switch ($option) {
+                        case 'value_glue':
+                        case 'glue_multiple':
+                            return ' ';
 
-        $column->expects(self::at(1))
-            ->method('getOption')
-            ->with('value_glue')
-            ->willReturn(' ');
+                        case 'empty_value':
+                            return ['id' => 'no', 'name' => 'no'];
+                    }
 
-        $column->expects(self::at(2))
-            ->method('getOption')
-            ->with('value_format')
-            ->willReturn(null);
+                    return null;
+                }
+            );
 
-        $column->expects(self::at(3))
-            ->method('getOption')
-            ->with('glue_multiple')
-            ->willReturn(' ');
-
-        $view->expects(self::at(1))
+        $view->expects(self::once())
             ->method('setValue')
             ->with('no no');
 
@@ -205,7 +193,7 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
         $view = $this->createMock(CellViewInterface::class);
         $column = $this->createMock(ColumnTypeInterface::class);
 
-        $view->expects(self::at(0))
+        $view->expects(self::atLeastOnce())
             ->method('getValue')
             ->willReturn(
                 [
@@ -220,27 +208,26 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
                 ]
             );
 
-        $column->expects(self::at(0))
+        $column->expects(self::atLeast(4))
             ->method('getOption')
-            ->with('empty_value')
-            ->willReturn(['id' => 'no', 'name' => 'no']);
+            ->willReturnCallback(
+                function ($option) {
+                    switch ($option) {
+                        case 'value_glue':
+                            return ' ';
 
-        $column->expects(self::at(1))
-            ->method('getOption')
-            ->with('value_glue')
-            ->willReturn(' ');
+                        case 'glue_multiple':
+                            return '<br />';
 
-        $column->expects(self::at(2))
-            ->method('getOption')
-            ->with('value_format')
-            ->willReturn(null);
+                        case 'empty_value':
+                            return ['id' => 'no', 'name' => 'no'];
+                    }
 
-        $column->expects(self::at(3))
-            ->method('getOption')
-            ->with('glue_multiple')
-            ->willReturn('<br />');
+                    return null;
+                }
+            );
 
-        $view->expects(self::at(1))
+        $view->expects(self::once())
             ->method('setValue')
             ->with('no no<br />no Foo');
 
@@ -253,7 +240,7 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
         $view = $this->createMock(CellViewInterface::class);
         $column = $this->createMock(ColumnTypeInterface::class);
 
-        $view->expects(self::at(0))
+        $view->expects(self::atLeastOnce())
             ->method('getValue')
             ->willReturn(
                 [
@@ -264,7 +251,7 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
                 ]
             );
 
-        $column->expects(self::at(0))
+        $column->expects(self::atLeastOnce())
             ->method('getOption')
             ->with('empty_value')
             ->willReturn(['id2' => 'no', 'name' => 'no']);
@@ -280,7 +267,7 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
         $view = $this->createMock(CellViewInterface::class);
         $column = $this->createMock(ColumnTypeInterface::class);
 
-        $view->expects(self::at(0))
+        $view->expects(self::atLeastOnce())
             ->method('getValue')
             ->willReturn(
                 [
@@ -291,22 +278,20 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
                 ]
             );
 
-        $column->expects(self::at(1))
+        $column->expects(self::atLeast(4))
             ->method('getOption')
-            ->with('value_glue')
-            ->willReturn(null);
+            ->willReturnCallback(
+                function ($option) {
+                    switch ($option) {
+                        case 'glue_multiple':
+                            return ' ';
+                    }
 
-        $column->expects(self::at(2))
-            ->method('getOption')
-            ->with('value_format')
-            ->willReturn(null);
+                    return null;
+                }
+            );
 
-        $column->expects(self::at(3))
-            ->method('getOption')
-            ->with('glue_multiple')
-            ->willReturn(' ');
-
-        $view->expects(self::at(1))
+        $view->expects(self::once())
             ->method('setValue')
             ->with('');
 
@@ -319,7 +304,7 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
         $view = $this->createMock(CellViewInterface::class);
         $column = $this->createMock(ColumnTypeInterface::class);
 
-        $view->expects(self::at(0))
+        $view->expects(self::atLeastOnce())
         ->method('getValue')
         ->willReturn(
             [
@@ -330,22 +315,26 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
             ]
         );
 
-        $column->expects(self::at(1))
+        $column->expects(self::atLeast(4))
             ->method('getOption')
-            ->with('value_glue')
-            ->willReturn('<br/>');
+            ->willReturnCallback(
+                function ($option) {
+                    switch ($option) {
+                        case 'value_format':
+                            return '(%s)';
 
-        $column->expects(self::at(2))
-            ->method('getOption')
-            ->with('value_format')
-            ->willReturn('(%s)');
+                        case 'value_glue':
+                            return '<br/>';
 
-        $column->expects(self::at(3))
-            ->method('getOption')
-            ->with('glue_multiple')
-            ->willReturn(' ');
+                        case 'glue_multiple':
+                            return ' ';
+                    }
 
-        $view->expects(self::at(1))
+                    return null;
+                }
+            );
+
+        $view->expects(self::once())
             ->method('setValue')
             ->with('(1)<br/>(Foo)');
 
@@ -358,7 +347,7 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
         $view = $this->createMock(CellViewInterface::class);
         $column = $this->createMock(ColumnTypeInterface::class);
 
-        $view->expects(self::at(0))
+        $view->expects(self::atLeastOnce())
         ->method('getValue')
             ->willReturn(
                 [
@@ -369,21 +358,24 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
                 ]
             );
 
-        $column->expects(self::at(1))
+        $column->expects(self::atLeast(3))
             ->method('getOption')
-            ->with('value_glue')
-            ->willReturn('<br/>');
+            ->willReturnCallback(
+                function ($option) {
+                    switch ($option) {
+                        case 'value_format':
+                            return '(%s) (%s)';
 
-        $column->expects(self::at(2))
-            ->method('getOption')
-            ->with('value_format')
-            ->willReturn('(%s) (%s)');
+                        case 'value_glue':
+                            return '<br/>';
+                    }
 
-        if (PHP_VERSION_ID >= 80000) {
-            $this->expectException(ArgumentCountError::class);
-        } else {
-            $this->expectException(Error::class);
-        }
+                    return null;
+                }
+            );
+
+        $this->expectError();
+
         $extension->buildCellView($column, $view);
     }
 
@@ -393,7 +385,7 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
         $view = $this->createMock(CellViewInterface::class);
         $column = $this->createMock(ColumnTypeInterface::class);
 
-        $view->expects(self::at(0))
+        $view->expects(self::atLeastOnce())
             ->method('getValue')
             ->willReturn(
                 [
@@ -408,22 +400,26 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
                 ]
             );
 
-        $column->expects(self::at(1))
+        $column->expects(self::atLeast(4))
             ->method('getOption')
-            ->with('value_glue')
-            ->willReturn(' ');
+            ->willReturnCallback(
+                function ($option) {
+                    switch ($option) {
+                        case 'glue_multiple':
+                            return '<br>';
 
-        $column->expects(self::at(2))
-            ->method('getOption')
-            ->with('value_format')
-            ->willReturn('(%s)');
+                        case 'value_format':
+                            return '(%s)';
 
-        $column->expects(self::at(3))
-            ->method('getOption')
-            ->with('glue_multiple')
-            ->willReturn('<br>');
+                        case 'value_glue':
+                            return ' ';
+                    }
 
-        $view->expects(self::at(1))
+                    return null;
+                }
+            );
+
+        $view->expects(self::once())
             ->method('setValue')
             ->with('(1) (Foo)<br>(2) (Bar)');
 

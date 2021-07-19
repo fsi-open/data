@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid\Extension\Core\ColumnType;
+namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnType;
 
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean as BooleanColumnType;
 use PHPUnit\Framework\TestCase;

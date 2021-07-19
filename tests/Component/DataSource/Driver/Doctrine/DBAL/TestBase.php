@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Driver\Doctrine\DBAL;
+namespace Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
@@ -25,8 +25,8 @@ use FSi\Component\DataSource\Driver\DriverFactoryInterface;
 use FSi\Component\DataSource\Driver\DriverFactoryManager;
 use FSi\Component\DataSource\Extension\Core;
 use FSi\Component\DataSource\Extension\Core\Ordering\OrderingExtension;
-use FSi\Tests\Component\DataSource\Driver\Doctrine\DBAL\Fixtures\DBALDriverExtension;
-use FSi\Tests\Component\DataSource\Driver\Doctrine\DBAL\Fixtures\TestConnectionRegistry;
+use Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL\Fixtures\DBALDriverExtension;
+use Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL\Fixtures\TestConnectionRegistry;
 use PHPUnit\Framework\TestCase;
 
 abstract class TestBase extends TestCase

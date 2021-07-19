@@ -11,7 +11,7 @@
         }
     ],
     "require": {
-        "php": "^7.2|^8.0",
+        "php": "^7.4|^8.0",
         "symfony/event-dispatcher" : "^4.4|^5.0",
         "symfony/property-access": "^4.4|^5.0",
         "symfony/options-resolver": "^4.4|^5.0",
@@ -24,8 +24,9 @@
         "gedmo/doctrine-extensions": "^2.3.10|^3.0",
         "phpstan/phpstan": "^0.12.78",
         "phpstan/phpstan-phpunit": "^0.12.17",
-        "phpunit/phpunit": "^8.5|^9.0",
+        "phpunit/phpunit": "^9.5",
         "squizlabs/php_codesniffer": "^3.5.8",
+        "symfony/cache": "^4.4|^5.0",
         "symfony/config": "^4.4|^5.0",
         "symfony/doctrine-bridge": "^4.4|^5.0",
         "symfony/dependency-injection": "^4.4|^5.0",
@@ -37,16 +38,16 @@
         "symfony/twig-bridge": "^4.4|^5.0",
         "symfony/validator": "^4.4|^5.0",
         "symfony/yaml": "^4.4|^5.0",
-        "twig/twig": "^2.11"
+        "twig/twig": "^2.12|^3.0"
     },
     "autoload": {
         "psr-4": {
-            "FSi\\": "src/"
+            "FSi\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "FSi\\Tests\\": "tests/"
+            "Tests\\FSi\\": "tests"
         }
     },
     "config": {

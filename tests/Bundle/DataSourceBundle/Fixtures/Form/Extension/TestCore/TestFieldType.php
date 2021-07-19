@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Bundle\DataSourceBundle\Fixtures\Form\Extension\TestCore;
+namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures\Form\Extension\TestCore;
 
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Field\FieldAbstractType;

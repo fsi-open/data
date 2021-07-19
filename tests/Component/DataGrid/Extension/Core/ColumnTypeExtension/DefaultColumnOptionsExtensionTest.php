@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid\Extension\Core\ColumnTypeExtension;
+namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension;
 
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\Column\HeaderViewInterface;
@@ -25,21 +25,16 @@ class DefaultColumnOptionsExtensionTest extends TestCase
         $column = $this->createMock(ColumnTypeInterface::class);
         $view = $this->createMock(HeaderViewInterface::class);
 
-        $column->expects(self::at(0))
+        $column->expects(self::exactly(2))
             ->method('getOption')
-            ->with('label')
-            ->willReturn('foo');
+            ->withConsecutive(['label'], ['display_order'])
+            ->willReturnOnConsecutiveCalls('foo', 100);
 
-        $column->expects(self::at(1))
-            ->method('getOption')
-            ->with('display_order')
-            ->willReturn(100);
-
-        $view->expects(self::at(0))
+        $view->expects(self::once())
             ->method('setLabel')
             ->with('foo');
 
-        $view->expects(self::at(1))
+        $view->expects(self::once())
             ->method('setAttribute')
             ->with('display_order', 100);
 

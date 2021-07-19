@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension;
+namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension;
 
 use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\Configuration;
@@ -20,8 +20,8 @@ use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\FormExtension;
-use FSi\Tests\Bundle\DataGridBundle\Fixtures\Entity;
-use FSi\Tests\Bundle\DataGridBundle\Fixtures\EntityCategory;
+use Tests\FSi\Bundle\DataGridBundle\Fixtures\Entity;
+use Tests\FSi\Bundle\DataGridBundle\Fixtures\EntityCategory;
 use FSi\Component\DataGrid\Column\ColumnTypeInterface;
 use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
@@ -90,6 +90,7 @@ class FormExtensionTest extends TestCase
                 'fieldName' => 'id',
                 'columnName' => 'id',
                 'inherited' => $entityClass,
+                'options' => [],
             ]
         ];
         $classMetadata->reflFields = [

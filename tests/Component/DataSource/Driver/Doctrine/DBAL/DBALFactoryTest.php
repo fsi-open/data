@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Driver\Doctrine\DBAL;
+namespace Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
 use Closure;
 use Doctrine\Persistence\ConnectionRegistry;
@@ -17,7 +17,7 @@ use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALDriver;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALFactory;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\CoreExtension;
 use FSi\Component\DataSource\Driver\DriverFactoryInterface;
-use FSi\Tests\Component\DataSource\Driver\Doctrine\DBAL\Fixtures\TestConnectionRegistry;
+use Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL\Fixtures\TestConnectionRegistry;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 class DBALFactoryTest extends TestBase

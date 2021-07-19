@@ -7,9 +7,9 @@
  * file that was distributed with this source code.
  */
 
-namespace FSi\Tests\Bundle\DataSourceBundle\Fixtures\Form\Extension\TestCore;
+namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures\Form\Extension\TestCore;
 
-use FSi\Tests\Bundle\DataSourceBundle\Fixtures\Form\Extension\TestCore\Type;
+use Tests\FSi\Bundle\DataSourceBundle\Fixtures\Form\Extension\TestCore\Type;
 use Symfony\Component\Form\AbstractExtension;
 
 class TestCoreExtension extends AbstractExtension

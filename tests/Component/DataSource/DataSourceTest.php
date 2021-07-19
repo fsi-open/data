@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource;
+namespace Tests\FSi\Component\DataSource;
 
 use FSi\Component\DataSource\DataSource;
 use FSi\Component\DataSource\DataSourceExtensionInterface;
@@ -20,8 +20,8 @@ use FSi\Component\DataSource\Driver\DriverExtensionInterface;
 use FSi\Component\DataSource\Driver\DriverInterface;
 use FSi\Component\DataSource\Exception\DataSourceException;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
-use FSi\Tests\Component\DataSource\Fixtures\TestResult;
-use FSi\Tests\Component\DataSource\Fixtures\DataSourceExtension;
+use Tests\FSi\Component\DataSource\Fixtures\TestResult;
+use Tests\FSi\Component\DataSource\Fixtures\DataSourceExtension;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 

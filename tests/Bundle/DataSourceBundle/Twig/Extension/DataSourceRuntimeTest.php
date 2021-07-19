@@ -1,15 +1,17 @@
 <?php
 
 /**
- * (c) FSi Sp. z o.o. <info@fsi.pl>
+ * (c) FSi sp. z o.o. <info@fsi.pl>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
 
-namespace FSi\Tests\Bundle\DataSourceBundle\Twig\Extension;
+namespace Tests\FSi\Bundle\DataSourceBundle\Twig\Extension;
 
-use FSi\Tests\Bundle\DataSourceBundle\Fixtures\StubTranslator;
+use FSi\Bundle\DataSourceBundle\Twig\Extension\DataSourceRuntime;
+use Tests\FSi\Bundle\DataGridBundle\Fixtures\TwigRuntimeLoader;
+use Tests\FSi\Bundle\DataSourceBundle\Fixtures\StubTranslator;
 use FSi\Bundle\DataSourceBundle\Twig\Extension\DataSourceExtension;
 use FSi\Component\DataSource\DataSourceViewInterface;
 use FSi\Component\DataSource\Field\FieldViewInterface;
@@ -17,50 +19,54 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Twig\Extension\FormExtension;
 use Symfony\Bridge\Twig\Extension\TranslationExtension;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\RouterInterface;
 use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Loader\FilesystemLoader;
 use Twig\Template;
+use Twig\TemplateWrapper;
 
 /**
  * @author Stanislav Prokopov <stanislav.prokopov@gmail.com>
  */
-class DataSourceExtensionTest extends TestCase
+class DataSourceRuntimeTest extends TestCase
 {
-    /**
-     * @var Environment
-     */
-    protected $twig;
-
-    /**
-     * @var DataSourceExtension
-     */
-    protected $extension;
+    private Environment $twig;
+    private DataSourceExtension $extension;
+    private DataSourceRuntime $runtime;
+    private TwigRuntimeLoader $runtimeLoader;
 
     public function testInitRuntimeShouldThrowExceptionBecauseNotExistingTheme(): void
     {
+        $this->twig->addExtension($this->extension);
+
+        $this->runtime = new DataSourceRuntime(
+            $this->createMock(RequestStack::class),
+            $this->twig,
+            $this->getRouter(),
+            'this_is_not_valid_path.html.twig'
+        );
+        $this->runtimeLoader->replaceInstance($this->runtime);
+
         $this->expectException(LoaderError::class);
         $this->expectExceptionMessage('Unable to find template "this_is_not_valid_path.html.twig"');
 
-        $this->twig->addExtension(new DataSourceExtension($this->getContainer(), 'this_is_not_valid_path.html.twig'));
-        // force initRuntime()
-        $this->twig->loadTemplate('datasource.html.twig');
+        $dataSource = $this->getDataSourceView('datasource');
+        $this->runtime->dataSourceFilter($dataSource);
     }
 
     public function testInitRuntimeWithValidPathToTheme(): void
     {
         $this->twig->addExtension($this->extension);
-        // force initRuntime()
-        self::assertInstanceOf(Template::class, $this->twig->loadTemplate('datasource.html.twig'));
+
+        $dataSource = $this->getDataSourceView('datasource');
+        self::assertSame('', $this->runtime->dataSourceFilter($dataSource));
     }
 
     public function testDataSourceFilterCount(): void
     {
         $this->twig->addExtension($this->extension);
-        // force initRuntime()
-        $this->twig->loadTemplate('datasource.html.twig');
 
         $datasourceView = $this->getDataSourceView('datasource');
         $fieldView1 = $this->createMock(FieldViewInterface::class);
@@ -77,26 +83,23 @@ class DataSourceExtensionTest extends TestCase
             ->willReturn([$fieldView1, $fieldView2, $fieldView3])
         ;
 
-        self::assertEquals(2, $this->extension->datasourceFilterCount($datasourceView));
+        self::assertEquals(2, $this->runtime->dataSourceFilterCount($datasourceView));
     }
 
     public function testDataSourceRenderBlock(): void
     {
         $this->twig->addExtension($this->extension);
-        // force initRuntime()
-        $this->twig->loadTemplate('datasource.html.twig');
+
         $template = $this->getTemplateMock();
-        $template->expects(self::at(0))->method('hasBlock')
-            ->with('datasource_datasource_filter')
-            ->willReturn(false)
+        $template->method('hasBlock')
+            ->withConsecutive(['datasource_datasource_filter'], ['datasource_filter'])
+            ->willReturnOnConsecutiveCalls(false, true)
         ;
-        $template->expects(self::at(1))->method('getParent')->with([])->willReturn(false);
-        $template->expects(self::at(2))->method('hasBlock')->with('datasource_filter')->willReturn(true);
 
         $datasourceView = $this->getDataSourceView('datasource');
-        $this->extension->setTheme($datasourceView, $template);
+        $this->runtime->setTheme($datasourceView, new TemplateWrapper($this->twig, $template));
 
-        $template->expects(self::at(3))
+        $template->expects(self::once())
             ->method('displayBlock')
             ->with('datasource_filter', [
                 'datasource' => $datasourceView,
@@ -106,41 +109,7 @@ class DataSourceExtensionTest extends TestCase
             ->willReturn(true)
         ;
 
-        $this->extension->datasourceFilter($datasourceView);
-    }
-
-    public function testDataSourceRenderBlockFromParent(): void
-    {
-        $this->twig->addExtension($this->extension);
-        // force initRuntime()
-        $this->twig->loadTemplate('datasource.html.twig');
-
-        $parent = $this->getTemplateMock();
-        $template = $this->getTemplateMock();
-        $template->expects(self::at(0))
-            ->method('hasBlock')
-            ->with('datasource_datasource_filter')
-            ->willReturn(false)
-        ;
-
-        $template->expects(self::at(1))->method('getParent')->with([])->willReturn(false);
-        $template->expects(self::at(2))->method('hasBlock')->with('datasource_filter')->willReturn(false);
-        $template->expects(self::at(3))->method('getParent')->with([])->willReturn($parent);
-        $parent->expects(self::at(0))->method('hasBlock')->with('datasource_filter')->willReturn(true);
-
-        $datasourceView = $this->getDataSourceView('datasource');
-        $this->extension->setTheme($datasourceView, $template);
-
-        $parent->expects(self::at(1))
-            ->method('displayBlock')
-            ->with('datasource_filter', [
-                'datasource' => $datasourceView,
-                'vars' => [],
-                'global_var' => 'global_value'
-            ])
-            ->willReturn(true);
-
-        $this->extension->datasourceFilter($datasourceView);
+        $this->runtime->dataSourceFilter($datasourceView);
     }
 
     protected function setUp(): void
@@ -156,26 +125,27 @@ class DataSourceExtensionTest extends TestCase
         $twig->addGlobal('global_var', 'global_value');
 
         $this->twig = $twig;
-        $this->extension = new DataSourceExtension($this->getContainer(), 'datasource.html.twig');
+        $this->extension = new DataSourceExtension();
+        $this->runtime = new DataSourceRuntime(
+            $this->createMock(RequestStack::class),
+            $twig,
+            $this->getRouter(),
+            'datasource.html.twig'
+        );
+
+        $this->runtimeLoader = new TwigRuntimeLoader([$this->runtime]);
+        $this->twig->addRuntimeLoader($this->runtimeLoader);
     }
 
-    private function getRouter(): MockObject
+    /**
+     * @return RouterInterface&MockObject
+     */
+    private function getRouter(): RouterInterface
     {
         $router = $this->createMock(RouterInterface::class);
         $router->method('generate')->willReturn('some_route');
 
         return $router;
-    }
-
-    /**
-     * @return ContainerInterface&MockObject
-     */
-    private function getContainer(): ContainerInterface
-    {
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->with('router')->willReturn($this->getRouter());
-
-        return $container;
     }
 
     /**

@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid\Extension\Core\ColumnTypeExtension;
+namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension;
 
 use FSi\Component\DataGrid\Column\CellViewInterface;
 use FSi\Component\DataGrid\Column\ColumnTypeInterface;
@@ -252,11 +252,7 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
 
         $view->expects(self::once())->method('getValue')->willReturn(['foo']);
 
-        if (PHP_VERSION_ID >= 80000) {
-            $this->expectException(ValueError::class);
-        } else {
-            $this->expectException(Error::class);
-        }
+        $this->expectError();
         $extension->buildCellView($column, $view);
     }
 

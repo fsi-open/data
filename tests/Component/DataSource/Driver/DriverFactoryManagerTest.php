@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Driver;
+namespace Tests\FSi\Component\DataSource\Driver;
 
 use DateTimeImmutable;
 use FSi\Component\DataSource\Driver\Collection\CollectionFactory;

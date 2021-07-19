@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Bundle\DataGridBundle\DataGrid\Extension\Configuration\EventSubscriber;
+namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\Extension\Configuration\EventSubscriber;
 
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Configuration\EventSubscriber\ConfigurationBuilder;
 use FSi\Component\DataGrid\DataGrid;
@@ -27,12 +27,8 @@ class ConfigurationBuilderTest extends TestCase
     /**
      * @var Kernel&MockObject
      */
-    private $kernel;
-
-    /**
-     * @var ConfigurationBuilder
-     */
-    private $subscriber;
+    private Kernel $kernel;
+    private ConfigurationBuilder $subscriber;
 
     public function testSubscribedEvents(): void
     {
@@ -57,7 +53,7 @@ class ConfigurationBuilderTest extends TestCase
                 function (): array {
                     $bundle = $this->createMock(Bundle::class);
                     $bundle->method('getPath')
-                        ->willReturn(sprintf('%s/../../../../Fixtures/FooBundle', __DIR__));
+                        ->willReturn(sprintf(__DIR__ . '/../../../../Fixtures/FooBundle'));
 
                     return [$bundle];
                 }
@@ -99,10 +95,14 @@ class ConfigurationBuilderTest extends TestCase
         $dataGrid = $this->getMockBuilder(DataGrid::class)->disableOriginalConstructor()->getMock();
         $dataGrid->method('getName')->willReturn('news');
 
-        // 0 - 1 is when getName() is called
-        $dataGrid->expects(self::at(2))->method('addColumn')->with('id', 'number', ['label' => 'ID']);
-        $dataGrid->expects(self::at(3))->method('addColumn')->with('title', 'text', []);
-        $dataGrid->expects(self::at(4))->method('addColumn')->with('author', 'text', []);
+        $dataGrid->expects(self::exactly(3))
+            ->method('addColumn')
+            ->withConsecutive(
+                ['id', 'number', ['label' => 'ID']],
+                ['title', 'text', []],
+                ['author', 'text', []]
+            )
+        ;
 
         $this->subscriber->readConfiguration(new DataGridEvent($dataGrid, []));
     }
@@ -121,14 +121,13 @@ class ConfigurationBuilderTest extends TestCase
         $dataGrid = $this->getMockBuilder(DataGrid::class)->disableOriginalConstructor()->getMock();
         $dataGrid->method('getName')->willReturn('news');
 
-        // 0  is when getName() is called
-        $dataGrid->expects(self::at(1))->method('addColumn')->with('id', 'number', ['label' => 'ID']);
-        $dataGrid->expects(self::at(2))->method('addColumn')
-            ->with('title_short', 'text', ['label' => 'Short title'])
-        ;
-        $dataGrid->expects(self::at(3))->method('addColumn')
-            ->with('created_at', 'date', ['label' => 'Created at'])
-        ;
+        $dataGrid->expects(self::exactly(3))
+            ->method('addColumn')
+            ->withConsecutive(
+                ['id', 'number', ['label' => 'ID']],
+                ['title_short', 'text', ['label' => 'Short title']],
+                ['created_at', 'date', ['label' => 'Created at']]
+            );
 
         $this->subscriber->readConfiguration(new DataGridEvent($dataGrid, []));
     }

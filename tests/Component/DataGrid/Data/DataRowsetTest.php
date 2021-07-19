@@ -9,9 +9,9 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid\Data;
+namespace Tests\FSi\Component\DataGrid\Data;
 
-use FSi\Tests\Component\DataGrid\Fixtures\Entity;
+use Tests\FSi\Component\DataGrid\Fixtures\Entity;
 use FSi\Component\DataGrid\Data\DataRowset;
 use PHPUnit\Framework\TestCase;
 use TypeError;

@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Field;
+namespace Tests\FSi\Component\DataSource\Field;
 
 use FSi\Component\DataSource\Field\FieldView;
 use PHPUnit\Framework\MockObject\MockObject;

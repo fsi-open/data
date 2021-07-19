@@ -9,10 +9,10 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid\DataMapper;
+namespace Tests\FSi\Component\DataGrid\DataMapper;
 
 use FSi\Component\DataGrid\DataMapper\ReflectionMapper;
-use FSi\Tests\Component\DataGrid\Fixtures\EntityMapper;
+use Tests\FSi\Component\DataGrid\Fixtures\EntityMapper;
 use FSi\Component\DataGrid\Exception\DataMappingException;
 use PHPUnit\Framework\TestCase;
 

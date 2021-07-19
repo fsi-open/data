@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid\Extension\Gedmo;
+namespace Tests\FSi\Component\DataGrid\Extension\Gedmo;
 
 use FSi\Component\DataGrid\Extension\Gedmo\GedmoDoctrineExtension;
 use Doctrine\Persistence\ManagerRegistry;

@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid\Extension\Doctrine;
+namespace Tests\FSi\Component\DataGrid\Extension\Doctrine;
 
 use FSi\Component\DataGrid\Extension\Doctrine\DoctrineExtension;
 use PHPUnit\Framework\TestCase;

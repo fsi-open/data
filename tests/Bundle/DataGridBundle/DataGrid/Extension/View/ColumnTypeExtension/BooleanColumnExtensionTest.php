@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Bundle\DataGridBundle\DataGrid\Extension\View\ColumnTypeExtension;
+namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\Extension\View\ColumnTypeExtension;
 
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\FormExtension;
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\View\ColumnTypeExtension\BooleanColumnExtension;
@@ -42,15 +42,13 @@ class BooleanColumnExtensionTest extends TestCase
         /** @var TranslatorInterface&MockObject $translator */
         $translator = $this->createMock(TranslatorInterface::class);
 
-        $translator->expects(self::at(0))
+        $translator->expects(self::exactly(2))
             ->method('trans')
-            ->with('datagrid.boolean.yes', [], 'DataGridBundle')
-            ->willReturn('YES');
-
-        $translator->expects(self::at(1))
-            ->method('trans')
-            ->with('datagrid.boolean.no', [], 'DataGridBundle')
-            ->willReturn('NO');
+            ->withConsecutive(
+                ['datagrid.boolean.yes', [], 'DataGridBundle'],
+                ['datagrid.boolean.no', [], 'DataGridBundle']
+            )
+            ->willReturnOnConsecutiveCalls('YES', 'NO');
 
         return $translator;
     }

@@ -16,30 +16,30 @@ use Twig\TokenParser\AbstractTokenParser;
 
 class DataSourceRouteTokenParser extends AbstractTokenParser
 {
-    public function parse(Token $token)
+    public function parse(Token $token): DataSourceRouteNode
     {
         $stream = $this->parser->getStream();
         $dataSource = $this->parser->getExpressionParser()->parseExpression();
         $route = $this->parser->getExpressionParser()->parseExpression();
-        $additional_parameters = new ArrayExpression([], $stream->getCurrent()->getLine());
+        $vars = new ArrayExpression([], $stream->getCurrent()->getLine());
 
-        if ($this->parser->getStream()->test(Token::NAME_TYPE, 'with')) {
+        if (true === $this->parser->getStream()->test(Token::NAME_TYPE, 'with')) {
             $this->parser->getStream()->next();
 
             if (
-                $this->parser->getStream()->test(Token::PUNCTUATION_TYPE)
-                || $this->parser->getStream()->test(Token::NAME_TYPE)
+                true === $this->parser->getStream()->test(Token::PUNCTUATION_TYPE)
+                || true === $this->parser->getStream()->test(Token::NAME_TYPE)
             ) {
-                $additional_parameters = $this->parser->getExpressionParser()->parseExpression();
+                $vars = $this->parser->getExpressionParser()->parseExpression();
             }
         }
 
         $stream->expect(Token::BLOCK_END_TYPE);
 
-        return new DataSourceRouteNode($dataSource, $route, $additional_parameters, $token->getLine(), $this->getTag());
+        return new DataSourceRouteNode($dataSource, $route, $vars, $token->getLine(), $this->getTag());
     }
 
-    public function getTag()
+    public function getTag(): string
     {
         return 'datasource_route';
     }

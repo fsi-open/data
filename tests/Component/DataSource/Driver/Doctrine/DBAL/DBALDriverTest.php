@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Driver\Doctrine\DBAL;
+namespace Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
 use Doctrine\DBAL\Connection;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALAbstractField;
@@ -21,8 +21,8 @@ use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field;
 use FSi\Component\DataSource\Exception\DataSourceException;
 use FSi\Component\DataSource\Exception\FieldException;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
-use FSi\Tests\Component\DataSource\Driver\Doctrine\DBAL\Fixtures\DBALDriverExtension;
-use FSi\Tests\Component\DataSource\Fixtures\FieldExtension;
+use Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL\Fixtures\DBALDriverExtension;
+use Tests\FSi\Component\DataSource\Fixtures\FieldExtension;
 use stdClass;
 
 class DBALDriverTest extends TestBase

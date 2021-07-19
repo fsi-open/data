@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Driver\Doctrine\ORM;
+namespace Tests\FSi\Component\DataSource\Driver\Doctrine\ORM;
 
 use ArrayIterator;
 use Doctrine\Persistence\ManagerRegistry;

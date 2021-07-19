@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-namespace FSi\Tests\Bundle\DataSourceBundle\DataSource\Extension\Configuration\EventSubscriber;
+namespace Tests\FSi\Bundle\DataSourceBundle\DataSource\Extension\Configuration\EventSubscriber;
 
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Configuration\EventSubscriber\ConfigurationBuilder;
 use FSi\Component\DataSource\DataSourceInterface;
@@ -94,9 +94,12 @@ class ConfigurationBuilderTest extends TestCase
         $dataSource = $this->createMock(DataSourceInterface::class);
         $dataSource->method('getName')->willReturn('news');
 
-        // 0 - 1 getName() is called
-        $dataSource->expects(self::at(2))->method('addField')->with('title', 'text', 'like', ['label' => 'News Title']);
-        $dataSource->expects(self::at(3))->method('addField')->with('author', null, null, []);
+        $dataSource->expects(self::exactly(2))
+            ->method('addField')
+            ->withConsecutive(
+                ['title', 'text', 'like', ['label' => 'News Title']],
+                ['author', null, null, []]
+            );
 
         $this->subscriber->readConfiguration(new ParametersEventArgs($dataSource, []));
     }
@@ -116,15 +119,12 @@ class ConfigurationBuilderTest extends TestCase
         $dataSource = $this->createMock(DataSourceInterface::class);
         $dataSource->method('getName')->willReturn('news');
 
-        // 0  is when getName() is called
-        $dataSource->expects(self::at(1))
+        $dataSource->expects(self::exactly(2))
             ->method('addField')
-            ->with('title_short', 'text', null, ['label' => 'Short title'])
-        ;
-
-        $dataSource->expects(self::at(2))
-            ->method('addField')
-            ->with('created_at', 'date', null, ['label' => 'Created at'])
+            ->withConsecutive(
+                ['title_short', 'text', null, ['label' => 'Short title']],
+                ['created_at', 'date', null, ['label' => 'Created at']]
+            )
         ;
 
         $this->subscriber->readConfiguration(new ParametersEventArgs($dataSource, []));

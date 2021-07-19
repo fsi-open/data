@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Driver\Doctrine\DBAL;
+namespace Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
 use Doctrine\DBAL\Connection;
 use FSi\Component\DataSource\DataSourceInterface;
@@ -191,7 +191,7 @@ class DBALDriverResultTest extends TestBase
         self::assertCount(6, $result);
         self::assertCount(3, iterator_to_array($result));
 
-        self::assertRegExp(
+        self::assertMatchesRegularExpression(
             '/^SELECT c\.\*, COUNT\(n\.id\) newscount FROM category c '
                 . 'LEFT JOIN news n ON n\.category_id = c\.id '
                 . 'GROUP BY c\.id HAVING newscount > :newscount LIMIT 3( OFFSET 0)?$/',
@@ -208,7 +208,7 @@ class DBALDriverResultTest extends TestBase
         self::assertCount(10, $result);
         self::assertCount(3, iterator_to_array($result));
 
-        self::assertRegExp(
+        self::assertMatchesRegularExpression(
             '/^SELECT c\.\*, COUNT\(n\.id\) newscount FROM category c '
                 . 'LEFT JOIN news n ON n\.category_id = c\.id '
                 . 'GROUP BY c\.id HAVING newscount > :newscount LIMIT 3( OFFSET 0)?$/',
@@ -241,7 +241,7 @@ class DBALDriverResultTest extends TestBase
         self::assertCount(3, $result);
         self::assertCount(2, iterator_to_array($result));
 
-        self::assertRegExp(
+        self::assertMatchesRegularExpression(
             '/^SELECT c\.\*, COUNT\(n\.id\) newscount FROM category c '
                 . 'LEFT JOIN news n ON n\.category_id = c\.id '
                 . 'GROUP BY c\.id HAVING newscount BETWEEN :newscount_from AND :newscount_to LIMIT 2( OFFSET 0)?$/',

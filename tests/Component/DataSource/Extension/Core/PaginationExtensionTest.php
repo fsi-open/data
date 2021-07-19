@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Extension\Core;
+namespace Tests\FSi\Component\DataSource\Extension\Core;
 
 use FSi\Component\DataSource\DataSourceFactory;
 use FSi\Component\DataSource\Driver\Collection\CollectionFactory;
@@ -18,7 +18,7 @@ use FSi\Component\DataSource\Driver\DriverFactoryManager;
 use FSi\Component\DataSource\Extension\Core\Pagination\EventSubscriber\Events;
 use FSi\Component\DataSource\Extension\Core\Pagination\PaginationExtension;
 use FSi\Component\DataSource\Event\DataSourceEvent;
-use FSi\Tests\Component\DataSource\Fixtures\TestResult;
+use Tests\FSi\Component\DataSource\Fixtures\TestResult;
 use PHPUnit\Framework\TestCase;
 use FSi\Component\DataSource\Driver\DriverInterface;
 use FSi\Component\DataSource\DataSource;

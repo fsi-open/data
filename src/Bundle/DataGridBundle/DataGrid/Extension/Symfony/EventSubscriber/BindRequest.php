@@ -14,6 +14,7 @@ namespace FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\EventSubscriber;
 use FSi\Component\DataGrid\DataGridEventInterface;
 use FSi\Component\DataGrid\DataGridEvents;
 use FSi\Component\DataGrid\Exception\DataGridException;
+use FSi\Component\RequestCompatibilityHelper;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -39,10 +40,10 @@ class BindRequest implements EventSubscriberInterface
             case 'PUT':
             case 'DELETE':
             case 'PATCH':
-                $data = $request->request->get($name, []);
+                $data = RequestCompatibilityHelper::get($request->request, $name);
                 break;
             case 'GET':
-                $data = $request->query->get($name, []);
+                $data = RequestCompatibilityHelper::get($request->query, $name);
                 break;
 
             default:

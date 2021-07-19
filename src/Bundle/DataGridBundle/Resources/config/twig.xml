@@ -8,10 +8,15 @@
     </parameters>
 
     <services>
-        <service id="datagrid.twig.extension" class="%datagrid.twig.extension.class%" public="false">
-            <tag name="twig.extension" />
+        <service id="FSi\Bundle\DataGridBundle\Twig\Extension\DataGridRuntime" public="true" autowire="true">
             <argument>%datagrid.twig.themes%</argument>
             <argument type="service" id="translator" />
+            <argument type="service" id="twig" />
+            <tag name="twig.runtime" />
+        </service>
+
+        <service id="datagrid.twig.extension" class="%datagrid.twig.extension.class%" public="false">
+            <tag name="twig.extension" />
         </service>
     </services>
 

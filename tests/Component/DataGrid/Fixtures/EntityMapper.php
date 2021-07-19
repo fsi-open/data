@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid\Fixtures;
+namespace Tests\FSi\Component\DataGrid\Fixtures;
 
 class EntityMapper
 {

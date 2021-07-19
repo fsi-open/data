@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace FSi\Bundle\DataGridBundle\Twig\Node;
 
+use FSi\Bundle\DataGridBundle\Twig\Extension\DataGridRuntime;
 use Twig\Compiler;
 use Twig\Node\Expression\ArrayExpression;
 use Twig\Node\Node;
@@ -31,9 +32,7 @@ class DataGridThemeNode extends Node
     {
         $compiler
             ->addDebugInfo($this)
-            ->write(
-                '$this->env->getExtension(\'FSi\Bundle\DataGridBundle\Twig\Extension\DataGridExtension\')->setTheme('
-            )
+            ->write(sprintf('$this->env->getRuntime(\'%s\')->setTheme(', DataGridRuntime::class))
             ->subcompile($this->getNode('datagrid'))
             ->raw(', ')
             ->subcompile($this->getNode('theme'))

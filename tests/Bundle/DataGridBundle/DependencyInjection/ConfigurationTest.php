@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Bundle\DataGridBundle\DependencyInjection;
+namespace Tests\FSi\Bundle\DataGridBundle\DependencyInjection;
 
 use FSi\Bundle\DataGridBundle\DependencyInjection\Configuration;
 use PHPUnit\Framework\TestCase;

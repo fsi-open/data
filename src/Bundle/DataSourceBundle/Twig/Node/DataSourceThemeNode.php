@@ -10,6 +10,7 @@
 namespace FSi\Bundle\DataSourceBundle\Twig\Node;
 
 use FSi\Bundle\DataSourceBundle\Twig\Extension\DataSourceExtension;
+use FSi\Bundle\DataSourceBundle\Twig\Extension\DataSourceRuntime;
 use Twig\Compiler;
 use Twig\Node\Expression\AbstractExpression;
 use Twig\Node\Node;
@@ -21,17 +22,17 @@ class DataSourceThemeNode extends Node
         parent::__construct(['datasource' => $dataGrid, 'theme' => $theme, 'vars' => $vars], [], $lineno, $tag);
     }
 
-    public function compile(Compiler $compiler)
+    public function compile(Compiler $compiler): void
     {
         $compiler
             ->addDebugInfo($this)
-            ->write(sprintf('$this->env->getExtension(\'%s\')->setTheme(', DataSourceExtension::class))
+            ->write(sprintf('$this->env->getRuntime(\'%s\')->setTheme(', DataSourceRuntime::class))
             ->subcompile($this->getNode('datasource'))
             ->raw(', ')
             ->subcompile($this->getNode('theme'))
             ->raw(', ')
             ->subcompile($this->getNode('vars'))
-            ->raw(");\n");
+            ->raw(");\n")
         ;
     }
 }

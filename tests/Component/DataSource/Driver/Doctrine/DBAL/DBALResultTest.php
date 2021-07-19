@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Driver\Doctrine\DBAL;
+namespace Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
 use Doctrine\DBAL\Connection;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALResult;
