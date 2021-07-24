@@ -17,6 +17,8 @@ cache:
 
 before_script:
     - phpenv config-rm xdebug.ini
+    - export PATH="$HOME/bin:$PATH"
+    - ./install_composer.sh
     - composer validate
     - composer update $COMPOSER_FLAGS
 
