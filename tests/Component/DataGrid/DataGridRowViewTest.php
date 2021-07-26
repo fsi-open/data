@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid;
+namespace Tests\FSi\Component\DataGrid;
 
 use FSi\Component\DataGrid\DataGridRowView;
 use FSi\Component\DataGrid\Column\ColumnTypeInterface;

@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid\Extension\Core;
+namespace Tests\FSi\Component\DataGrid\Extension\Core;
 
 use FSi\Component\DataGrid\Extension\Core\CoreExtension;
 use FSi\Component\DataGrid\Extension\Core\EventSubscriber\ColumnOrder;

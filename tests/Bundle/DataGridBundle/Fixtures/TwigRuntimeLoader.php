@@ -9,9 +9,12 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Bundle\DataGridBundle\Fixtures;
+namespace Tests\FSi\Bundle\DataGridBundle\Fixtures;
 
+use Twig\Extension\RuntimeExtensionInterface;
 use Twig\RuntimeLoader\RuntimeLoaderInterface;
+
+use function get_class;
 
 class TwigRuntimeLoader implements RuntimeLoaderInterface
 {
@@ -22,6 +25,11 @@ class TwigRuntimeLoader implements RuntimeLoaderInterface
         foreach ($instances as $instance) {
             $this->instances[get_class($instance)] = $instance;
         }
+    }
+
+    public function replaceInstance(RuntimeExtensionInterface $runtime): void
+    {
+        $this->instances[get_class($runtime)] = $runtime;
     }
 
     public function load($class)

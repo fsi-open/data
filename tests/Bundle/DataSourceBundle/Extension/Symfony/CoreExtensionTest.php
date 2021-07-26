@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-namespace FSi\Tests\Bundle\DataSourceBundle\Extension\Symfony;
+namespace Tests\FSi\Bundle\DataSourceBundle\Extension\Symfony;
 
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Core\CoreExtension;
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Core\EventSubscriber\BindParameters;

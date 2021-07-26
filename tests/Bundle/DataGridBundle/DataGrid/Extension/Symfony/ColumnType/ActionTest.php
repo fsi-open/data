@@ -9,10 +9,10 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnType;
+namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnType;
 
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnType\Action;
-use FSi\Tests\Bundle\DataGridBundle\Fixtures\Request;
+use Tests\FSi\Bundle\DataGridBundle\Fixtures\Request;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;

@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Bundle\DataSourceBundle\DependencyInjection;
+namespace Tests\FSi\Bundle\DataSourceBundle\DependencyInjection;
 
 use FSi\Bundle\DataSourceBundle\DependencyInjection\Configuration;
 use PHPUnit\Framework\TestCase;

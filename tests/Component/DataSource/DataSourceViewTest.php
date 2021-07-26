@@ -9,14 +9,14 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource;
+namespace Tests\FSi\Component\DataSource;
 
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\DataSourceView;
 use FSi\Component\DataSource\Exception\DataSourceViewException;
 use FSi\Component\DataSource\Field\FieldViewInterface;
 use FSi\Component\DataSource\Result;
-use FSi\Tests\Component\DataSource\Fixtures\TestResult;
+use Tests\FSi\Component\DataSource\Fixtures\TestResult;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 

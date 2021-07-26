@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Bundle\DataGridBundle\Fixtures;
+namespace Tests\FSi\Bundle\DataGridBundle\Fixtures;
 
 class Entity
 {

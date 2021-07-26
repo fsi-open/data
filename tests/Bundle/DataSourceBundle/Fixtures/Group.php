@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-namespace FSi\Tests\Bundle\DataSourceBundle\Fixtures;
+namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures;
 
 use Doctrine\ORM\Mapping as ORM;
 

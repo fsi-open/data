@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Fixtures;
+namespace Tests\FSi\Component\DataSource\Fixtures;
 
 use ArrayIterator;
 use FSi\Component\DataSource\Result;

@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Fixtures;
+namespace Tests\FSi\Component\DataSource\Fixtures;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use FSi\Component\DataSource\DataSourceAbstractExtension;

@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Driver\Doctrine\ORM;
+namespace Tests\FSi\Component\DataSource\Driver\Doctrine\ORM;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
@@ -23,8 +23,8 @@ use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field;
 use FSi\Component\DataSource\Exception\DataSourceException;
 use FSi\Component\DataSource\Exception\FieldException;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
-use FSi\Tests\Component\DataSource\Fixtures\DoctrineDriverExtension;
-use FSi\Tests\Component\DataSource\Fixtures\FieldExtension;
+use Tests\FSi\Component\DataSource\Fixtures\DoctrineDriverExtension;
+use Tests\FSi\Component\DataSource\Fixtures\FieldExtension;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use stdClass;

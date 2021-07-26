@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Fixtures;
+namespace Tests\FSi\Component\DataSource\Fixtures;
 
 use Doctrine\ORM\QueryBuilder;
 use FSi\Component\DataSource\Driver\DriverAbstractExtension;

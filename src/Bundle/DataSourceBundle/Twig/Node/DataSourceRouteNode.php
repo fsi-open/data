@@ -9,7 +9,7 @@
 
 namespace FSi\Bundle\DataSourceBundle\Twig\Node;
 
-use FSi\Bundle\DataSourceBundle\Twig\Extension\DataSourceExtension;
+use FSi\Bundle\DataSourceBundle\Twig\Extension\DataSourceRuntime;
 use Twig\Compiler;
 use Twig\Node\Expression\AbstractExpression;
 use Twig\Node\Node;
@@ -35,17 +35,17 @@ class DataSourceRouteNode extends Node
         );
     }
 
-    public function compile(Compiler $compiler)
+    public function compile(Compiler $compiler): void
     {
         $compiler
             ->addDebugInfo($this)
-            ->write(sprintf('$this->env->getExtension(\'%s\')->setRoute(', DataSourceExtension::class))
+            ->write(sprintf('$this->env->getRuntime(\'%s\')->setRoute(', DataSourceRuntime::class))
             ->subcompile($this->getNode('datasource'))
             ->raw(', ')
             ->subcompile($this->getNode('route'))
             ->raw(', ')
             ->subcompile($this->getNode('additional_parameters'))
-            ->raw(");\n");
+            ->raw(");\n")
         ;
     }
 }

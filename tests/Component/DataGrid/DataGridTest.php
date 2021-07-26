@@ -9,12 +9,12 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid;
+namespace Tests\FSi\Component\DataGrid;
 
 use FSi\Component\DataGrid\DataGrid;
-use FSi\Tests\Component\DataGrid\Fixtures\FooExtension;
-use FSi\Tests\Component\DataGrid\Fixtures\ColumnType\FooType;
-use FSi\Tests\Component\DataGrid\Fixtures\Entity;
+use Tests\FSi\Component\DataGrid\Fixtures\FooExtension;
+use Tests\FSi\Component\DataGrid\Fixtures\ColumnType\FooType;
+use Tests\FSi\Component\DataGrid\Fixtures\Entity;
 use FSi\Component\DataGrid\DataGridViewInterface;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\DataGridFactoryInterface;

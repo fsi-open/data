@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Fixtures;
+namespace Tests\FSi\Component\DataSource\Fixtures;
 
 use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
@@ -58,17 +58,17 @@ class News
     private $create_time;
 
     /**
-     * @ORM\ManyToOne(targetEntity="FSi\Tests\Component\DataSource\Fixtures\Category", inversedBy="news")
+     * @ORM\ManyToOne(targetEntity="Tests\FSi\Component\DataSource\Fixtures\Category", inversedBy="news")
      */
     private $category;
 
     /**
-     * @ORM\ManyToOne(targetEntity="FSi\Tests\Component\DataSource\Fixtures\Category")
+     * @ORM\ManyToOne(targetEntity="Tests\FSi\Component\DataSource\Fixtures\Category")
      */
     private $category2;
 
     /**
-     * @ORM\ManyToMany(targetEntity="FSi\Tests\Component\DataSource\Fixtures\Group")
+     * @ORM\ManyToMany(targetEntity="Tests\FSi\Component\DataSource\Fixtures\Group")
      */
     private $groups;
 

@@ -8,10 +8,15 @@
     </parameters>
 
     <services>
+        <service id="FSi\Bundle\DataSourceBundle\Twig\Extension\DataSourceRuntime" public="true" autowire="true">
+            <argument type="service" id="service_container" />
+            <argument type="service" id="twig" />
+            <argument>%datasource.twig.template%</argument>
+            <tag name="twig.runtime" />
+        </service>
+
         <service id="datasource.twig.extension" class="%datasource.twig.extension.class%" public="false">
             <tag name="twig.extension" />
-            <argument type="service" id="service_container" />
-            <argument>%datasource.twig.template%</argument>
         </service>
     </services>
 

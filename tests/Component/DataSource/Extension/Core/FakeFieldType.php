@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Extension\Core;
+namespace Tests\FSi\Component\DataSource\Extension\Core;
 
 use FSi\Component\DataSource\Field\FieldAbstractType;
 

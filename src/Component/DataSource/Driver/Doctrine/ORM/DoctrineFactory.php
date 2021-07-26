@@ -94,7 +94,7 @@ class DoctrineFactory implements DriverFactoryInterface
 
             $objectManager = null;
             if (null === $em && null !== $options['entity']) {
-                $objectManager = $this->registry->getManagerForClass($em);
+                $objectManager = $this->registry->getManagerForClass($options['entity']);
             } elseif (null === $em || true === is_string($em)) {
                 $objectManager = $this->registry->getManager($em);
             }

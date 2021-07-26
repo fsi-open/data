@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Bundle\DataGridBundle\DataGrid\Extension\Symfony\EventSubscriber;
+namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\EventSubscriber;
 
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\EventSubscriber\BindRequest;
 use FSi\Component\DataGrid\DataGridEventInterface;
@@ -39,9 +39,13 @@ class BindRequestTest extends TestCase
         $request = $this->createMock(Request::class);
         $request->expects(self::once())->method('getMethod')->willReturn('POST');
 
-        /** @var ParameterBag&MockObject $requestBag */
-        $requestBag = $this->createMock(ParameterBag::class);
-        $requestBag->expects(self::once())->method('get')->with('grid', [])->willReturn(['foo' => 'bar']);
+        if (true === class_exists(InputBag::class)) {
+            $requestBag = new InputBag();
+        } else {
+            $requestBag = new ParameterBag();
+        }
+        /** @var ParameterBag $requestBag */
+        $requestBag->set('grid', ['foo' => 'bar']);
 
         $request->request = $requestBag;
 

@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
+namespace Tests\FSi\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
 
 use Doctrine\Common\EventManager;
 use Doctrine\ORM\EntityManager;
@@ -18,7 +18,7 @@ use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\Mapping\ClassMetadataFactory;
 use Doctrine\Persistence\ObjectManager;
-use FSi\Tests\Component\DataGrid\Fixtures\EntityTree;
+use Tests\FSi\Component\DataGrid\Fixtures\EntityTree;
 use FSi\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;

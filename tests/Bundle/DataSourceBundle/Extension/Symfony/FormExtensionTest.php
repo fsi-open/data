@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-namespace FSi\Tests\Bundle\DataSourceBundle\Extension\Symfony;
+namespace Tests\FSi\Bundle\DataSourceBundle\Extension\Symfony;
 
 use DateTimeImmutable;
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Driver\DriverExtension;
@@ -15,7 +15,7 @@ use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\EventSubscribe
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Extension\DatasourceExtension;
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Field\FormFieldExtension;
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Type\BetweenType;
-use FSi\Tests\Bundle\DataSourceBundle\Fixtures\Form as TestForm;
+use Tests\FSi\Bundle\DataSourceBundle\Fixtures\Form as TestForm;
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\DataSourceViewInterface;
 use FSi\Component\DataSource\Event\DataSourceEvent\ViewEventArgs;

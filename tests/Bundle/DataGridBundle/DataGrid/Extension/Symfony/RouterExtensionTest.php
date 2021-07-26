@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Bundle\DataGridBundle\DataGrid\Extension\Symfony;
+namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony;
 
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\RouterExtension;
 use PHPUnit\Framework\TestCase;

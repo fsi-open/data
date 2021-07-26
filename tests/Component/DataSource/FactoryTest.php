@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource;
+namespace Tests\FSi\Component\DataSource;
 
 use FSi\Component\DataSource\DataSourceFactory;
 use FSi\Component\DataSource\Driver\Collection\CollectionFactory;

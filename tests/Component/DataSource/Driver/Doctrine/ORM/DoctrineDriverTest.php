@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Driver\Doctrine\ORM;
+namespace Tests\FSi\Component\DataSource\Driver\Doctrine\ORM;
 
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManager;
@@ -25,10 +25,10 @@ use FSi\Component\DataSource\Driver\DriverFactoryManager;
 use FSi\Component\DataSource\Extension\Core;
 use FSi\Component\DataSource\Extension\Core\Ordering\OrderingExtension;
 use FSi\Component\DataSource\Extension\Core\Pagination\PaginationExtension;
-use FSi\Tests\Component\DataSource\Fixtures\Category;
-use FSi\Tests\Component\DataSource\Fixtures\DoctrineDriverExtension;
-use FSi\Tests\Component\DataSource\Fixtures\Group;
-use FSi\Tests\Component\DataSource\Fixtures\News;
+use Tests\FSi\Component\DataSource\Fixtures\Category;
+use Tests\FSi\Component\DataSource\Fixtures\DoctrineDriverExtension;
+use Tests\FSi\Component\DataSource\Fixtures\Group;
+use Tests\FSi\Component\DataSource\Fixtures\News;
 use Iterator;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;

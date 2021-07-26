@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-namespace FSi\Tests\Bundle\DataSourceBundle\Fixtures;
+namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures;
 
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -55,17 +55,17 @@ class News
     private $create_time;
 
     /**
-     * @ORM\ManyToOne(targetEntity="FSi\Tests\Bundle\DataSourceBundle\Fixtures\Category", inversedBy="news")
+     * @ORM\ManyToOne(targetEntity="Tests\FSi\Bundle\DataSourceBundle\Fixtures\Category", inversedBy="news")
      */
     private $category;
 
     /**
-     * @ORM\ManyToOne(targetEntity="FSi\Tests\Bundle\DataSourceBundle\Fixtures\Category")
+     * @ORM\ManyToOne(targetEntity="Tests\FSi\Bundle\DataSourceBundle\Fixtures\Category")
      */
     private $category2;
 
     /**
-     * @ORM\ManyToMany(targetEntity="FSi\Tests\Bundle\DataSourceBundle\Fixtures\Group")
+     * @ORM\ManyToMany(targetEntity="Tests\FSi\Bundle\DataSourceBundle\Fixtures\Group")
      */
     private $groups;
 

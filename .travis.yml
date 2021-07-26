@@ -2,10 +2,9 @@ language: php
 
 matrix:
     include:
-        - php: 7.2
-          env:
-            - COMPOSER_FLAGS='--prefer-lowest'
         - php: 7.4
+          env:
+              - COMPOSER_FLAGS='--prefer-lowest'
         - php: 8.0
 
 sudo: false
@@ -17,6 +16,8 @@ cache:
 
 before_script:
     - phpenv config-rm xdebug.ini
+    - export PATH="$HOME/bin:$PATH"
+    - ./install_composer.sh
     - composer validate
     - composer update $COMPOSER_FLAGS
 

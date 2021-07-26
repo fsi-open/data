@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-namespace FSi\Tests\Bundle\DataSourceBundle\Fixtures;
+namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -29,7 +29,7 @@ class Category
     private $name;
 
     /**
-     * @ORM\OneToMany(targetEntity="FSi\Tests\Bundle\DataSourceBundle\Fixtures\News", mappedBy="category")
+     * @ORM\OneToMany(targetEntity="Tests\FSi\Bundle\DataSourceBundle\Fixtures\News", mappedBy="category")
      */
     private $news;
 

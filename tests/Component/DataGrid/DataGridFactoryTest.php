@@ -9,15 +9,15 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid;
+namespace Tests\FSi\Component\DataGrid;
 
 use FSi\Component\DataGrid\DataGridFactory;
 use FSi\Component\DataGrid\DataGridFactoryInterface;
-use FSi\Tests\Component\DataGrid\Fixtures\FooExtension;
+use Tests\FSi\Component\DataGrid\Fixtures\FooExtension;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
 use FSi\Component\DataGrid\Exception\DataGridColumnException;
-use FSi\Tests\Component\DataGrid\Fixtures\ColumnType\FooType;
+use Tests\FSi\Component\DataGrid\Fixtures\ColumnType\FooType;
 use PHPUnit\Framework\TestCase;
 
 class DataGridFactoryTest extends TestCase

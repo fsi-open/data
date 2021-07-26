@@ -1,7 +1,7 @@
 <?php
 
 /**
- * (c) FSi sp. z o.o <info@fsi.pl>
+ * (c) FSi sp. z o.o. <info@fsi.pl>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataIndexer;
+namespace Tests\FSi\Component\DataIndexer;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\CachedReader;
@@ -25,16 +25,16 @@ use Doctrine\Persistence\ManagerRegistry;
 use FSi\Component\DataIndexer\DoctrineDataIndexer;
 use FSi\Component\DataIndexer\Exception\InvalidArgumentException;
 use FSi\Component\DataIndexer\Exception\RuntimeException;
-use FSi\Tests\Component\DataIndexer\Fixtures\DeciduousTree;
-use FSi\Tests\Component\DataIndexer\Fixtures\Monocycle;
-use FSi\Tests\Component\DataIndexer\Fixtures\News;
-use FSi\Tests\Component\DataIndexer\Fixtures\Oak;
-use FSi\Tests\Component\DataIndexer\Fixtures\Plant;
-use FSi\Tests\Component\DataIndexer\Fixtures\Post;
-use FSi\Tests\Component\DataIndexer\Fixtures\Car;
-use FSi\Tests\Component\DataIndexer\Fixtures\Bike;
-use FSi\Tests\Component\DataIndexer\Fixtures\Tree;
-use FSi\Tests\Component\DataIndexer\Fixtures\Vehicle;
+use Tests\FSi\Component\DataIndexer\Fixtures\DeciduousTree;
+use Tests\FSi\Component\DataIndexer\Fixtures\Monocycle;
+use Tests\FSi\Component\DataIndexer\Fixtures\News;
+use Tests\FSi\Component\DataIndexer\Fixtures\Oak;
+use Tests\FSi\Component\DataIndexer\Fixtures\Plant;
+use Tests\FSi\Component\DataIndexer\Fixtures\Post;
+use Tests\FSi\Component\DataIndexer\Fixtures\Car;
+use Tests\FSi\Component\DataIndexer\Fixtures\Bike;
+use Tests\FSi\Component\DataIndexer\Fixtures\Tree;
+use Tests\FSi\Component\DataIndexer\Fixtures\Vehicle;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Doctrine\ORM\Configuration;
@@ -275,7 +275,6 @@ final class DoctrineDataIndexerTest extends TestCase
         $config->method('getQuoteStrategy')->willReturn(new DefaultQuoteStrategy());
 
         $reader = new AnnotationReader();
-        $reader = new CachedReader($reader, new ArrayCache());
 
         $config->method('getMetadataDriverImpl')->willReturn(new AnnotationDriver($reader, __DIR__));
         $config->method('getDefaultRepositoryClassName')->willReturn(EntityRepository::class);

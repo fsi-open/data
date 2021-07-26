@@ -9,10 +9,10 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid\Fixtures;
+namespace Tests\FSi\Component\DataGrid\Fixtures;
 
 use FSi\Component\DataGrid\DataGridAbstractExtension;
-use FSi\Tests\Component\DataGrid\Fixtures\ColumnType;
+use Tests\FSi\Component\DataGrid\Fixtures\ColumnType;
 
 class FooExtension extends DataGridAbstractExtension
 {

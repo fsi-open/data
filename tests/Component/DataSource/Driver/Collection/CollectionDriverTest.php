@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Driver\Collection;
+namespace Tests\FSi\Component\DataSource\Driver\Collection;
 
 use DateTimeImmutable;
 use Doctrine\Common\Collections\Criteria;
@@ -30,9 +30,9 @@ use FSi\Component\DataSource\Extension\Core;
 use FSi\Component\DataSource\Extension\Core\Ordering\OrderingExtension;
 use FSi\Component\DataSource\Extension\Core\Pagination\PaginationExtension;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
-use FSi\Tests\Component\DataSource\Fixtures\Category;
-use FSi\Tests\Component\DataSource\Fixtures\Group;
-use FSi\Tests\Component\DataSource\Fixtures\News;
+use Tests\FSi\Component\DataSource\Fixtures\Category;
+use Tests\FSi\Component\DataSource\Fixtures\Group;
+use Tests\FSi\Component\DataSource\Fixtures\News;
 use PHPUnit\Framework\TestCase;
 
 class CollectionDriverTest extends TestCase

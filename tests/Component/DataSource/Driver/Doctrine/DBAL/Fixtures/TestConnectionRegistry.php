@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Driver\Doctrine\DBAL\Fixtures;
+namespace Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL\Fixtures;
 
 use Doctrine\Persistence\ConnectionRegistry;
 use Doctrine\DBAL\Driver\Connection;

@@ -7,7 +7,7 @@
  * file that was distributed with this source code.
  */
 
-namespace FSi\Tests\Bundle\DataSourceBundle\Extension\Symfony;
+namespace Tests\FSi\Bundle\DataSourceBundle\Extension\Symfony;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\SchemaTool;
@@ -15,12 +15,11 @@ use Doctrine\ORM\Tools\Setup;
 use Doctrine\Persistence\ManagerRegistry;
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Driver\DriverExtension;
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Field\FormFieldExtension;
-use FSi\Tests\Bundle\DataSourceBundle\Fixtures\Form\Extension\TestCore\TestFieldType;
-use FSi\Tests\Bundle\DataSourceBundle\Fixtures\News;
+use Tests\FSi\Bundle\DataSourceBundle\Fixtures\Form\Extension\TestCore\TestFieldType;
+use Tests\FSi\Bundle\DataSourceBundle\Fixtures\News;
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Event\FieldEvent;
 use FSi\Component\DataSource\Field\FieldAbstractExtension;
-use FSi\Component\DataSource\Field\FieldTypeInterface;
 use FSi\Component\DataSource\Field\FieldViewInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Doctrine\Form\DoctrineOrmExtension;

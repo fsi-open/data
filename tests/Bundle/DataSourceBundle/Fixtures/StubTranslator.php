@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Bundle\DataSourceBundle\Fixtures;
+namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures;
 
 use Symfony\Contracts\Translation\TranslatorInterface;
 

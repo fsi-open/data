@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataSource\Fixtures;
+namespace Tests\FSi\Component\DataSource\Fixtures;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -31,7 +31,7 @@ class Category
     private $name;
 
     /**
-     * @ORM\OneToMany(targetEntity="FSi\Tests\Component\DataSource\Fixtures\News", mappedBy="category")
+     * @ORM\OneToMany(targetEntity="Tests\FSi\Component\DataSource\Fixtures\News", mappedBy="category")
      */
     private $news;
 

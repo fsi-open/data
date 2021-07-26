@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid\DataMapper;
+namespace Tests\FSi\Component\DataGrid\DataMapper;
 
 use FSi\Component\DataGrid\DataMapper\ChainMapper;
 use FSi\Component\DataGrid\Exception\DataMappingException;

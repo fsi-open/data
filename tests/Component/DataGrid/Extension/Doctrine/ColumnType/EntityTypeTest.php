@@ -9,9 +9,9 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid\Extension\Doctrine\ColumnType;
+namespace Tests\FSi\Component\DataGrid\Extension\Doctrine\ColumnType;
 
-use FSi\Tests\Component\DataGrid\Fixtures\Entity as Fixture;
+use Tests\FSi\Component\DataGrid\Fixtures\Entity as Fixture;
 use FSi\Component\DataGrid\Extension\Doctrine\ColumnType\Entity;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;

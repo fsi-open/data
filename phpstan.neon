@@ -2,6 +2,7 @@ includes:
     - vendor/phpstan/phpstan-phpunit/extension.neon
 parameters:
     treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false
     level: 4
     paths:
         - src
@@ -9,3 +10,6 @@ parameters:
     excludePaths:
         - src/Bundle/DataGridBundle/DependencyInjection/Configuration.php
         - src/Bundle/DataSourceBundle/DependencyInjection/Configuration.php
+    ignoreErrors:
+        - message: '#Property Symfony\\Component\\HttpFoundation\\Request::\$request \(Symfony\\Component\\HttpFoundation\\InputBag\) does not accept Symfony\\Component\\HttpFoundation\\ParameterBag\.#'
+          path: tests/Bundle/DataGridBundle/DataGrid/Extension/Symfony/EventSubscriber/BindRequestTest.php

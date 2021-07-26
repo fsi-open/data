@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Tests\Component\DataGrid\Fixtures\ColumnType;
+namespace Tests\FSi\Component\DataGrid\Fixtures\ColumnType;
 
 use FSi\Component\DataGrid\Column\ColumnAbstractType;
 
