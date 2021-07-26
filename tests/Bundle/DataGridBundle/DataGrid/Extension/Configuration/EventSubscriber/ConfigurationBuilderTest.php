@@ -15,6 +15,7 @@ use FSi\Bundle\DataGridBundle\DataGrid\Extension\Configuration\EventSubscriber\C
 use FSi\Component\DataGrid\DataGrid;
 use FSi\Component\DataGrid\DataGridEvent;
 use FSi\Component\DataGrid\DataGridEvents;
+use FSi\Component\DataGrid\DataGridInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -59,7 +60,7 @@ class ConfigurationBuilderTest extends TestCase
                 }
             );
 
-        $dataGrid = $this->getMockBuilder(DataGrid::class)->disableOriginalConstructor()->getMock();
+        $dataGrid = $this->getMockBuilder(DataGridInterface::class)->disableOriginalConstructor()->getMock();
         $dataGrid->method('getName')->willReturn('news');
         $dataGrid->expects(self::once())->method('addColumn')->with('id', 'number', ['label' => 'Identity']);
 
@@ -92,7 +93,7 @@ class ConfigurationBuilderTest extends TestCase
                 }
             );
 
-        $dataGrid = $this->getMockBuilder(DataGrid::class)->disableOriginalConstructor()->getMock();
+        $dataGrid = $this->getMockBuilder(DataGridInterface::class)->disableOriginalConstructor()->getMock();
         $dataGrid->method('getName')->willReturn('news');
 
         $dataGrid->expects(self::exactly(3))
@@ -118,7 +119,7 @@ class ConfigurationBuilderTest extends TestCase
 
         $this->kernel->expects(self::once())->method('getContainer')->willReturn($container);
         $this->kernel->expects(self::never())->method('getBundles');
-        $dataGrid = $this->getMockBuilder(DataGrid::class)->disableOriginalConstructor()->getMock();
+        $dataGrid = $this->getMockBuilder(DataGridInterface::class)->disableOriginalConstructor()->getMock();
         $dataGrid->method('getName')->willReturn('news');
 
         $dataGrid->expects(self::exactly(3))
@@ -154,7 +155,7 @@ class ConfigurationBuilderTest extends TestCase
                 }
             );
 
-        $dataGrid = $this->getMockBuilder(DataGrid::class)->disableOriginalConstructor()->getMock();
+        $dataGrid = $this->getMockBuilder(DataGridInterface::class)->disableOriginalConstructor()->getMock();
         $dataGrid->method('getName')->willReturn('user');
         $dataGrid->expects(self::once())->method('addColumn')->with('username', 'text', []);
 
@@ -175,7 +176,7 @@ class ConfigurationBuilderTest extends TestCase
 
         $this->kernel->expects(self::once())->method('getContainer')->willReturn($container);
 
-        $dataGrid = $this->getMockBuilder(DataGrid::class)->disableOriginalConstructor()->getMock();
+        $dataGrid = $this->getMockBuilder(DataGridInterface::class)->disableOriginalConstructor()->getMock();
         $dataGrid->method('getName')->willReturn('news');
 
         $this->subscriber->readConfiguration(new DataGridEvent($dataGrid, []));

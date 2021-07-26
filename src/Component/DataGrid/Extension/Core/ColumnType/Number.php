@@ -54,7 +54,7 @@ class Number extends ColumnAbstractType
 
     public function initOptions(): void
     {
-        $this->options = [
+        $defaults = [
             'round_mode' => null,
             'precision' => 2,
             'format' => false,
@@ -63,7 +63,7 @@ class Number extends ColumnAbstractType
             'format_thousands_sep' => ',',
         ];
 
-        $this->getOptionsResolver()->setDefaults($this->options);
+        $this->getOptionsResolver()->setDefaults($defaults);
 
         $this->getOptionsResolver()->setAllowedTypes('precision', 'integer');
         $this->getOptionsResolver()->setAllowedTypes('format', 'bool');

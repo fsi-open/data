@@ -17,10 +17,13 @@ use RuntimeException;
 class DataRowset implements DataRowsetInterface
 {
     /**
-     * @var array
+     * @var array<int|string,array|object>
      */
-    protected $data = [];
+    protected array $data = [];
 
+    /**
+     * @param iterable<array|object> $data
+     */
     public function __construct(iterable $data)
     {
         foreach ($data as $id => $element) {

@@ -21,6 +21,12 @@ interface DataGridInterface
 
     public function getDataMapper(): DataMapperInterface;
 
+    /**
+     * @param ColumnTypeInterface|string $name
+     * @param string $type
+     * @param array<string,mixed> $options
+     * @return DataGridInterface
+     */
     public function addColumn($name, string $type = 'text', array $options = []): DataGridInterface;
 
     public function removeColumn(string $name): DataGridInterface;
@@ -30,7 +36,7 @@ interface DataGridInterface
     public function getColumn(string $name): ColumnTypeInterface;
 
     /**
-     * @return ColumnTypeInterface[]
+     * @return array<ColumnTypeInterface>
      */
     public function getColumns(): array;
 

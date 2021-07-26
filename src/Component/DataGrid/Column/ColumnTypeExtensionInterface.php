@@ -13,18 +13,29 @@ namespace FSi\Component\DataGrid\Column;
 
 interface ColumnTypeExtensionInterface
 {
+    /**
+     * @param ColumnTypeInterface $column
+     * @param mixed $data
+     * @param array|object $object
+     * @param int|string $index
+     */
     public function bindData(ColumnTypeInterface $column, $data, $object, $index): void;
 
     public function buildCellView(ColumnTypeInterface $column, CellViewInterface $view): void;
 
     public function buildHeaderView(ColumnTypeInterface $column, HeaderViewInterface $view): void;
 
+    /**
+     * @param ColumnTypeInterface $column
+     * @param mixed $value
+     * @return mixed
+     */
     public function filterValue(ColumnTypeInterface $column, $value);
 
-    public function initOptions(ColumnTypeInterface $column);
+    public function initOptions(ColumnTypeInterface $column): void;
 
     /**
-     * @return string[]
+     * @return array<string>
      */
     public function getExtendedColumnTypes(): array;
 }

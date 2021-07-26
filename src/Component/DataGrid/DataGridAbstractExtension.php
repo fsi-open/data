@@ -13,29 +13,28 @@ namespace FSi\Component\DataGrid;
 
 use FSi\Component\DataGrid\Column\ColumnTypeInterface;
 use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
-use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
 use FSi\Component\DataGrid\Exception\DataGridException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 abstract class DataGridAbstractExtension implements DataGridExtensionInterface
 {
     /**
-     * @var ColumnTypeExtensionInterface[][]
+     * @var array<string,array<ColumnTypeExtensionInterface>>
      */
-    protected $columnTypesExtensions;
+    protected array $columnTypesExtensions = [];
 
     /**
-     * @var ColumnTypeInterface[]
+     * @var array<string,ColumnTypeInterface>
      */
-    protected $columnTypes;
+    protected array $columnTypes = [];
 
     public function getColumnType(string $type): ColumnTypeInterface
     {
-        if (null === $this->columnTypes) {
+        if (0 === count($this->columnTypes)) {
             $this->initColumnTypes();
         }
 
-        if (!array_key_exists($type, $this->columnTypes)) {
+        if (false === array_key_exists($type, $this->columnTypes)) {
             throw new DataGridException(sprintf(
                 'The column type "%s" can not be loaded by this extension',
                 $type
@@ -47,7 +46,7 @@ abstract class DataGridAbstractExtension implements DataGridExtensionInterface
 
     public function hasColumnType(string $type): bool
     {
-        if (null === $this->columnTypes) {
+        if (0 === count($this->columnTypes)) {
             $this->initColumnTypes();
         }
 
@@ -56,7 +55,7 @@ abstract class DataGridAbstractExtension implements DataGridExtensionInterface
 
     public function hasColumnTypeExtensions(string $type): bool
     {
-        if (null === $this->columnTypesExtensions) {
+        if (0 === count($this->columnTypes)) {
             $this->initColumnTypesExtensions();
         }
 
@@ -65,7 +64,7 @@ abstract class DataGridAbstractExtension implements DataGridExtensionInterface
 
     public function getColumnTypeExtensions(string $type): array
     {
-        if (null === $this->columnTypesExtensions) {
+        if (0 === count($this->columnTypes)) {
             $this->initColumnTypesExtensions();
         }
 
@@ -84,20 +83,12 @@ abstract class DataGridAbstractExtension implements DataGridExtensionInterface
         $subscribers = $this->loadSubscribers();
 
         foreach ($subscribers as $subscriber) {
-            if (!$subscriber instanceof EventSubscriberInterface) {
-                throw new UnexpectedTypeException(sprintf(
-                    '"%s" is not instance of "%s"',
-                    $subscriber,
-                    EventSubscriberInterface::class
-                ));
-            }
-
             $dataGrid->addEventSubscriber($subscriber);
         }
     }
 
     /**
-     * @return ColumnTypeInterface[]
+     * @return array<ColumnTypeInterface>
      */
     protected function loadColumnTypes(): array
     {
@@ -105,7 +96,7 @@ abstract class DataGridAbstractExtension implements DataGridExtensionInterface
     }
 
     /**
-     * @return EventSubscriberInterface[]
+     * @return array<EventSubscriberInterface>
      */
     protected function loadSubscribers(): array
     {
@@ -113,7 +104,7 @@ abstract class DataGridAbstractExtension implements DataGridExtensionInterface
     }
 
     /**
-     * @return ColumnTypeExtensionInterface[]
+     * @return array<ColumnTypeExtensionInterface>
      */
     protected function loadColumnTypesExtensions(): array
     {
@@ -127,13 +118,6 @@ abstract class DataGridAbstractExtension implements DataGridExtensionInterface
         $columnTypes = $this->loadColumnTypes();
 
         foreach ($columnTypes as $columnType) {
-            if (!$columnType instanceof ColumnTypeInterface) {
-                throw new UnexpectedTypeException(sprintf(
-                    'Column type must implement "%s"',
-                    ColumnTypeInterface::class
-                ));
-            }
-
             $this->columnTypes[$columnType->getId()] = $columnType;
         }
     }
@@ -141,19 +125,11 @@ abstract class DataGridAbstractExtension implements DataGridExtensionInterface
     private function initColumnTypesExtensions(): void
     {
         $columnTypesExtensions = $this->loadColumnTypesExtensions();
-        $this->columnTypesExtensions = [];
 
         foreach ($columnTypesExtensions as $extension) {
-            if (!$extension instanceof ColumnTypeExtensionInterface) {
-                throw new UnexpectedTypeException(sprintf(
-                    'Extension must implement %s',
-                    ColumnTypeExtensionInterface::class
-                ));
-            }
-
             $types = $extension->getExtendedColumnTypes();
             foreach ($types as $type) {
-                if (!array_key_exists($type, $this->columnTypesExtensions)) {
+                if (false === array_key_exists($type, $this->columnTypesExtensions)) {
                     $this->columnTypesExtensions[$type] = [];
                 }
 

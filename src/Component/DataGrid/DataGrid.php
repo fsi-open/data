@@ -21,37 +21,17 @@ use InvalidArgumentException;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class DataGrid implements DataGridInterface
+final class DataGrid implements DataGridInterface
 {
+    private string $name;
+    private ?DataRowsetInterface $rowset = null;
+    private DataMapperInterface $dataMapper;
+    private DataGridFactoryInterface $dataGridFactory;
     /**
-     * @var string
+     * @var array<ColumnTypeInterface>
      */
-    protected $name;
-
-    /**
-     * @var DataRowsetInterface
-     */
-    protected $rowset;
-
-    /**
-     * @var DataMapperInterface
-     */
-    protected $dataMapper;
-
-    /**
-     * @var DataGridFactoryInterface
-     */
-    protected $dataGridFactory;
-
-    /**
-     * @var ColumnTypeInterface[]
-     */
-    protected $columns = [];
-
-    /**
-     * @var EventDispatcher
-     */
-    protected $eventDispatcher;
+    protected array $columns = [];
+    protected EventDispatcher $eventDispatcher;
 
     public function __construct(
         string $name,
@@ -70,19 +50,12 @@ class DataGrid implements DataGridInterface
         return $this->name;
     }
 
-    /**
-     * @param ColumnTypeInterface|string $name
-     * @param string $type
-     * @param array $options
-     * @return $this|DataGridInterface
-     * @throws UnexpectedTypeException
-     */
     public function addColumn($name, string $type = 'text', array $options = []): DataGridInterface
     {
         if ($name instanceof ColumnTypeInterface) {
             $type = $name->getId();
 
-            if (!$this->dataGridFactory->hasColumnType($type)) {
+            if (false === $this->dataGridFactory->hasColumnType($type)) {
                 throw new UnexpectedTypeException(sprintf(
                     'There is no column with type "%s" registred in factory.',
                     $type
@@ -112,7 +85,7 @@ class DataGrid implements DataGridInterface
 
     public function getColumn(string $name): ColumnTypeInterface
     {
-        if (!$this->hasColumn($name)) {
+        if (false === $this->hasColumn($name)) {
             throw new InvalidArgumentException(sprintf(
                 'Column "%s" does not exist in data grid.',
                 $name
@@ -135,7 +108,7 @@ class DataGrid implements DataGridInterface
     public function hasColumnType(string $type): bool
     {
         foreach ($this->columns as $column) {
-            if ($column->getId() === $type) {
+            if ($type === $column->getId()) {
                 return true;
             }
         }
@@ -145,7 +118,7 @@ class DataGrid implements DataGridInterface
 
     public function removeColumn(string $name): DataGridInterface
     {
-        if (!$this->hasColumn($name)) {
+        if (false === $this->hasColumn($name)) {
             throw new InvalidArgumentException(sprintf(
                 'Column "%s" does not exist in data grid.',
                 $name
@@ -174,7 +147,7 @@ class DataGrid implements DataGridInterface
         $event = new DataGridEvent($this, $data);
         $this->eventDispatcher->dispatch($event, DataGridEvents::PRE_SET_DATA);
         $data = $event->getData();
-        if (!is_iterable($data)) {
+        if (false === is_iterable($data)) {
             throw new InvalidArgumentException(sprintf(
                 'The data returned by the "DataGridEvents::PRE_SET_DATA" class needs to be iterable, "%s" given!',
                 is_object($data) ? get_class($data) : gettype($data)
@@ -232,9 +205,8 @@ class DataGrid implements DataGridInterface
 
         $event = new DataGridEvent($this, $view);
         $this->eventDispatcher->dispatch($event, DataGridEvents::POST_BUILD_VIEW);
-        $view = $event->getData();
 
-        return $view;
+        return $event->getData();
     }
 
     private function getRowset(): DataRowsetInterface

@@ -11,22 +11,15 @@ namespace FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Driver;
 
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Field;
 use FSi\Component\DataSource\Driver\DriverAbstractExtension;
-use Symfony\Component\Form\FormFactory;
+use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class DriverExtension extends DriverAbstractExtension
 {
-    /**
-     * @var FormFactory
-     */
-    private $formFactory;
+    private FormFactoryInterface $formFactory;
+    private TranslatorInterface $translator;
 
-    /**
-     * @var TranslatorInterface
-     */
-    private $translator;
-
-    public function __construct(FormFactory $formFactory, TranslatorInterface $translator)
+    public function __construct(FormFactoryInterface $formFactory, TranslatorInterface $translator)
     {
         $this->formFactory = $formFactory;
         $this->translator = $translator;

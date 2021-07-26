@@ -15,16 +15,16 @@ use Symfony\Contracts\EventDispatcher\Event;
 
 class DataGridEvent extends Event implements DataGridEventInterface
 {
-    /**
-     * @var DataGridInterface
-     */
-    protected $dataGrid;
-
+    protected DataGridInterface $dataGrid;
     /**
      * @var mixed
      */
     protected $data;
 
+    /**
+     * @param DataGridInterface $dataGrid
+     * @param mixed $data
+     */
     public function __construct(DataGridInterface $dataGrid, $data)
     {
         $this->dataGrid = $dataGrid;
@@ -36,11 +36,17 @@ class DataGridEvent extends Event implements DataGridEventInterface
         return $this->dataGrid;
     }
 
+    /**
+     * @return mixed
+     */
     public function getData()
     {
         return $this->data;
     }
 
+    /**
+     * @param mixed $data
+     */
     public function setData($data): void
     {
         $this->data = $data;

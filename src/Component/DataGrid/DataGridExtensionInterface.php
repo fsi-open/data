@@ -26,7 +26,7 @@ interface DataGridExtensionInterface
 
     /**
      * @param string $type
-     * @return ColumnTypeExtensionInterface[]
+     * @return array<ColumnTypeExtensionInterface>
      */
     public function getColumnTypeExtensions(string $type): array;
 }

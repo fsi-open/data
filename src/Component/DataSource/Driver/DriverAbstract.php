@@ -142,9 +142,8 @@ abstract class DriverAbstract implements DriverInterface
         // postGetResult event.
         $event = new DriverEvent\ResultEventArgs($this, $fields, $result);
         $this->getEventDispatcher()->dispatch($event, DriverEvents::POST_GET_RESULT);
-        $result = $event->getResult();
 
-        return $result;
+        return $event->getResult();
     }
 
     /**
@@ -170,9 +169,9 @@ abstract class DriverAbstract implements DriverInterface
      * @param array<FieldTypeInterface> $fields
      * @param int|null $first
      * @param int|null $max
-     * @return Countable&IteratorAggregate
+     * @return Result
      */
-    abstract protected function buildResult(array $fields, ?int $first, ?int $max): IteratorAggregate;
+    abstract protected function buildResult(array $fields, ?int $first, ?int $max): Result;
 
     /**
      * Inits field for given type (including extending that type) and saves it as pattern for later cloning.

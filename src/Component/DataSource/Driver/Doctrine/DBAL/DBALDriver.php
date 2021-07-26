@@ -17,6 +17,7 @@ use FSi\Component\DataSource\Driver\Doctrine\DBAL\Exception\DBALDriverException;
 use FSi\Component\DataSource\Driver\DriverAbstract;
 use FSi\Component\DataSource\Driver\DriverExtensionInterface;
 use FSi\Component\DataSource\Exception\DataSourceException;
+use FSi\Component\DataSource\Result;
 use IteratorAggregate;
 
 class DBALDriver extends DriverAbstract
@@ -107,10 +108,10 @@ class DBALDriver extends DriverAbstract
      * @param array<DBALFieldInterface> $fields
      * @param int|null $first
      * @param int|null $max
-     * @return IteratorAggregate
+     * @return Result
      * @throws DBALDriverException
      */
-    protected function buildResult(array $fields, ?int $first, ?int $max): IteratorAggregate
+    protected function buildResult(array $fields, ?int $first, ?int $max): Result
     {
         foreach ($fields as $field) {
             if (false === $field instanceof DBALFieldInterface) {

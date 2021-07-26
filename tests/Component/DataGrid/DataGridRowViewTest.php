@@ -21,7 +21,7 @@ class DataGridRowViewTest extends TestCase
 {
     public function testCreateDataGridRowView(): void
     {
-        $source = 'SOURCE';
+        $source = ['SOURCE'];
 
         $dataGridView = $this->createMock(DataGridViewInterface::class);
 

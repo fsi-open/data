@@ -13,47 +13,26 @@ namespace FSi\Component\DataGrid\Column;
 
 use FSi\Component\DataGrid\DataGridViewInterface;
 
-class CellView implements CellViewInterface
+final class CellView implements CellViewInterface
 {
     /**
      * The original object from which the value of the cell was retrieved.
      *
-     * @var mixed
+     * @var array|object
      */
-    protected $source;
+    private $source;
 
     /**
      * Cell value. In most cases this should be a simple string.
      *
      * @var mixed
      */
-    protected $value;
+    private $value;
 
-    /**
-     * Cell attributes.
-     *
-     * @var array
-     */
-    protected $attributes = [];
-
-    /**
-     * Cell name.
-     *
-     * @var string
-     */
-    protected $name;
-
-    /**
-     * Cell type.
-     *
-     * @var string
-     */
-    protected $type;
-
-    /**
-     * @var DataGridViewInterface
-     */
-    protected $datagrid;
+    private array $attributes = [];
+    private string $name;
+    private string $type;
+    private ?DataGridViewInterface $dataGrid;
 
     public function __construct(string $name, string $type)
     {
@@ -88,11 +67,7 @@ class CellView implements CellViewInterface
 
     public function getAttribute(string $name)
     {
-        if (array_key_exists($name, $this->attributes)) {
-            return $this->attributes[$name];
-        }
-
-        return null;
+        return $this->attributes[$name] ?? null;
     }
 
     public function getAttributes(): array
@@ -117,11 +92,11 @@ class CellView implements CellViewInterface
 
     public function setDataGridView(DataGridViewInterface $dataGrid): void
     {
-        $this->datagrid = $dataGrid;
+        $this->dataGrid = $dataGrid;
     }
 
     public function getDataGridView(): DataGridViewInterface
     {
-        return $this->datagrid;
+        return $this->dataGrid;
     }
 }

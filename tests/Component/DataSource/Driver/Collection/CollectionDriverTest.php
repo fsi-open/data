@@ -88,7 +88,7 @@ class CollectionDriverTest extends TestCase
         $this->driverTests($this->prepareArrayDataSource());
     }
 
-    private function driverTests(DataSource $datasource): void
+    private function driverTests(DataSourceInterface $datasource): void
     {
         $datasource
             ->addField('title', 'text', 'contains')

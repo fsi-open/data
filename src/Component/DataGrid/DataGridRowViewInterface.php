@@ -11,9 +11,19 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid;
 
-interface DataGridRowViewInterface extends \Iterator, \Countable, \ArrayAccess
+use ArrayAccess;
+use Countable;
+use Iterator;
+
+interface DataGridRowViewInterface extends Iterator, Countable, ArrayAccess
 {
+    /**
+     * @return int|string
+     */
     public function getIndex();
 
+    /**
+     * @return array|object
+     */
     public function getSource();
 }

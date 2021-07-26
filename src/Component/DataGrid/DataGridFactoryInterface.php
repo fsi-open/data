@@ -21,7 +21,7 @@ interface DataGridFactoryInterface
     public function getColumnType(string $type): ColumnTypeInterface;
 
     /**
-     * @return DataGridExtensionInterface[]
+     * @return array<DataGridExtensionInterface>
      */
     public function getExtensions(): array;
 

@@ -17,18 +17,41 @@ interface CellViewInterface
 {
     public function hasAttribute(string $name): bool;
 
+    /**
+     * @param string $name
+     * @param mixed $value
+     */
     public function setAttribute(string $name, $value): void;
 
+    /**
+     * @param string $name
+     * @return mixed
+     */
     public function getAttribute(string $name);
 
+    /**
+     * @return array<string,mixed>
+     */
     public function getAttributes(): array;
 
+    /**
+     * @param array|object $source
+     */
     public function setSource($source): void;
 
+    /**
+     * @return array|object
+     */
     public function getSource();
 
+    /**
+     * @return mixed
+     */
     public function getValue();
 
+    /**
+     * @param mixed $value
+     */
     public function setValue($value): void;
 
     public function getType(): string;

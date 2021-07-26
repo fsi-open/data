@@ -13,7 +13,6 @@ namespace Tests\FSi\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
 
 use Doctrine\Common\EventManager;
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\Mapping\ClassMetadataFactory;
@@ -23,7 +22,6 @@ use FSi\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\DataGridInterface;
-use Gedmo\Tree\Entity\Repository\NestedTreeRepository;
 use Gedmo\Tree\RepositoryInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -43,7 +41,7 @@ class TreeTypeTest extends TestCase
         $extension = new DefaultColumnOptionsExtension();
         $extension->initOptions($column);
 
-        $object = 'This is string, not object';
+        $object = ['This is string, not object'];
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Column "gedmo_tree" must read value from object.');
@@ -90,7 +88,10 @@ class TreeTypeTest extends TestCase
         );
     }
 
-    protected function getManagerRegistry(): MockObject
+    /**
+     * @return ManagerRegistry&MockObject
+     */
+    protected function getManagerRegistry(): ManagerRegistry
     {
         $managerRegistry = $this->createMock(ManagerRegistry::class);
 

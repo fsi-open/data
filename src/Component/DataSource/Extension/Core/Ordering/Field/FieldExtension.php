@@ -23,9 +23,9 @@ use function array_key_exists;
 class FieldExtension extends FieldAbstractExtension
 {
     /**
-     * @var array<string, array{priority: string, direction: string}|null>
+     * @var array<string, array{priority: int, direction: string}|null>
      */
-    private $ordering = [];
+    private array $ordering = [];
 
     public function getExtendedFieldTypes(): array
     {
@@ -55,7 +55,7 @@ class FieldExtension extends FieldAbstractExtension
 
     /**
      * @param FieldTypeInterface $field
-     * @param array{priority: string, direction: string}|null $ordering
+     * @param array{priority: int, direction: string}|null $ordering
      */
     public function setOrdering(FieldTypeInterface $field, ?array $ordering): void
     {
@@ -65,7 +65,7 @@ class FieldExtension extends FieldAbstractExtension
 
     /**
      * @param FieldTypeInterface $field
-     * @return array{priority: string, direction: string}|null
+     * @return array{priority: int, direction: string}|null
      */
     public function getOrdering(FieldTypeInterface $field): ?array
     {

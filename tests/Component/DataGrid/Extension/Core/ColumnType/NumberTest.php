@@ -31,6 +31,8 @@ class NumberTest extends TestCase
         $extension = new DefaultColumnOptionsExtension();
         $extension->initOptions($column);
 
+        $column->setOptions([]);
+
         $this->column = $column;
     }
 

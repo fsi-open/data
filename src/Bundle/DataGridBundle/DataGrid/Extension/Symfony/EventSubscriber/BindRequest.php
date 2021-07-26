@@ -14,7 +14,7 @@ namespace FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\EventSubscriber;
 use FSi\Component\DataGrid\DataGridEventInterface;
 use FSi\Component\DataGrid\DataGridEvents;
 use FSi\Component\DataGrid\Exception\DataGridException;
-use FSi\Component\RequestCompatibilityHelper;
+use FSi\Bundle\DataGridBundle\HttpFoundation\RequestCompatibilityHelper;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 

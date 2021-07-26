@@ -17,27 +17,23 @@ use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use InvalidArgumentException;
 
+use function array_key_exists;
+
 class DataGridFactory implements DataGridFactoryInterface
 {
     /**
-     * @var DataGridInterface[]
+     * @var array<DataGridInterface>
      */
-    protected $dataGrids = [];
-
+    private array $dataGrids = [];
     /**
-     * @var ColumnTypeInterface[]
+     * @var array<ColumnTypeInterface>
      */
-    protected $columnTypes = [];
-
+    private array $columnTypes = [];
     /**
-     * @var DataMapperInterface
+     * @var array<DataGridExtensionInterface>
      */
-    protected $dataMapper;
-
-    /**
-     * @var DataGridExtensionInterface[]
-     */
-    protected $extensions = [];
+    private array $extensions;
+    private DataMapperInterface $dataMapper;
 
     /**
      * @param DataGridExtensionInterface[] $extensions
@@ -47,7 +43,7 @@ class DataGridFactory implements DataGridFactoryInterface
     public function __construct(array $extensions, DataMapperInterface $dataMapper)
     {
         foreach ($extensions as $extension) {
-            if (!$extension instanceof DataGridExtensionInterface) {
+            if (false === $extension instanceof DataGridExtensionInterface) {
                 throw new InvalidArgumentException(sprintf(
                     'Each extension must implement "%s"',
                     DataGridExtensionInterface::class
@@ -61,7 +57,7 @@ class DataGridFactory implements DataGridFactoryInterface
 
     public function createDataGrid(string $name = 'grid'): DataGridInterface
     {
-        if (array_key_exists($name, $this->dataGrids)) {
+        if (true === array_key_exists($name, $this->dataGrids)) {
             throw new DataGridColumnException(sprintf(
                 'Datagrid name "%s" is not uniqe, it was used before to create datagrid',
                 $name
@@ -75,7 +71,7 @@ class DataGridFactory implements DataGridFactoryInterface
 
     public function hasColumnType(string $type): bool
     {
-        if (array_key_exists($type, $this->columnTypes)) {
+        if (true === array_key_exists($type, $this->columnTypes)) {
             return true;
         }
 
@@ -88,14 +84,9 @@ class DataGridFactory implements DataGridFactoryInterface
         return true;
     }
 
-    /**
-     * @param string $type
-     * @return ColumnTypeInterface
-     * @throws UnexpectedTypeException
-     */
     public function getColumnType(string $type): ColumnTypeInterface
     {
-        if ($this->hasColumnType($type)) {
+        if (true === $this->hasColumnType($type)) {
             return clone $this->columnTypes[$type];
         }
 
@@ -114,19 +105,15 @@ class DataGridFactory implements DataGridFactoryInterface
         return $this->dataMapper;
     }
 
-    /**
-     * @param string $type
-     * @throws UnexpectedTypeException
-     */
     private function loadColumnType(string $type): void
     {
-        if (isset($this->columnTypes[$type])) {
+        if (true === array_key_exists($type, $this->columnTypes)) {
             return;
         }
 
         $typeInstance = null;
         foreach ($this->extensions as $extension) {
-            if ($extension->hasColumnType($type)) {
+            if (true === $extension->hasColumnType($type)) {
                 $typeInstance = $extension->getColumnType($type);
                 break;
             }
@@ -140,7 +127,7 @@ class DataGridFactory implements DataGridFactoryInterface
         }
 
         foreach ($this->extensions as $extension) {
-            if ($extension->hasColumnTypeExtensions($type)) {
+            if (true === $extension->hasColumnTypeExtensions($type)) {
                 $columnExtensions = $extension->getColumnTypeExtensions($type);
                 foreach ($columnExtensions as $columnExtension) {
                     $typeInstance->addExtension($columnExtension);

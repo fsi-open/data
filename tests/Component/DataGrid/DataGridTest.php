@@ -131,10 +131,6 @@ class DataGridTest extends TestCase
         $this->datagrid->setData($gridData);
 
         self::assertSameSize($gridData, $this->datagrid->createView());
-
-        $gridBrokenData = false;
-        $this->expectException(TypeError::class);
-        $this->datagrid->setData($gridBrokenData);
     }
 
     public function testCreateView(): void

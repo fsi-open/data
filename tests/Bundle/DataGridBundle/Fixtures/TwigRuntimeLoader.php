@@ -36,7 +36,7 @@ class TwigRuntimeLoader implements RuntimeLoaderInterface
         $this->instances[get_class($runtime)] = $runtime;
     }
 
-    public function load($class): ?RuntimeExtensionInterface
+    public function load($class)
     {
         if (true === array_key_exists($class, $this->instances)) {
             return $this->instances[$class];

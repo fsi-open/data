@@ -11,9 +11,12 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid;
 
+use ArrayAccess;
+use Countable;
 use FSi\Component\DataGrid\Column\HeaderViewInterface;
+use Iterator;
 
-interface DataGridViewInterface extends \Iterator, \Countable, \ArrayAccess
+interface DataGridViewInterface extends Iterator, Countable, ArrayAccess
 {
     public function getName(): string;
 
@@ -26,7 +29,7 @@ interface DataGridViewInterface extends \Iterator, \Countable, \ArrayAccess
     public function getColumn(string $name): HeaderViewInterface;
 
     /**
-     * @return HeaderViewInterface[]
+     * @return array<HeaderViewInterface>
      */
     public function getColumns(): array;
 
@@ -35,7 +38,7 @@ interface DataGridViewInterface extends \Iterator, \Countable, \ArrayAccess
     public function addColumn(HeaderViewInterface $column): void;
 
     /**
-     * @param HeaderViewInterface[] $columns
+     * @param array<HeaderViewInterface> $columns
      */
     public function setColumns(array $columns): void;
 }

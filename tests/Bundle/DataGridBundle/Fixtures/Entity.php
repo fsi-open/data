@@ -14,8 +14,8 @@ namespace Tests\FSi\Bundle\DataGridBundle\Fixtures;
 class Entity
 {
     private string $name;
-    private ?string $author;
-    private ?EntityCategory $category;
+    private ?string $author = null;
+    private ?EntityCategory $category = null;
 
     public function __construct(string $name)
     {

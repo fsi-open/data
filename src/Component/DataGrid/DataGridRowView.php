@@ -17,28 +17,26 @@ use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
 use InvalidArgumentException;
 use RuntimeException;
 
-class DataGridRowView implements DataGridRowViewInterface
+final class DataGridRowView implements DataGridRowViewInterface
 {
     /**
-     * @var CellViewInterface[]
+     * @var array<CellViewInterface>
      */
-    protected $cellViews = [];
-
+    private array $cellViews = [];
     /**
-     * @var mixed
+     * @var array|object
      */
-    protected $source;
-
+    private $source;
     /**
-     * @var int
+     * @var int|string
      */
-    protected $index;
+    private $index;
 
     /**
      * @param DataGridViewInterface $dataGridView
      * @param ColumnTypeInterface[] $columns
-     * @param mixed $source
-     * @param int $index
+     * @param array|object $source
+     * @param int|string $index
      * @throws Exception\UnexpectedTypeException
      */
     public function __construct(DataGridViewInterface $dataGridView, array $columns, $source, $index)
@@ -46,7 +44,7 @@ class DataGridRowView implements DataGridRowViewInterface
         $this->source = $source;
         $this->index = $index;
         foreach ($columns as $name => $column) {
-            if (!$column instanceof ColumnTypeInterface) {
+            if (false === $column instanceof ColumnTypeInterface) {
                 throw new UnexpectedTypeException(sprintf(
                     'Column object must implement "%s"',
                     ColumnTypeInterface::class

@@ -13,32 +13,19 @@ namespace FSi\Component\DataGrid\Column;
 
 use FSi\Component\DataGrid\DataGridViewInterface;
 
-class HeaderView implements HeaderViewInterface
+final class HeaderView implements HeaderViewInterface
 {
+    private ?string $label = null;
+    private string $name;
+    private string $type;
     /**
-     * @var string|null
+     * @var array<string,mixed>
      */
-    protected $label;
-
-    /**
-     * @var string
-     */
-    protected $name;
-
-    /**
-     * @var string
-     */
-    protected $type;
-
-    /**
-     * @var array
-     */
-    protected $attributes = [];
-
+    private array $attributes = [];
     /**
      * @var DataGridViewInterface
      */
-    protected $datagrid;
+    private DataGridViewInterface $dataGrid;
 
     public function __construct(string $name, string $type)
     {
@@ -53,11 +40,7 @@ class HeaderView implements HeaderViewInterface
 
     public function getAttribute(string $name)
     {
-        if (array_key_exists($name, $this->attributes)) {
-            return $this->attributes[$name];
-        }
-
-        return null;
+        return $this->attributes[$name] ?? null;
     }
 
     public function hasAttribute(string $name): bool
@@ -92,11 +75,11 @@ class HeaderView implements HeaderViewInterface
 
     public function setDataGridView(DataGridViewInterface $dataGrid): void
     {
-        $this->datagrid = $dataGrid;
+        $this->dataGrid = $dataGrid;
     }
 
     public function getDataGridView(): DataGridViewInterface
     {
-        return $this->datagrid;
+        return $this->dataGrid;
     }
 }

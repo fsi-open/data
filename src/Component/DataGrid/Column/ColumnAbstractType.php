@@ -18,45 +18,29 @@ use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
 use FSi\Component\DataGrid\Exception\UnknownOptionException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+use function sprintf;
+
 abstract class ColumnAbstractType implements ColumnTypeInterface
 {
     /**
-     * @var ColumnTypeExtensionInterface[]
+     * @var array<ColumnTypeExtensionInterface>
      */
-    protected $extensions = [];
-
+    private array $extensions = [];
     /**
-     * @var array
+     * @var array<string,mixed>
      */
-    protected $options = [];
-
-    /**
-     * @var string
-     */
-    protected $name;
-
+    private array $options = [];
+    private ?string $name = null;
     /**
      * This property is used when creating column view.
      * After ColumnView is created it is set to null.
      *
-     * @var null|string
+     * @var int|string|null
      */
-    protected $index;
-
-    /**
-     * @var DataMapperInterface
-     */
-    protected $dataMapper;
-
-    /**
-     * @var DataGridInterface
-     */
-    protected $dataGrid;
-
-    /**
-     * @var OptionsResolver
-     */
-    private $optionsResolver;
+    private $index;
+    private ?DataMapperInterface $dataMapper = null;
+    private ?DataGridInterface $dataGrid = null;
+    private ?OptionsResolver $optionsResolver = null;
 
     public function getName(): string
     {
@@ -79,6 +63,10 @@ abstract class ColumnAbstractType implements ColumnTypeInterface
 
     public function getDataGrid(): DataGridInterface
     {
+        if (null === $this->dataGrid) {
+            throw new DataGridColumnException('Use setDataGrid method to attach column to the DataGrid instance');
+        }
+
         return $this->dataGrid;
     }
 
@@ -99,7 +87,7 @@ abstract class ColumnAbstractType implements ColumnTypeInterface
     public function getValue($object)
     {
         $values = [];
-        if (!$this->hasOption('field_mapping') || !count($this->getOption('field_mapping'))) {
+        if (false === $this->hasOption('field_mapping') || 0 === count($this->getOption('field_mapping'))) {
             throw new DataGridColumnException(
                 sprintf('"field_mapping" option is missing in column "%s"', $this->getName())
             );
@@ -119,11 +107,6 @@ abstract class ColumnAbstractType implements ColumnTypeInterface
         $view = new CellView($this->getName(), $this->getId());
         $view->setSource($object);
         $view->setAttribute('row', $index);
-        $dataMapper = $this->getDataMapper();
-
-        if (!$dataMapper instanceof DataMapperInterface) {
-            throw new UnexpectedTypeException($dataMapper, DataMapperInterface::class);
-        }
 
         $values = $this->getValue($object);
 
@@ -177,7 +160,7 @@ abstract class ColumnAbstractType implements ColumnTypeInterface
 
     public function getOption(string $name)
     {
-        if (!array_key_exists($name, $this->options)) {
+        if (false === array_key_exists($name, $this->options)) {
             throw new UnknownOptionException(
                 sprintf('Option "%s" is not available in column type "%s".', $name, $this->getId())
             );
@@ -201,8 +184,14 @@ abstract class ColumnAbstractType implements ColumnTypeInterface
     public function setExtensions(array $extensions): void
     {
         foreach ($extensions as $extension) {
-            if (!$extension instanceof ColumnTypeExtensionInterface) {
-                throw new UnexpectedTypeException($extension, ColumnTypeExtensionInterface::class);
+            if (false === $extension instanceof ColumnTypeExtensionInterface) {
+                throw new UnexpectedTypeException(sprintf(
+                    'Expected instance of %s, but got %s',
+                    ColumnTypeExtensionInterface::class,
+                    (true === is_object($extension))
+                        ? sprintf("an instance of %s", get_class($extension))
+                        : gettype($extension)
+                ));
             }
         }
 

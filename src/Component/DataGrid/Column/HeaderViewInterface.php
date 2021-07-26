@@ -15,17 +15,28 @@ use FSi\Component\DataGrid\DataGridViewInterface;
 
 interface HeaderViewInterface
 {
+    /**
+     * @param string $name
+     * @param mixed $value
+     */
     public function setAttribute(string $name, $value): void;
 
+    /**
+     * @param string $name
+     * @return mixed
+     */
     public function getAttribute(string $name);
 
     public function hasAttribute(string $name): bool;
 
+    /**
+     * @return array<string,mixed>
+     */
     public function getAttributes(): array;
 
     public function getLabel(): ?string;
 
-    public function setLabel(string $value): void;
+    public function setLabel(string $label): void;
 
     public function getName(): string;
 

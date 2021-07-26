@@ -16,6 +16,7 @@ use FSi\Component\DataSource\Driver\Doctrine\ORM\Exception\DoctrineDriverExcepti
 use FSi\Component\DataSource\Driver\DriverAbstract;
 use FSi\Component\DataSource\Driver\DriverExtensionInterface;
 use FSi\Component\DataSource\Exception\DataSourceException;
+use FSi\Component\DataSource\Result;
 use IteratorAggregate;
 
 class DoctrineDriver extends DriverAbstract
@@ -100,10 +101,10 @@ class DoctrineDriver extends DriverAbstract
      * @param array<DoctrineFieldInterface> $fields
      * @param int|null $first
      * @param int|null $max
-     * @return IteratorAggregate
+     * @return Result
      * @throws DoctrineDriverException
      */
-    protected function buildResult(array $fields, ?int $first, ?int $max): IteratorAggregate
+    protected function buildResult(array $fields, ?int $first, ?int $max): Result
     {
         foreach ($fields as $field) {
             if (false === $field instanceof DoctrineFieldInterface) {

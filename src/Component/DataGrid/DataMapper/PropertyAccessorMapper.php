@@ -15,11 +15,8 @@ use FSi\Component\DataGrid\Exception\DataMappingException;
 use Symfony\Component\PropertyAccess\Exception\RuntimeException;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
-class PropertyAccessorMapper implements DataMapperInterface
+final class PropertyAccessorMapper implements DataMapperInterface
 {
-    /**
-     * @inheritdoc
-     */
     public function getData(string $field, $object)
     {
         $accessor = PropertyAccess::createPropertyAccessor();
@@ -33,9 +30,6 @@ class PropertyAccessorMapper implements DataMapperInterface
         return $data;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function setData(string $field, $object, $value): void
     {
         $accessor = PropertyAccess::createPropertyAccessor();

@@ -48,16 +48,6 @@ class DBALDriverTest extends TestBase
     }
 
     /**
-     * Checks creation exception.
-     */
-    public function testCreationExceptionWhenExtensionIsInvalid(): void
-    {
-        $qb = $this->connection->createQueryBuilder();
-        $this->expectException(DataSourceException::class);
-        new DBALDriver([new stdClass()], $qb, 'e');
-    }
-
-    /**
      * Checks exception when fields aren't proper instances.
      */
     public function testGetResultExceptionWhenFieldIsNotDBALField(): void
