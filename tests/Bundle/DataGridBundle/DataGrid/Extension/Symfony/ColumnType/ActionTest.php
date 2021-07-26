@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnType;
 
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnType\Action;
+use InvalidArgumentException;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\Request;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -26,12 +27,8 @@ class ActionTest extends TestCase
     /**
      * @var RouterInterface&MockObject
      */
-    private $router;
-
-    /**
-     * @var Action
-     */
-    private $column;
+    private RouterInterface $router;
+    private Action $column;
 
     protected function setUp(): void
     {
@@ -52,21 +49,21 @@ class ActionTest extends TestCase
         $this->column = $column;
     }
 
-    public function testFilterValueWrongActionsOptionType()
+    public function testFilterValueWrongActionsOptionType(): void
     {
         $this->expectException(InvalidOptionsException::class);
         $this->column->setOption('actions', 'boo');
     }
 
-    public function testFilterValueInvalidActionInActionsOption()
+    public function testFilterValueInvalidActionInActionsOption(): void
     {
         $this->column->setOption('actions', ['edit' => 'asdasd']);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->column->filterValue([]);
     }
 
-    public function testFilterValueRequiredActionInActionsOption()
+    public function testFilterValueRequiredActionInActionsOption(): void
     {
         $this->router->method('generate')
             ->with('foo', ['redirect_uri' => Request::RELATIVE_URI], UrlGeneratorInterface::ABSOLUTE_PATH)
@@ -104,7 +101,7 @@ class ActionTest extends TestCase
         );
     }
 
-    public function testFilterValueAvailableActionInActionsOption()
+    public function testFilterValueAvailableActionInActionsOption(): void
     {
         $this->router->expects(self::once())
             ->method('generate')
@@ -149,7 +146,7 @@ class ActionTest extends TestCase
     }
 
 
-    public function testFilterValueWithRedirectUriFalse()
+    public function testFilterValueWithRedirectUriFalse(): void
     {
         $this->router->expects(self::once())
             ->method('generate')

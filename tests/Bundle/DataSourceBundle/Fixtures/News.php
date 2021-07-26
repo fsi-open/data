@@ -9,6 +9,8 @@
 
 namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures;
 
+use DateTime;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 
@@ -22,284 +24,174 @@ class News
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $id;
+    private ?int $id = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $title;
+    private ?string $title = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $author;
+    private ?string $author = null;
 
     /**
      * @ORM\Column(type="string", length=500, nullable=true)
      */
-    private $short_content;
+    private ?string $short_content = null;
 
     /**
      * @ORM\Column(type="text", nullable=true)
      */
-    private $content;
+    private ?string $content = null;
 
     /**
      * @ORM\Column(type="datetime")
      */
-    private $create_date;
+    private ?DateTime $create_date = null;
 
     /**
      * @ORM\Column(type="time")
      */
-    private $create_time;
+    private ?DateTime $create_time = null;
 
     /**
      * @ORM\ManyToOne(targetEntity="Tests\FSi\Bundle\DataSourceBundle\Fixtures\Category", inversedBy="news")
      */
-    private $category;
+    private ?Category $category = null;
 
     /**
      * @ORM\ManyToOne(targetEntity="Tests\FSi\Bundle\DataSourceBundle\Fixtures\Category")
      */
-    private $category2;
+    private ?Category $category2 = null;
 
     /**
      * @ORM\ManyToMany(targetEntity="Tests\FSi\Bundle\DataSourceBundle\Fixtures\Group")
      */
-    private $groups;
+    private ?Collection $groups;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $tags;
+    private ?string $tags = null;
 
     /**
      * @ORM\Column(type="boolean")
      */
-    private $active = false;
+    private bool $active = false;
 
     public function __construct()
     {
         $this->groups = new ArrayCollection();
     }
 
-    /**
-     * Get id.
-     *
-     * @return integer
-     */
-    public function getId()
+    public function getId(): ?int
     {
         return $this->id;
     }
 
-    /**
-     * Set title.
-     *
-     * @param string $title
-     */
-    public function setTitle($title)
+    public function setTitle(string $title): void
     {
         $this->title = $title;
     }
 
-    /**
-     * Get title.
-     *
-     * @return string
-     */
-    public function getTitle()
+    public function getTitle(): ?string
     {
         return $this->title;
     }
 
-    /**
-     * Set author.
-     *
-     * @param string $author
-     */
-    public function setAuthor($author)
+    public function setAuthor(string $author): void
     {
         $this->author = $author;
     }
 
-    /**
-     * Get author.
-     *
-     * @return string
-     */
-    public function getAuthor()
+    public function getAuthor(): ?string
     {
         return $this->author;
     }
 
-    /**
-     * Set short content.
-     *
-     * @param string $shortContent
-     */
-    public function setShortContent($shortContent)
+    public function setShortContent(?string $shortContent): void
     {
         $this->short_content = $shortContent;
     }
 
-    /**
-     * Get short content.
-     *
-     * @return string
-     */
-    public function getShortContent()
+    public function getShortContent(): ?string
     {
         return $this->short_content;
     }
 
-    /**
-     * Set content.
-     *
-     * @param string $content
-     */
-    public function setContent($content)
+    public function setContent(?string $content): void
     {
         $this->content = $content;
     }
 
-    /**
-     * Get content.
-     *
-     * @return string
-     */
-    public function getContent()
+    public function getContent(): ?string
     {
         return $this->content;
     }
 
-    /**
-     * Set create date.
-     *
-     * @param \DateTime $createDate
-     */
-    public function setCreateDate($createDate)
+    public function setCreateDate(?DateTime $createDate): void
     {
         $this->create_date = $createDate;
     }
 
-    /**
-     * Get create date.
-     *
-     * @return \DateTime
-     */
-    public function getCreateDate()
+    public function getCreateDate(): ?DateTime
     {
         return $this->create_date;
     }
 
-    /**
-     * Set create time.
-     *
-     * @param \DateTime $createTime
-     */
-    public function setCreateTime($createTime)
+    public function setCreateTime(?DateTime $createTime): void
     {
         $this->create_time = $createTime;
     }
 
-    /**
-     * Get create time.
-     *
-     * @return \DateTime
-     */
-    public function getCreateTime()
+    public function getCreateTime(): ?DateTime
     {
         return $this->create_time;
     }
 
-    /**
-     * Set category.
-     *
-     * @param Category $category
-     */
-    public function setCategory(Category $category)
+    public function setCategory(Category $category): void
     {
         $this->category = $category;
     }
 
-    /**
-     * Get category.
-     *
-     * @return null|Category
-     */
-    public function getCategory()
+    public function getCategory(): ?Category
     {
         return $this->category;
     }
 
-    /**
-     * Set category2.
-     *
-     * @param Category $category2
-     */
-    public function setCategory2(Category $category2)
+    public function setCategory2(Category $category2): void
     {
         $this->category2 = $category2;
     }
 
-    /**
-     * Get category2.
-     *
-     * @return null|Category
-     */
-    public function getCategory2()
+    public function getCategory2(): ?Category
     {
         return $this->category2;
     }
 
-    /**
-     * Get groups.
-     *
-     * @return ArrayCollection
-     */
-    public function getGroups()
+    public function getGroups(): Collection
     {
         return $this->groups;
     }
 
-    /**
-     * Set tags.
-     *
-     * @param string $tags
-    */
-    public function setTags($tags)
+    public function setTags(string $tags): void
     {
         $this->tags = $tags;
     }
 
-    /**
-     * Get tags.
-     *
-     * @return string
-     */
-    public function getTags()
+    public function getTags(): ?string
     {
         return $this->tags;
     }
 
-    /**
-     * Set active
-     *
-     * @param boolean $active
-     */
-    public function setActive($active = true)
+    public function setActive(bool $active = true): void
     {
         $this->active = $active;
     }
 
-    /**
-     * Is active
-     *
-     * @return boolean
-     */
-    public function isActive()
+    public function isActive(): bool
     {
         return $this->active;
     }

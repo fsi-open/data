@@ -17,10 +17,7 @@ use Symfony\Component\Config\Definition\Processor;
 
 class ConfigurationTest extends TestCase
 {
-    /**
-     * @var Processor
-     */
-    private $processor;
+    private Processor $processor;
 
     public function testDefaultOptions(): void
     {

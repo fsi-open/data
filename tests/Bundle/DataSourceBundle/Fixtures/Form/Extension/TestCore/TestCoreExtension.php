@@ -12,9 +12,9 @@ namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures\Form\Extension\TestCore;
 use Tests\FSi\Bundle\DataSourceBundle\Fixtures\Form\Extension\TestCore\Type;
 use Symfony\Component\Form\AbstractExtension;
 
-class TestCoreExtension extends AbstractExtension
+final class TestCoreExtension extends AbstractExtension
 {
-    protected function loadTypes()
+    protected function loadTypes(): array
     {
         return [
             new Type\FormType(),

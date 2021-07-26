@@ -20,13 +20,13 @@ use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\FormExtension;
+use ReflectionProperty;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\Entity;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\EntityCategory;
 use FSi\Component\DataGrid\Column\ColumnTypeInterface;
 use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\MockObject\RuntimeException;
 use PHPUnit\Framework\MockObject\Stub\ReturnCallback;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Doctrine\Form\DoctrineOrmExtension;
@@ -46,14 +46,10 @@ use function interface_exists;
 class FormExtensionTest extends TestCase
 {
     /**
-     * @var FormExtension
-     */
-    private $extension;
-
-    /**
      * @var DataGridInterface&MockObject
      */
-    private $dataGrid;
+    private DataGridInterface $dataGrid;
+    private FormExtension $extension;
 
     protected function setUp(): void
     {
@@ -94,7 +90,7 @@ class FormExtensionTest extends TestCase
             ]
         ];
         $classMetadata->reflFields = [
-            'id' => new \ReflectionProperty($entityClass, 'id'),
+            'id' => new ReflectionProperty($entityClass, 'id'),
         ];
 
         $repository = $this->getMockBuilder(EntityRepository::class)

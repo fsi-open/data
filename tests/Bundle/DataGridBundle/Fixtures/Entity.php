@@ -13,48 +13,41 @@ namespace Tests\FSi\Bundle\DataGridBundle\Fixtures;
 
 class Entity
 {
-    private $name;
+    private string $name;
+    private ?string $author;
+    private ?EntityCategory $category;
 
-    private $author;
-
-    private $category;
-
-    public function __construct($name)
+    public function __construct(string $name)
     {
         $this->name = $name;
     }
 
-    public function setName($name)
+    public function setName(string $name): void
     {
         $this->name = $name;
-        return $this;
     }
 
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
-    public function setAuthor($author)
+    public function setAuthor(?string $author): void
     {
         $this->author = $author;
-        return $this;
     }
 
-    public function getAuthor()
+    public function getAuthor(): ?string
     {
         return $this->author;
     }
 
-    /**
-     * @return EntityCategory|null
-     */
-    public function getCategory()
+    public function getCategory(): ?EntityCategory
     {
         return $this->category;
     }
 
-    public function setCategory($category)
+    public function setCategory(?EntityCategory $category): void
     {
         $this->category = $category;
     }
