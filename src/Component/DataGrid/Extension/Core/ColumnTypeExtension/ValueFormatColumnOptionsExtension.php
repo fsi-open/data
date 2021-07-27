@@ -11,75 +11,85 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension;
 
-use FSi\Component\DataGrid\Column\ColumnTypeInterface;
+use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Column\CellViewInterface;
 use FSi\Component\DataGrid\Column\ColumnAbstractTypeExtension;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Collection;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\DateTime;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Money;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Number;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Text;
+use FSi\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
+use InvalidArgumentException;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+
+use function is_callable;
 
 class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
 {
-    public function buildCellView(ColumnTypeInterface $column, CellViewInterface $view): void
+    public function filterValue(ColumnInterface $column, $value)
     {
         $this->validateEmptyValueOption($column);
-        $value = $this->populateValue($view->getValue(), $column->getOption('empty_value'));
+        $value = $this->populateValue($value, $column->getOption('empty_value'));
         $glue = $column->getOption('value_glue');
         $format = $column->getOption('value_format');
 
         $value = $this->formatValue($value, $format, $glue);
 
-        if (!isset($glue, $format) && is_array($value)) {
-            throw new \InvalidArgumentException(sprintf(
+        if (null === $glue && null === $format && true === is_array($value)) {
+            throw new InvalidArgumentException(sprintf(
                 'At least one of "value_format" or "value_glue" option is missing in column: "%s".',
                 $column->getName()
             ));
         }
 
-        $view->setValue($value);
+        return $value;
     }
 
     public function getExtendedColumnTypes(): array
     {
         return [
-            'text',
-            'boolean',
-            'datetime',
-            'collection',
-            'number',
-            'money',
-            'gedmo_tree',
+            Text::class,
+            Boolean::class,
+            DateTime::class,
+            Collection::class,
+            Number::class,
+            Money::class,
         ];
     }
 
-    public function initOptions(ColumnTypeInterface $column): void
+    public function initOptions(OptionsResolver $optionsResolver): void
     {
-        $column->getOptionsResolver()->setDefaults([
+        $optionsResolver->setDefaults([
             'value_glue' => null,
             'value_format' => null,
             'empty_value' => '',
         ]);
 
-        $column->getOptionsResolver()->setAllowedTypes('value_glue', ['string', 'null']);
-        $column->getOptionsResolver()->setAllowedTypes('value_format', ['string', 'Closure', 'null']);
-        $column->getOptionsResolver()->setAllowedTypes('empty_value', 'string');
+        $optionsResolver->setAllowedTypes('value_glue', ['string', 'null']);
+        $optionsResolver->setAllowedTypes('value_format', ['string', 'callable', 'null']);
+        $optionsResolver->setAllowedTypes('empty_value', 'string');
     }
 
-    private function validateEmptyValueOption(ColumnTypeInterface $column): void
+    private function validateEmptyValueOption(ColumnInterface $column): void
     {
         $emptyValue = $column->getOption('empty_value');
         $mappingFields = $column->getOption('field_mapping');
 
-        if (is_string($emptyValue)) {
+        if (true === is_string($emptyValue)) {
             return;
         }
 
-        if (!is_array($emptyValue)) {
-            throw new \InvalidArgumentException(
+        if (false === is_array($emptyValue)) {
+            throw new InvalidArgumentException(
                 sprintf('Option "empty_value" in column: "%s" must be a array.', $column->getName())
             );
         }
 
         foreach ($emptyValue as $field => $value) {
-            if (!in_array($field, $mappingFields)) {
-                throw new \InvalidArgumentException(
+            if (false === in_array($field, $mappingFields, true)) {
+                throw new InvalidArgumentException(
                     sprintf(
                         'Mapping field "%s" doesn\'t exist in column: "%s".',
                         $field,
@@ -88,8 +98,8 @@ class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
                 );
             }
 
-            if (!is_string($value)) {
-                throw new \InvalidArgumentException(
+            if (false === is_string($value)) {
+                throw new InvalidArgumentException(
                     sprintf(
                         'Option "empty_value" for field "%s" in column: "%s" must be a string.',
                         $field,
@@ -107,14 +117,14 @@ class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
      */
     private function populateValue($value, $emptyValue)
     {
-        if (is_string($emptyValue)) {
-            if (!isset($value) || (is_string($value) && !strlen($value))) {
+        if (true === is_string($emptyValue)) {
+            if (null === $value || '' === $value) {
                 return $emptyValue;
             }
 
-            if (is_array($value)) {
+            if (true === is_array($value)) {
                 foreach ($value as &$val) {
-                    if (!isset($val) || (is_string($val) && !strlen($val))) {
+                    if (null === $val || '' === $val) {
                         $val = $emptyValue;
                     }
                 }
@@ -127,16 +137,14 @@ class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
          * If value is simple string and $empty_value is array there is no way
          * to guess which empty_value should be used.
          */
-        if (is_string($value)) {
+        if (true === is_string($value)) {
             return $value;
         }
 
-        if (is_array($value)) {
+        if (true === is_array($value)) {
             foreach ($value as $field => &$fieldValue) {
-                if (empty($fieldValue)) {
-                    $fieldValue = array_key_exists($field, $emptyValue)
-                        ? $emptyValue[$field]
-                        : '';
+                if (null === $fieldValue || '' === $fieldValue) {
+                    $fieldValue = $emptyValue[$field] ?? '';
                 }
             }
         }
@@ -146,13 +154,13 @@ class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
 
     private function formatValue($value, $format = null, ?string $glue = null)
     {
-        if (is_array($value) && isset($glue) && !isset($format)) {
+        if (true === is_array($value) && null !== $glue && null === $format) {
             $value = implode($glue, $value);
         }
 
-        if (isset($format)) {
-            if (is_array($value)) {
-                if (isset($glue)) {
+        if (null !== $format) {
+            if (true === is_array($value)) {
+                if (null !== $glue) {
                     $renderedValues = [];
                     foreach ($value as $val) {
                         $renderedValues[] = $this->formatSingleValue($val, $format);
@@ -167,7 +175,7 @@ class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
             }
         }
 
-        if (is_array($value) && count($value) === 1) {
+        if (true === is_array($value) && 1 === count($value)) {
             reset($value);
             $value = current($value);
         }
@@ -177,12 +185,12 @@ class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
 
     /**
      * @param mixed $value
-     * @param string|\Closure $template
+     * @param string|callable $template
      * @return string
      */
     private function formatSingleValue($value, $template): string
     {
-        if ($template instanceof \Closure) {
+        if (true === is_callable($template)) {
             return $template($value);
         }
 
@@ -190,13 +198,13 @@ class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
     }
 
     /**
-     * @param mixed $value
-     * @param string|\Closure $template
+     * @param array $value
+     * @param string|callable $template
      * @return string
      */
-    private function formatMultipleValues($value, $template): string
+    private function formatMultipleValues(array $value, $template): string
     {
-        if ($template instanceof \Closure) {
+        if (true === is_callable($template)) {
             return $template($value);
         }
 

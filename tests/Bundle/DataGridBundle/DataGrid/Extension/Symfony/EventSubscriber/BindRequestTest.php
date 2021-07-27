@@ -12,25 +12,27 @@ declare(strict_types=1);
 namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\EventSubscriber;
 
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\EventSubscriber\BindRequest;
-use FSi\Component\DataGrid\DataGridEventInterface;
+use FSi\Component\DataGrid\Event\PreBindDataEvent;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use FSi\Component\DataGrid\DataGridInterface;
+
 use function class_exists;
 
 class BindRequestTest extends TestCase
 {
     public function testPreBindDataWithoutRequestObject(): void
     {
-        $event = $this->createMock(DataGridEventInterface::class);
-        $event->expects(self::never())->method('setData');
+        $event = new PreBindDataEvent($this->createMock(DataGridInterface::class), []);
 
         $subscriber = new BindRequest();
 
         $subscriber->preBindData($event);
+
+        self::assertSame([], $event->getData());
     }
 
     public function testPreBindDataPOST(): void
@@ -52,14 +54,13 @@ class BindRequestTest extends TestCase
         $grid = $this->createMock(DataGridInterface::class);
         $grid->expects(self::once())->method('getName')->willReturn('grid');
 
-        $event = $this->createMock(DataGridEventInterface::class);
-        $event->expects(self::once())->method('getData')->willReturn($request);
-        $event->expects(self::once())->method('setData')->with(['foo' => 'bar']);
-        $event->expects(self::once())->method('getDataGrid')->willReturn($grid);
+        $event = new PreBindDataEvent($grid, $request);
 
         $subscriber = new BindRequest();
 
         $subscriber->preBindData($event);
+
+        self::assertSame(['foo' => 'bar'], $event->getData());
     }
 
     public function testPreBindDataGET(): void
@@ -71,13 +72,12 @@ class BindRequestTest extends TestCase
         $grid = $this->createMock(DataGridInterface::class);
         $grid->expects(self::once())->method('getName')->willReturn('grid');
 
-        $event = $this->createMock(DataGridEventInterface::class);
-        $event->expects(self::once())->method('getData')->willReturn($request);
-        $event->expects(self::once())->method('setData')->with(['foo' => 'bar']);
-        $event->expects(self::once())->method('getDataGrid')->willReturn($grid);
+        $event = new PreBindDataEvent($grid, $request);
 
         $subscriber = new BindRequest();
 
         $subscriber->preBindData($event);
+
+        self::assertSame(['foo' => 'bar'], $event->getData());
     }
 }

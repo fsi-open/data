@@ -13,6 +13,7 @@ namespace Tests\FSi\Component\DataGrid;
 
 use FSi\Component\DataGrid\DataGridFactory;
 use FSi\Component\DataGrid\DataGridFactoryInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Tests\FSi\Component\DataGrid\Fixtures\FooExtension;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
@@ -34,13 +35,14 @@ class DataGridFactoryTest extends TestCase
         ];
 
         $dataMapper = $this->createMock(DataMapperInterface::class);
+        $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
-        $this->factory = new DataGridFactory($extensions, $dataMapper);
+        $this->factory = new DataGridFactory($extensions, $dataMapper, $eventDispatcher);
     }
 
     public function testCreateGrids(): void
     {
-        $grid = $this->factory->createDataGrid();
+        $grid = $this->factory->createDataGrid('grid');
         self::assertSame('grid', $grid->getName());
 
         $this->expectException(DataGridColumnException::class);

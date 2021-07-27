@@ -11,132 +11,155 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnType;
 
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean as BooleanColumnType;
+use FSi\Component\DataGrid\DataGridFactory;
+use FSi\Component\DataGrid\DataGridFactoryInterface;
+use FSi\Component\DataGrid\DataGridInterface;
+use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
+use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean;
+use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\PropertyAccess\PropertyAccess;
+use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
 class BooleanTest extends TestCase
 {
-    /**
-     * @var BooleanColumnType
-     */
-    private $column;
+    private DataGridFactoryInterface $dataGridFactory;
+
+    public function testValues(): void
+    {
+        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Boolean::class, 'available', [
+            'true_value' => 'true',
+            'false_value' => 'false',
+        ]);
+
+        $trueCellView = $this->dataGridFactory->createCellView($column, (object) ['available' => true]);
+        $falseCellView = $this->dataGridFactory->createCellView($column, (object) ['available' => false]);
+
+        $this->assertSame('true', $trueCellView->getValue());
+        $this->assertSame('false', $falseCellView->getValue());
+    }
+
+    public function testAllTrueValues(): void
+    {
+        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Boolean::class, 'available', [
+            'true_value' => 'true',
+            'field_mapping' => ['available', 'active'],
+        ]);
+
+        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+            'available' => true,
+            'active' => true
+        ]);
+
+        $this->assertSame('true', $cellView->getValue());
+    }
+
+    public function testMixedValues(): void
+    {
+        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Boolean::class, 'available', [
+            'true_value' => 'true',
+            'false_value' => 'false',
+            'field_mapping' => ['available', 'active', 'createdAt'],
+        ]);
+
+        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+            'available' => true,
+            'active' => 1,
+            'createdAt' => new \DateTime(),
+        ]);
+
+        $this->assertSame('true', $cellView->getValue());
+    }
+
+    public function testAllFalseValues(): void
+    {
+        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Boolean::class, 'available', [
+            'true_value' => 'true',
+            'false_value' => 'false',
+            'field_mapping' => ['available', 'active'],
+        ]);
+
+        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+            'available' => false,
+            'active' => false,
+        ]);
+
+        $this->assertSame('false', $cellView->getValue());
+    }
+
+    public function testMixedValuesAndFalse(): void
+    {
+        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Boolean::class, 'available', [
+            'true_value' => 'true',
+            'false_value' => 'false',
+            'field_mapping' => ['available', 'active', 'createdAt', 'disabled'],
+        ]);
+
+        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+            'available' => true,
+            'active' => 1,
+            'createdAt' => new \DateTime(),
+            'disabled' => false,
+        ]);
+
+        $this->assertSame('false', $cellView->getValue());
+    }
+
+    public function testMixedValuesAndNull(): void
+    {
+        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Boolean::class, 'available', [
+            'true_value' => 'true',
+            'false_value' => 'false',
+            'field_mapping' => ['available', 'active', 'createdAt', 'disabled'],
+        ]);
+
+        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+            'available' => true,
+            'active' => 1,
+            'createdAt' => new \DateTime(),
+            'disabled' => null,
+        ]);
+
+        $this->assertSame('true', $cellView->getValue());
+    }
+
+    public function testAllNulls(): void
+    {
+        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Boolean::class, 'available', [
+            'true_value' => 'true',
+            'false_value' => 'false',
+            'field_mapping' => ['available', 'active'],
+        ]);
+
+        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+            'available' => null,
+            'active' => null,
+        ]);
+
+        $this->assertSame('', $cellView->getValue());
+    }
 
     protected function setUp(): void
     {
-        $column = new BooleanColumnType();
-        $column->setName('available');
-        $column->initOptions();
-
-        $this->column = $column;
-    }
-
-    public function testBasicFilterValue(): void
-    {
-        $this->column->setOptions([
-            'true_value' => 'true',
-            'false_value' => 'false'
-        ]);
-
-        self::assertSame($this->column->filterValue(true), 'true');
-        self::assertNotSame($this->column->filterValue(true), 'false');
-    }
-
-    public function testFilterValueWithTrueValuesInArray(): void
-    {
-        $this->column->setOption('true_value', 'true');
-
-        self::assertSame(
-            $this->column->filterValue([
-                true,
-                true
-            ]),
-            'true'
+        $this->dataGridFactory = new DataGridFactory(
+            [new SimpleDataGridExtension(new DefaultColumnOptionsExtension(), new Boolean())],
+            $this->createMock(DataMapperInterface::class),
+            $this->createMock(EventDispatcherInterface::class)
         );
     }
 
-    public function testFilterValueWithMixedValuesInArray(): void
+    /**
+     * @return DataGridInterface&MockObject
+     */
+    private function getDataGridMock(): DataGridInterface
     {
-        $this->column->setOptions([
-            'true_value' => 'true',
-            'false_value' => 'false'
-        ]);
+        $dataGrid = $this->createMock(DataGridInterface::class);
+        $dataGrid->method('getDataMapper')
+            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
 
-        self::assertSame(
-            $this->column->filterValue([
-                true,
-                1,
-                new \DateTime()
-            ]),
-            'true'
-        );
-    }
-
-
-    public function testFilterValueWithFalseValuesInArray(): void
-    {
-        $this->column->setOptions([
-            'true_value' => 'true',
-            'false_value' => 'false'
-        ]);
-
-        self::assertSame(
-            $this->column->filterValue([
-                false,
-                false
-            ]),
-            'false'
-        );
-    }
-
-    public function testFilterValueWithMixedValuesAndFalseInArray(): void
-    {
-        $this->column->setOptions([
-            'true_value' => 'true',
-            'false_value' => 'false'
-        ]);
-
-        self::assertSame(
-            $this->column->filterValue([
-                true,
-                1,
-                new \DateTime(),
-                false
-            ]),
-            'false'
-        );
-    }
-
-    public function testFilterValueWithMixedValuesAndNullInArray(): void
-    {
-        $this->column->setOptions([
-            'true_value' => 'true',
-            'false_value' => 'false'
-        ]);
-
-        self::assertSame(
-            $this->column->filterValue([
-                true,
-                1,
-                new \DateTime(),
-                null
-            ]),
-            'true'
-        );
-    }
-
-    public function testFilterValueWithAllNullsInArray(): void
-    {
-        $this->column->setOptions([
-            'true_value' => 'true',
-            'false_value' => 'false'
-        ]);
-
-        self::assertSame(
-            $this->column->filterValue([
-                null,
-                null
-            ]),
-            ''
-        );
+        return $dataGrid;
     }
 }

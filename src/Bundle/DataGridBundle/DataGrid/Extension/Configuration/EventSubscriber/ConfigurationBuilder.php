@@ -11,9 +11,8 @@ declare(strict_types=1);
 
 namespace FSi\Bundle\DataGridBundle\DataGrid\Extension\Configuration\EventSubscriber;
 
-use FSi\Component\DataGrid\DataGridEventInterface;
-use FSi\Component\DataGrid\DataGridEvents;
 use FSi\Component\DataGrid\DataGridInterface;
+use FSi\Component\DataGrid\Event\PreSetDataEvent;
 use RuntimeException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
@@ -25,10 +24,7 @@ class ConfigurationBuilder implements EventSubscriberInterface
     private const BUNDLE_CONFIG_PATH = '%s/Resources/config/datagrid/%s.yml';
     private const MAIN_CONFIG_DIRECTORY = 'datagrid.yaml.main_config';
 
-    /**
-     * @var KernelInterface
-     */
-    private $kernel;
+    private KernelInterface $kernel;
 
     public function __construct(KernelInterface $kernel)
     {
@@ -37,10 +33,10 @@ class ConfigurationBuilder implements EventSubscriberInterface
 
     public static function getSubscribedEvents(): array
     {
-        return [DataGridEvents::PRE_SET_DATA => ['readConfiguration', 128]];
+        return [PreSetDataEvent::class => ['readConfiguration', 128]];
     }
 
-    public function readConfiguration(DataGridEventInterface $event): void
+    public function readConfiguration(PreSetDataEvent $event): void
     {
         $dataGrid = $event->getDataGrid();
         $mainConfiguration = $this->getMainConfiguration($dataGrid->getName());

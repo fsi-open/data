@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataGrid\Extension\Gedmo;
 
+use FSi\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
 use FSi\Component\DataGrid\Extension\Gedmo\GedmoDoctrineExtension;
 use Doctrine\Persistence\ManagerRegistry;
 use PHPUnit\Framework\TestCase;
@@ -23,6 +24,7 @@ class GedmoDoctrineExtensionTest extends TestCase
         $extension = new GedmoDoctrineExtension($registry);
 
         self::assertTrue($extension->hasColumnType('gedmo_tree'));
+        self::assertTrue($extension->hasColumnType(Tree::class));
         self::assertFalse($extension->hasColumnType('foo'));
     }
 }

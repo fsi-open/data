@@ -9,23 +9,23 @@
 
 declare(strict_types=1);
 
-namespace FSi\Component\DataGrid;
+namespace FSi\Component\DataGrid\Event;
 
-use Symfony\Contracts\EventDispatcher\Event;
+use FSi\Component\DataGrid\DataGridInterface;
 
-class DataGridEvent extends Event implements DataGridEventInterface
+final class PreSetDataEvent
 {
-    protected DataGridInterface $dataGrid;
+    private DataGridInterface $dataGrid;
     /**
-     * @var mixed
+     * @var iterable<int|string,array|object>
      */
-    protected $data;
+    private iterable $data;
 
     /**
      * @param DataGridInterface $dataGrid
-     * @param mixed $data
+     * @param iterable<int|string,array|object> $data
      */
-    public function __construct(DataGridInterface $dataGrid, $data)
+    public function __construct(DataGridInterface $dataGrid, iterable $data)
     {
         $this->dataGrid = $dataGrid;
         $this->data = $data;
@@ -36,18 +36,15 @@ class DataGridEvent extends Event implements DataGridEventInterface
         return $this->dataGrid;
     }
 
-    /**
-     * @return mixed
-     */
     public function getData()
     {
         return $this->data;
     }
 
     /**
-     * @param mixed $data
+     * @param iterable<int|string,array|object> $data
      */
-    public function setData($data): void
+    public function setData(iterable $data): void
     {
         $this->data = $data;
     }

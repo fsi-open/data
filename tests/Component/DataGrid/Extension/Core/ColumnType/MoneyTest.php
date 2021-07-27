@@ -11,147 +11,87 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnType;
 
+use FSi\Component\DataGrid\DataGridFactory;
+use FSi\Component\DataGrid\DataGridFactoryInterface;
+use FSi\Component\DataGrid\DataGridInterface;
+use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
+use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Money;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\PropertyAccess\PropertyAccess;
+use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
 class MoneyTest extends TestCase
 {
-    /**
-     * @var Money
-     */
-    private $column;
-
-    protected function setUp(): void
-    {
-        $column = new Money();
-        $column->setName('money');
-        $column->initOptions();
-
-        $extension = new DefaultColumnOptionsExtension();
-        $extension->initOptions($column);
-
-        $this->column = $column;
-    }
+    private DataGridFactoryInterface $dataGridFactory;
 
     public function testCurrencyOption(): void
     {
-        $value = [
-            'value' => 10,
-        ];
-
-        $this->column->setOption('currency', 'PLN');
-
-        self::assertSame(
-            $this->column->filterValue($value),
-            [
-                'value' => '10.00 PLN',
-            ]
-        );
+        $this->assertCellValue(['currency' => 'EUR'], (object) ['price' => 10], ['price' => '10.00 EUR']);
     }
 
     public function testCurrencySeparatorOption(): void
     {
-        $value = [
-            'value' => 10,
-        ];
+        $this->assertCellValue(['value_currency_separator' => '$'], (object) ['price' => 10], ['price' => '10.00$PLN']);
+    }
 
-        $this->column->setOption('currency', 'PLN');
-        $this->column->setOption('value_currency_separator', '$ ');
+    public function testDecPointOption(): void
+    {
+        $this->assertCellValue(['dec_point' => '-'], (object) ['price' => 10], ['price' => '10-00 PLN']);
+    }
 
-        self::assertSame(
-            $this->column->filterValue($value),
-            [
-                'value' => '10.00$ PLN',
-            ]
+    public function testDecimalsOption(): void
+    {
+        $this->assertCellValue(['decimals' => 0], (object) ['price' => 10], ['price' => '10 PLN']);
+
+        $this->assertCellValue(['decimals' => 5], (object) ['price' => 10], ['price' => '10.00000 PLN']);
+    }
+
+    public function testPrecisionOption(): void
+    {
+        $this->assertCellValue(['precision' => 2], (object) ['price' => 10.326], ['price' => '10.33 PLN']);
+
+        $this->assertCellValue(['precision' => 2], (object) ['price' => 10.324], ['price' => '10.32 PLN']);
+    }
+
+    public function testThousandsSepOption(): void
+    {
+        $this->assertCellValue(['thousands_sep' => '.'], (object) ['price' => 10000], ['price' => '10.000.00 PLN']);
+    }
+
+    protected function setUp(): void
+    {
+        $this->dataGridFactory = new DataGridFactory(
+            [new SimpleDataGridExtension(new DefaultColumnOptionsExtension(), new Money())],
+            $this->createMock(DataMapperInterface::class),
+            $this->createMock(EventDispatcherInterface::class)
         );
     }
 
-    public function testCurrencyDecPointOption(): void
+    private function assertCellValue(array $options, $value, array $expectedValue): void
     {
-        $value = [
-            'value' => 10,
-        ];
+        $options = array_merge([
+            'currency' => 'PLN',
+        ], $options);
 
-        $this->column->setOption('currency', 'PLN');
-        $this->column->setOption('dec_point', '-');
+        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Money::class, 'price', $options);
+        $cellView = $this->dataGridFactory->createCellView($column, $value);
 
-        self::assertSame(
-            $this->column->filterValue($value),
-            [
-                'value' => '10-00 PLN',
-            ]
-        );
+        $this->assertSame($expectedValue, $cellView->getValue());
     }
 
-    public function testCurrencyDecimalsOption(): void
+    /**
+     * @return DataGridInterface&MockObject
+     */
+    private function getDataGridMock(): DataGridInterface
     {
-        $value = [
-            'value' => 10,
-        ];
+        $dataGrid = $this->createMock(DataGridInterface::class);
+        $dataGrid->method('getDataMapper')
+            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
 
-        $this->column->setOption('currency', 'PLN');
-        $this->column->setOption('decimals', 0);
-
-        self::assertSame(
-            $this->column->filterValue($value),
-            [
-                'value' => '10 PLN',
-            ]
-        );
-
-        $this->column->setOption('currency', 'PLN');
-        $this->column->setOption('decimals', 5);
-
-        self::assertSame(
-            $this->column->filterValue($value),
-            [
-                'value' => '10.00000 PLN',
-            ]
-        );
-    }
-
-    public function testCurrencyPrecisionOption(): void
-    {
-        $value = [
-            'value' => 10.326
-        ];
-
-        $this->column->setOption('currency', 'PLN');
-        $this->column->setOption('precision', 2);
-
-        self::assertSame(
-            $this->column->filterValue($value),
-            [
-                'value' => '10.33 PLN',
-            ]
-        );
-
-        $value = [
-            'value' => 10.324,
-        ];
-        self::assertSame(
-            $this->column->filterValue($value),
-            [
-                'value' => '10.32 PLN',
-            ]
-        );
-    }
-
-    public function testCurrencyThousandsSepOption(): void
-    {
-        $value = [
-            'value' => 10000,
-        ];
-
-        $this->column->setOption('currency', 'PLN');
-        $this->column->setOption('thousands_sep', '.');
-
-        self::assertSame(
-            $this->column->filterValue($value),
-            [
-                'value' => '10.000.00 PLN',
-            ]
-        );
+        return $dataGrid;
     }
 }

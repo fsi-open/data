@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension;
 
+use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\Column\HeaderViewInterface;
-use FSi\Component\DataGrid\Column\ColumnTypeInterface;
 use PHPUnit\Framework\TestCase;
 
 class DefaultColumnOptionsExtensionTest extends TestCase
@@ -22,7 +22,7 @@ class DefaultColumnOptionsExtensionTest extends TestCase
     {
         $extension = new DefaultColumnOptionsExtension();
 
-        $column = $this->createMock(ColumnTypeInterface::class);
+        $column = $this->createMock(ColumnInterface::class);
         $view = $this->createMock(HeaderViewInterface::class);
 
         $column->expects(self::exactly(2))
@@ -30,13 +30,9 @@ class DefaultColumnOptionsExtensionTest extends TestCase
             ->withConsecutive(['label'], ['display_order'])
             ->willReturnOnConsecutiveCalls('foo', 100);
 
-        $view->expects(self::once())
-            ->method('setLabel')
-            ->with('foo');
-
-        $view->expects(self::once())
+        $view->expects(self::exactly(2))
             ->method('setAttribute')
-            ->with('display_order', 100);
+            ->withConsecutive(['label', 'foo'], ['display_order', 100]);
 
         $extension->buildHeaderView($column, $view);
     }

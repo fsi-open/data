@@ -11,32 +11,33 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid;
 
-use FSi\Component\DataGrid\Column\ColumnTypeInterface;
+use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 interface DataGridInterface
 {
+    public function getFactory(): DataGridFactoryInterface;
+
     public function getName(): string;
 
-    public function getDataMapper(): DataMapperInterface;
-
     /**
-     * @param ColumnTypeInterface|string $name
+     * @param string $name
      * @param string $type
      * @param array<string,mixed> $options
      * @return DataGridInterface
      */
-    public function addColumn($name, string $type = 'text', array $options = []): DataGridInterface;
+    public function addColumn(string $name, string $type = 'text', array $options = []): DataGridInterface;
+
+    public function addColumnInstance(ColumnInterface $column): DataGridInterface;
 
     public function removeColumn(string $name): DataGridInterface;
 
     public function clearColumns(): DataGridInterface;
 
-    public function getColumn(string $name): ColumnTypeInterface;
+    public function getColumn(string $name): ColumnInterface;
 
     /**
-     * @return array<ColumnTypeInterface>
+     * @return array<ColumnInterface>
      */
     public function getColumns(): array;
 
@@ -46,11 +47,15 @@ interface DataGridInterface
 
     public function createView(): DataGridViewInterface;
 
+    /**
+     * @param iterable<int|string,array|object> $data
+     */
     public function setData(iterable $data): void;
 
+    /**
+     * @param mixed $data
+     */
     public function bindData($data): void;
 
-    public function addEventListener(string $eventName, callable $listener, int $priority = 0): DataGridInterface;
-
-    public function addEventSubscriber(EventSubscriberInterface $subscriber): DataGridInterface;
+    public function getDataMapper(): DataMapperInterface;
 }

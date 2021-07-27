@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace FSi\Component\DataGrid\Extension\Core\ColumnType;
 
 use FSi\Component\DataGrid\Column\ColumnAbstractType;
+use FSi\Component\DataGrid\Column\ColumnInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class Number extends ColumnAbstractType
 {
@@ -25,34 +27,38 @@ class Number extends ColumnAbstractType
         return 'number';
     }
 
-    public function filterValue($value)
+    public function filterValue(ColumnInterface $column, $value)
     {
-        $precision = (int) $this->getOption('precision');
-        $roundmode = $this->getOption('round_mode');
+        $precision = (int) $column->getOption('precision');
+        $roundMode = $column->getOption('round_mode');
 
-        $format = $this->getOption('format');
-        $format_decimals = $this->getOption('format_decimals');
-        $format_dec_point = $this->getOption('format_dec_point');
-        $format_thousands_sep = $this->getOption('format_thousands_sep');
+        /** @var bool $format */
+        $format = $column->getOption('format');
+        /** @var int $formatDecimals */
+        $formatDecimals = $column->getOption('format_decimals');
+        /** @var string $formatDecimalPoint */
+        $formatDecimalPoint = $column->getOption('format_dec_point');
+        /** @var string $formatThousandsSeparator */
+        $formatThousandsSeparator = $column->getOption('format_thousands_sep');
 
         foreach ($value as &$val) {
             if (empty($val)) {
                 continue;
             }
 
-            if (isset($roundmode)) {
-                $val = round($val, $precision, $roundmode);
+            if (null !== $roundMode) {
+                $val = round($val, $precision, $roundMode);
             }
 
-            if ($format) {
-                $val = number_format((float) $val, $format_decimals, $format_dec_point, $format_thousands_sep);
+            if (true === $format) {
+                $val = number_format((float) $val, $formatDecimals, $formatDecimalPoint, $formatThousandsSeparator);
             }
         }
 
         return $value;
     }
 
-    public function initOptions(): void
+    public function initOptions(OptionsResolver $optionsResolver): void
     {
         $defaults = [
             'round_mode' => null,
@@ -63,13 +69,15 @@ class Number extends ColumnAbstractType
             'format_thousands_sep' => ',',
         ];
 
-        $this->getOptionsResolver()->setDefaults($defaults);
+        $optionsResolver->setDefaults($defaults);
 
-        $this->getOptionsResolver()->setAllowedTypes('precision', 'integer');
-        $this->getOptionsResolver()->setAllowedTypes('format', 'bool');
-        $this->getOptionsResolver()->setAllowedTypes('format_decimals', 'integer');
+        $optionsResolver->setAllowedTypes('precision', 'integer');
+        $optionsResolver->setAllowedTypes('format', 'bool');
+        $optionsResolver->setAllowedTypes('format_decimals', 'integer');
+        $optionsResolver->setAllowedTypes('format_dec_point', 'string');
+        $optionsResolver->setAllowedTypes('format_thousands_sep', 'string');
 
-        $this->getOptionsResolver()->setAllowedValues('round_mode', [
+        $optionsResolver->setAllowedValues('round_mode', [
             null,
             self::ROUND_HALF_UP,
             self::ROUND_HALF_DOWN,

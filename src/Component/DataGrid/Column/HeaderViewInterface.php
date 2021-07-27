@@ -11,15 +11,15 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid\Column;
 
-use FSi\Component\DataGrid\DataGridViewInterface;
-
 interface HeaderViewInterface
 {
-    /**
-     * @param string $name
-     * @param mixed $value
-     */
-    public function setAttribute(string $name, $value): void;
+    public function getDataGridName(): string;
+
+    public function getType(): string;
+
+    public function getName(): string;
+
+    public function hasAttribute(string $name): bool;
 
     /**
      * @param string $name
@@ -27,22 +27,14 @@ interface HeaderViewInterface
      */
     public function getAttribute(string $name);
 
-    public function hasAttribute(string $name): bool;
-
     /**
      * @return array<string,mixed>
      */
     public function getAttributes(): array;
 
-    public function getLabel(): ?string;
-
-    public function setLabel(string $label): void;
-
-    public function getName(): string;
-
-    public function getType(): string;
-
-    public function setDataGridView(DataGridViewInterface $dataGrid): void;
-
-    public function getDataGridView(): DataGridViewInterface;
+    /**
+     * @param string $name
+     * @param mixed $value
+     */
+    public function setAttribute(string $name, $value): void;
 }

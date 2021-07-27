@@ -11,11 +11,20 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid;
 
+use FSi\Component\DataGrid\Column\CellView;
+use FSi\Component\DataGrid\Column\CellViewInterface;
+use FSi\Component\DataGrid\Column\Column;
+use FSi\Component\DataGrid\Column\ColumnInterface;
+use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
 use FSi\Component\DataGrid\Column\ColumnTypeInterface;
+use FSi\Component\DataGrid\Column\HeaderView;
+use FSi\Component\DataGrid\Column\HeaderViewInterface;
 use FSi\Component\DataGrid\Exception\DataGridColumnException;
 use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use InvalidArgumentException;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 use function array_key_exists;
 
@@ -34,14 +43,18 @@ class DataGridFactory implements DataGridFactoryInterface
      */
     private array $extensions;
     private DataMapperInterface $dataMapper;
+    private EventDispatcherInterface $eventDispatcher;
 
     /**
-     * @param DataGridExtensionInterface[] $extensions
+     * @param array<DataGridExtensionInterface> $extensions
      * @param DataMapperInterface $dataMapper
-     * @throws InvalidArgumentException
+     * @param EventDispatcherInterface $eventDispatcher
      */
-    public function __construct(array $extensions, DataMapperInterface $dataMapper)
-    {
+    public function __construct(
+        array $extensions,
+        DataMapperInterface $dataMapper,
+        EventDispatcherInterface $eventDispatcher
+    ) {
         foreach ($extensions as $extension) {
             if (false === $extension instanceof DataGridExtensionInterface) {
                 throw new InvalidArgumentException(sprintf(
@@ -53,20 +66,7 @@ class DataGridFactory implements DataGridFactoryInterface
 
         $this->dataMapper = $dataMapper;
         $this->extensions = $extensions;
-    }
-
-    public function createDataGrid(string $name = 'grid'): DataGridInterface
-    {
-        if (true === array_key_exists($name, $this->dataGrids)) {
-            throw new DataGridColumnException(sprintf(
-                'Datagrid name "%s" is not uniqe, it was used before to create datagrid',
-                $name
-            ));
-        }
-
-        $this->dataGrids[$name] = new DataGrid($name, $this, $this->dataMapper);
-
-        return $this->dataGrids[$name];
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     public function hasColumnType(string $type): bool
@@ -87,17 +87,32 @@ class DataGridFactory implements DataGridFactoryInterface
     public function getColumnType(string $type): ColumnTypeInterface
     {
         if (true === $this->hasColumnType($type)) {
-            return clone $this->columnTypes[$type];
+            return $this->columnTypes[$type];
         }
 
         $this->loadColumnType($type);
 
-        return clone $this->columnTypes[$type];
+        return $this->columnTypes[$type];
     }
 
-    public function getExtensions(): array
+    /**
+     * @param ColumnTypeInterface $columnType
+     * @return array<ColumnTypeExtensionInterface>
+     */
+    public function getColumnTypeExtensions(ColumnTypeInterface $columnType): array
     {
-        return $this->extensions;
+        $extensions = [];
+        foreach ($this->extensions as $extension) {
+            if ($extension->hasColumnTypeExtensions($columnType)) {
+                $extensions[] = $extension->getColumnTypeExtensions($columnType);
+            }
+        }
+
+        if (empty($extensions)) {
+            return [];
+        }
+
+        return array_merge(...$extensions);
     }
 
     public function getDataMapper(): DataMapperInterface
@@ -105,6 +120,78 @@ class DataGridFactory implements DataGridFactoryInterface
         return $this->dataMapper;
     }
 
+    public function createDataGrid(string $name): DataGridInterface
+    {
+        if (true === array_key_exists($name, $this->dataGrids)) {
+            throw new DataGridColumnException(sprintf(
+                'Datagrid name "%s" is not uniqe, it was used before to create datagrid',
+                $name
+            ));
+        }
+
+        $this->dataGrids[$name] = new DataGrid($name, $this, $this->dataMapper, $this->eventDispatcher);
+
+        return $this->dataGrids[$name];
+    }
+
+    public function createColumn(
+        DataGridInterface $dataGrid,
+        string $type,
+        string $name,
+        array $options
+    ): ColumnInterface {
+        $optionsResolver = new OptionsResolver();
+        $optionsResolver->setRequired('name');
+        $optionsResolver->setAllowedTypes('name', 'string');
+
+        $columnType = $this->getColumnType($type);
+        $columnType->initOptions($optionsResolver);
+        foreach ($this->getColumnTypeExtensions($columnType) as $extension) {
+            $extension->initOptions($optionsResolver);
+        }
+
+        return new Column(
+            $dataGrid,
+            $columnType,
+            $name,
+            $optionsResolver->resolve(array_merge(['name' => $name], $options))
+        );
+    }
+
+    public function createCellView(ColumnInterface $column, $source): CellViewInterface
+    {
+        $columnType = $column->getType();
+        $value = $columnType->filterValue($column, $columnType->getValue($column, $source));
+        foreach ($this->getColumnTypeExtensions($columnType) as $extension) {
+            $value = $extension->filterValue($column, $value);
+        }
+
+        $cellView = new CellView($column, $value);
+        $columnType->buildCellView($column, $cellView);
+        foreach ($this->getColumnTypeExtensions($columnType) as $extension) {
+            $extension->buildCellView($column, $cellView);
+        }
+
+        return $cellView;
+    }
+
+    public function createHeaderView(ColumnInterface $column): HeaderViewInterface
+    {
+        $view = new HeaderView($column);
+
+        $columnType = $column->getType();
+        $columnType->buildHeaderView($column, $view);
+        foreach ($this->getColumnTypeExtensions($columnType) as $extension) {
+            $extension->buildHeaderView($column, $view);
+        }
+
+        return $view;
+    }
+
+    /**
+     * @param string|class-string<ColumnTypeInterface> $type
+     * @throws UnexpectedTypeException
+     */
     private function loadColumnType(string $type): void
     {
         if (true === array_key_exists($type, $this->columnTypes)) {
@@ -124,15 +211,6 @@ class DataGridFactory implements DataGridFactoryInterface
                 'There is no column with type "%s" registered in factory.',
                 $type
             ));
-        }
-
-        foreach ($this->extensions as $extension) {
-            if (true === $extension->hasColumnTypeExtensions($type)) {
-                $columnExtensions = $extension->getColumnTypeExtensions($type);
-                foreach ($columnExtensions as $columnExtension) {
-                    $typeInstance->addExtension($columnExtension);
-                }
-            }
         }
 
         $this->columnTypes[$type] = $typeInstance;

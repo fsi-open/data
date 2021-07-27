@@ -12,15 +12,14 @@ declare(strict_types=1);
 namespace FSi\Component\DataGrid\Extension\Core\ColumnType;
 
 use FSi\Component\DataGrid\Column\ColumnAbstractType;
+use FSi\Component\DataGrid\Column\ColumnInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\OptionsResolver\Options;
+
+use function array_key_exists;
 
 class Action extends ColumnAbstractType
 {
-    /**
-     * @var OptionsResolver
-     */
-    protected $actionOptionsResolver;
+    protected OptionsResolver $actionOptionsResolver;
 
     public function __construct()
     {
@@ -32,10 +31,10 @@ class Action extends ColumnAbstractType
         return 'action';
     }
 
-    public function filterValue($value)
+    public function filterValue(ColumnInterface $column, $value)
     {
         $return = [];
-        $actions = $this->getOption('actions');
+        $actions = $column->getOption('actions');
 
         foreach ($actions as $name => $options) {
             $options = $this->actionOptionsResolver->resolve((array) $options);
@@ -44,7 +43,7 @@ class Action extends ColumnAbstractType
             $url = (isset($options['protocol'], $options['domain'])) ? $options['protocol'] . $options['domain'] : '';
             $url .= vsprintf($options['uri_scheme'], $value);
 
-            if (isset($options['redirect_uri']) && is_string($options['redirect_uri'])) {
+            if (true === array_key_exists('redirect_uri', $options) && is_string($options['redirect_uri'])) {
                 if (strpos($url, '?') !== false) {
                     $url .= '&redirect_uri=' . urlencode($options['redirect_uri']);
                 } else {
@@ -59,13 +58,13 @@ class Action extends ColumnAbstractType
         return $return;
     }
 
-    public function initOptions(): void
+    public function initOptions(OptionsResolver $optionsResolver): void
     {
-        $this->getOptionsResolver()->setDefaults([
+        $optionsResolver->setDefaults([
             'actions' => [],
         ]);
 
-        $this->getOptionsResolver()->setAllowedTypes('actions', 'array');
+        $optionsResolver->setAllowedTypes('actions', 'array');
 
         $this->actionOptionsResolver->setDefaults([
             'redirect_uri' => null,

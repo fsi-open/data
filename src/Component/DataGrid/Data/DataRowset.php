@@ -22,7 +22,7 @@ class DataRowset implements DataRowsetInterface
     protected array $data = [];
 
     /**
-     * @param iterable<array|object> $data
+     * @param iterable<int|string,array|object> $data
      */
     public function __construct(iterable $data)
     {

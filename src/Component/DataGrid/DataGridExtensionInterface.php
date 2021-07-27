@@ -16,17 +16,23 @@ use FSi\Component\DataGrid\Column\ColumnTypeInterface;
 
 interface DataGridExtensionInterface
 {
-    public function registerSubscribers(DataGridInterface $dataGrid): void;
-
+    /**
+     * @param string|class-string<ColumnTypeInterface> $type
+     * @return bool
+     */
     public function hasColumnType(string $type): bool;
 
+    /**
+     * @param string|class-string<ColumnTypeInterface> $type
+     * @return ColumnTypeInterface
+     */
     public function getColumnType(string $type): ColumnTypeInterface;
 
-    public function hasColumnTypeExtensions(string $type): bool;
+    public function hasColumnTypeExtensions(ColumnTypeInterface $type): bool;
 
     /**
-     * @param string $type
+     * @param ColumnTypeInterface $type
      * @return array<ColumnTypeExtensionInterface>
      */
-    public function getColumnTypeExtensions(string $type): array;
+    public function getColumnTypeExtensions(ColumnTypeInterface $type): array;
 }

@@ -11,37 +11,48 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataGrid\Extension\Doctrine\ColumnType;
 
+use FSi\Component\DataGrid\DataGridFactory;
+use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
+use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
+use PHPUnit\Framework\MockObject\MockObject;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\PropertyAccess\PropertyAccess;
 use Tests\FSi\Component\DataGrid\Fixtures\Entity as Fixture;
 use FSi\Component\DataGrid\Extension\Doctrine\ColumnType\Entity;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
-use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\DataGridInterface;
 use PHPUnit\Framework\TestCase;
+use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
 class EntityTypeTest extends TestCase
 {
     public function testGetValue(): void
     {
-        $column = new Entity();
-        $column->setName('foo');
-        $column->initOptions();
+        $dataGridFactory = new DataGridFactory(
+            [new SimpleDataGridExtension(new DefaultColumnOptionsExtension(), new Entity())],
+            $this->createMock(DataMapperInterface::class),
+            $this->createMock(EventDispatcherInterface::class)
+        );
 
-        $extension = new DefaultColumnOptionsExtension();
-        $extension->initOptions($column);
-
-        // Call resolve at OptionsResolver.
-        $column->setOptions([]);
+        $dataGrid = $this->getDataGridMock();
+        $column = $dataGridFactory->createColumn($dataGrid, Entity::class, 'foo', ['relation_field' => 'author']);
 
         $object = new Fixture('object');
+        $object->setAuthor((object) ['foo' => 'bar']);
 
-        $dataMapper = $this->createMock(DataMapperInterface::class);
-        $dataMapper->expects(self::once())->method('getData')->willReturn(['foo' => 'bar']);
+        $cellView = $dataGridFactory->createCellView($column, $object);
+        $this->assertSame([['foo' => 'bar']], $cellView->getValue());
+    }
 
+    /**
+     * @return DataGridInterface&MockObject
+     */
+    private function getDataGridMock(): DataGridInterface
+    {
         $dataGrid = $this->createMock(DataGridInterface::class);
-        $dataGrid->method('getDataMapper')->willReturn($dataMapper);
+        $dataGrid->method('getDataMapper')
+            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
 
-        $column->setDataGrid($dataGrid);
-
-        $column->getValue($object);
+        return $dataGrid;
     }
 }

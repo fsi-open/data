@@ -13,8 +13,13 @@ namespace FSi\Component\DataGrid;
 
 use ArrayAccess;
 use Countable;
+use FSi\Component\DataGrid\Column\CellViewInterface;
 use Iterator;
 
+/**
+ * @template-extends Iterator<string,CellViewInterface>
+ * @template-extends ArrayAccess<string,CellViewInterface>
+ */
 interface DataGridRowViewInterface extends Iterator, Countable, ArrayAccess
 {
     /**

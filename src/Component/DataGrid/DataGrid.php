@@ -11,38 +11,49 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid;
 
+use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Data\DataRowsetInterface;
 use FSi\Component\DataGrid\Data\DataRowset;
-use FSi\Component\DataGrid\Column\ColumnTypeInterface;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
-use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
+use FSi\Component\DataGrid\Event\PostBindDataEvent;
+use FSi\Component\DataGrid\Event\PostBuildViewEvent;
+use FSi\Component\DataGrid\Event\PostSetDataEvent;
+use FSi\Component\DataGrid\Event\PreBindDataEvent;
+use FSi\Component\DataGrid\Event\PreBuildViewEvent;
+use FSi\Component\DataGrid\Event\PreSetDataEvent;
 use FSi\Component\DataGrid\Exception\DataGridException;
 use InvalidArgumentException;
-use Symfony\Component\EventDispatcher\EventDispatcher;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
+
+use function sprintf;
 
 final class DataGrid implements DataGridInterface
 {
-    private string $name;
-    private ?DataRowsetInterface $rowset = null;
-    private DataMapperInterface $dataMapper;
     private DataGridFactoryInterface $dataGridFactory;
+    private string $name;
+    private DataMapperInterface $dataMapper;
+    private EventDispatcherInterface $eventDispatcher;
     /**
-     * @var array<ColumnTypeInterface>
+     * @var array<string,ColumnInterface>
      */
-    protected array $columns = [];
-    protected EventDispatcher $eventDispatcher;
+    private array $columns = [];
+    private ?DataRowsetInterface $rowset = null;
 
     public function __construct(
         string $name,
         DataGridFactoryInterface $dataGridFactory,
-        DataMapperInterface $dataMapper
+        DataMapperInterface $dataMapper,
+        EventDispatcherInterface $eventDispatcher
     ) {
         $this->name = $name;
         $this->dataGridFactory = $dataGridFactory;
         $this->dataMapper = $dataMapper;
-        $this->eventDispatcher = new EventDispatcher();
-        $this->registerSubscribers();
+        $this->eventDispatcher = $eventDispatcher;
+    }
+
+    public function getFactory(): DataGridFactoryInterface
+    {
+        return $this->dataGridFactory;
     }
 
     public function getName(): string
@@ -50,40 +61,43 @@ final class DataGrid implements DataGridInterface
         return $this->name;
     }
 
-    public function addColumn($name, string $type = 'text', array $options = []): DataGridInterface
+    public function addColumn(string $name, string $type = 'text', array $options = []): DataGridInterface
     {
-        if ($name instanceof ColumnTypeInterface) {
-            $type = $name->getId();
+        return $this->addColumnInstance(
+            $this->dataGridFactory->createColumn($this, $type, $name, $options)
+        );
+    }
 
-            if (false === $this->dataGridFactory->hasColumnType($type)) {
-                throw new UnexpectedTypeException(sprintf(
-                    'There is no column with type "%s" registred in factory.',
-                    $type
-                ));
-            }
-
-            $name->setDataGrid($this);
-            $this->columns[$name->getName()] = $name;
-
-            return $this;
+    public function addColumnInstance(ColumnInterface $column): DataGridInterface
+    {
+        if ($column->getDataGrid() !== $this) {
+            throw new InvalidArgumentException('Tried to add column associated with different datagrid instance');
         }
 
-        $column = $this->dataGridFactory->getColumnType($type);
-        $column->setName($name);
-        $column->setDataGrid($this);
-
-        $column->initOptions();
-        foreach ($column->getExtensions() as $extension) {
-            $extension->initOptions($column);
-        }
-        $column->setOptions($options);
-
-        $this->columns[$name] = $column;
+        $this->columns[$column->getName()] = $column;
 
         return $this;
     }
 
-    public function getColumn(string $name): ColumnTypeInterface
+    public function removeColumn(string $name): DataGridInterface
+    {
+        if (false === $this->hasColumn($name)) {
+            throw new InvalidArgumentException(sprintf('Column "%s" does not exist in data grid.', $name));
+        }
+
+        unset($this->columns[$name]);
+
+        return $this;
+    }
+
+    public function clearColumns(): DataGridInterface
+    {
+        $this->columns = [];
+
+        return $this;
+    }
+
+    public function getColumn(string $name): ColumnInterface
     {
         if (false === $this->hasColumn($name)) {
             throw new InvalidArgumentException(sprintf(
@@ -108,7 +122,7 @@ final class DataGrid implements DataGridInterface
     public function hasColumnType(string $type): bool
     {
         foreach ($this->columns as $column) {
-            if ($type === $column->getId()) {
+            if ($column->getType()->getId() === $type) {
                 return true;
             }
         }
@@ -116,36 +130,22 @@ final class DataGrid implements DataGridInterface
         return false;
     }
 
-    public function removeColumn(string $name): DataGridInterface
+    public function createView(): DataGridViewInterface
     {
-        if (false === $this->hasColumn($name)) {
-            throw new InvalidArgumentException(sprintf(
-                'Column "%s" does not exist in data grid.',
-                $name
-            ));
-        }
+        $event = new PreBuildViewEvent($this);
+        $this->eventDispatcher->dispatch($event);
 
-        unset($this->columns[$name]);
+        $view = new DataGridView($this->name, $this->columns, $this->getRowset());
 
-        return $this;
-    }
+        $this->eventDispatcher->dispatch(new PostBuildViewEvent($this, $view));
 
-    public function clearColumns(): DataGridInterface
-    {
-        $this->columns = [];
-
-        return $this;
-    }
-
-    public function getDataMapper(): DataMapperInterface
-    {
-        return $this->dataMapper;
+        return (new PostBuildViewEvent($this, $view))->getDataGridView();
     }
 
     public function setData(iterable $data): void
     {
-        $event = new DataGridEvent($this, $data);
-        $this->eventDispatcher->dispatch($event, DataGridEvents::PRE_SET_DATA);
+        $event = new PreSetDataEvent($this, $data);
+        $this->eventDispatcher->dispatch($event);
         $data = $event->getData();
         if (false === is_iterable($data)) {
             throw new InvalidArgumentException(sprintf(
@@ -156,57 +156,37 @@ final class DataGrid implements DataGridInterface
 
         $this->rowset = new DataRowset($data);
 
-        $event = new DataGridEvent($this, $this->rowset);
-        $this->eventDispatcher->dispatch($event, DataGridEvents::POST_SET_DATA);
+        $this->eventDispatcher->dispatch(new PostSetDataEvent($this, $this->rowset));
     }
 
     public function bindData($data): void
     {
-        $event = new DataGridEvent($this, $data);
-        $this->eventDispatcher->dispatch($event, DataGridEvents::PRE_BIND_DATA);
+        $event = new PreBindDataEvent($this, $data);
+        $this->eventDispatcher->dispatch($event);
         $data = $event->getData();
 
         foreach ($data as $index => $values) {
-            if (!isset($this->rowset[$index])) {
+            if (false === isset($this->rowset[$index])) {
                 continue;
             }
 
-            $object = $this->rowset[$index];
+            $source = $this->rowset[$index];
 
             foreach ($this->getColumns() as $column) {
-                $column->bindData($values, $object, $index);
+                $columnType = $column->getType();
+
+                foreach ($this->dataGridFactory->getColumnTypeExtensions($columnType) as $extension) {
+                    $extension->bindData($column, $index, $source, $values);
+                }
             }
         }
 
-        $event = new DataGridEvent($this, $data);
-        $this->eventDispatcher->dispatch($event, DataGridEvents::POST_BIND_DATA);
+        $this->eventDispatcher->dispatch(new PostBindDataEvent($this, $data));
     }
 
-    public function addEventListener(string $eventName, callable $listener, int $priority = 0): DataGridInterface
+    public function getDataMapper(): DataMapperInterface
     {
-        $this->eventDispatcher->addListener($eventName, $listener, $priority);
-
-        return $this;
-    }
-
-    public function addEventSubscriber(EventSubscriberInterface $subscriber): DataGridInterface
-    {
-        $this->eventDispatcher->addSubscriber($subscriber);
-
-        return $this;
-    }
-
-    public function createView(): DataGridViewInterface
-    {
-        $event = new DataGridEvent($this, null);
-        $this->eventDispatcher->dispatch($event, DataGridEvents::PRE_BUILD_VIEW);
-
-        $view = new DataGridView($this->name, $this->columns, $this->getRowset());
-
-        $event = new DataGridEvent($this, $view);
-        $this->eventDispatcher->dispatch($event, DataGridEvents::POST_BUILD_VIEW);
-
-        return $event->getData();
+        return $this->dataMapper;
     }
 
     private function getRowset(): DataRowsetInterface
@@ -218,14 +198,5 @@ final class DataGrid implements DataGridInterface
         }
 
         return $this->rowset;
-    }
-
-    private function registerSubscribers(): void
-    {
-        $extensions = $this->dataGridFactory->getExtensions();
-
-        foreach ($extensions as $extension) {
-            $extension->registerSubscribers($this);
-        }
     }
 }

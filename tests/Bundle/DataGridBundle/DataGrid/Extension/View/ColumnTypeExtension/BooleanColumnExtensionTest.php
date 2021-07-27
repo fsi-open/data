@@ -17,21 +17,24 @@ use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class BooleanColumnExtensionTest extends TestCase
 {
     public function testColumnOptions(): void
     {
+        $optionsResolver = new OptionsResolver();
         $column = new Boolean();
+        $column->initOptions($optionsResolver);
         $formExtension = new FormExtension($this->getFormFactory());
-        $formExtension->initOptions($column);
+        $formExtension->initOptions($optionsResolver);
         $extension = new BooleanColumnExtension($this->getTranslator());
-        $extension->initOptions($column);
-        $options = $column->getOptionsResolver()->resolve();
+        $extension->initOptions($optionsResolver);
+        $options = $optionsResolver->resolve();
 
-        self::assertEquals('YES', $options['true_value']);
-        self::assertEquals('NO', $options['false_value']);
+        $this->assertEquals('YES', $options['true_value']);
+        $this->assertEquals('NO', $options['false_value']);
     }
 
     /**
@@ -42,13 +45,12 @@ class BooleanColumnExtensionTest extends TestCase
         /** @var TranslatorInterface&MockObject $translator */
         $translator = $this->createMock(TranslatorInterface::class);
 
-        $translator->expects(self::exactly(2))
+        $translator->expects(self::atLeast(2))
             ->method('trans')
             ->withConsecutive(
                 ['datagrid.boolean.yes', [], 'DataGridBundle'],
                 ['datagrid.boolean.no', [], 'DataGridBundle']
-            )
-            ->willReturnOnConsecutiveCalls('YES', 'NO');
+            )->willReturnOnConsecutiveCalls('YES', 'NO');
 
         return $translator;
     }

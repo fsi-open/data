@@ -12,10 +12,8 @@ declare(strict_types=1);
 namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\Extension\Configuration\EventSubscriber;
 
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Configuration\EventSubscriber\ConfigurationBuilder;
-use FSi\Component\DataGrid\DataGrid;
-use FSi\Component\DataGrid\DataGridEvent;
-use FSi\Component\DataGrid\DataGridEvents;
 use FSi\Component\DataGrid\DataGridInterface;
+use FSi\Component\DataGrid\Event\PreSetDataEvent;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -34,8 +32,8 @@ class ConfigurationBuilderTest extends TestCase
     public function testSubscribedEvents(): void
     {
         self::assertEquals(
-            $this->subscriber::getSubscribedEvents(),
-            [DataGridEvents::PRE_SET_DATA => ['readConfiguration', 128]]
+            [PreSetDataEvent::class => ['readConfiguration', 128]],
+            $this->subscriber::getSubscribedEvents()
         );
     }
 
@@ -60,11 +58,11 @@ class ConfigurationBuilderTest extends TestCase
                 }
             );
 
-        $dataGrid = $this->getMockBuilder(DataGridInterface::class)->disableOriginalConstructor()->getMock();
+        $dataGrid = $this->createMock(DataGridInterface::class);
         $dataGrid->method('getName')->willReturn('news');
         $dataGrid->expects(self::once())->method('addColumn')->with('id', 'number', ['label' => 'Identity']);
 
-        $this->subscriber->readConfiguration(new DataGridEvent($dataGrid, []));
+        $this->subscriber->readConfiguration(new PreSetDataEvent($dataGrid, []));
     }
 
     public function testReadConfigurationFromManyBundles(): void
@@ -105,7 +103,7 @@ class ConfigurationBuilderTest extends TestCase
             )
         ;
 
-        $this->subscriber->readConfiguration(new DataGridEvent($dataGrid, []));
+        $this->subscriber->readConfiguration(new PreSetDataEvent($dataGrid, []));
     }
 
     public function testMainConfigurationOverridesBundles(): void
@@ -130,7 +128,7 @@ class ConfigurationBuilderTest extends TestCase
                 ['created_at', 'date', ['label' => 'Created at']]
             );
 
-        $this->subscriber->readConfiguration(new DataGridEvent($dataGrid, []));
+        $this->subscriber->readConfiguration(new PreSetDataEvent($dataGrid, []));
     }
 
     public function testBundleConfigUsedWhenNoFileFoundInMainDirectory(): void
@@ -159,19 +157,19 @@ class ConfigurationBuilderTest extends TestCase
         $dataGrid->method('getName')->willReturn('user');
         $dataGrid->expects(self::once())->method('addColumn')->with('username', 'text', []);
 
-        $this->subscriber->readConfiguration(new DataGridEvent($dataGrid, []));
+        $this->subscriber->readConfiguration(new PreSetDataEvent($dataGrid, []));
     }
 
     public function testExceptionThrownWhenMainConfigPathIsNotADirectory(): void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('"non existant directory" is not a directory!');
+        $this->expectExceptionMessage('"non existing directory" is not a directory!');
 
         $container = $this->createMock(ContainerInterface::class);
         $container->expects(self::once())
             ->method('getParameter')
             ->with('datagrid.yaml.main_config')
-            ->willReturn('non existant directory')
+            ->willReturn('non existing directory')
         ;
 
         $this->kernel->expects(self::once())->method('getContainer')->willReturn($container);
@@ -179,7 +177,7 @@ class ConfigurationBuilderTest extends TestCase
         $dataGrid = $this->getMockBuilder(DataGridInterface::class)->disableOriginalConstructor()->getMock();
         $dataGrid->method('getName')->willReturn('news');
 
-        $this->subscriber->readConfiguration(new DataGridEvent($dataGrid, []));
+        $this->subscriber->readConfiguration(new PreSetDataEvent($dataGrid, []));
     }
 
     protected function setUp(): void

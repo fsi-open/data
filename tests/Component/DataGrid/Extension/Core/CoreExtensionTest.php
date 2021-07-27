@@ -11,11 +11,21 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataGrid\Extension\Core;
 
+use FSi\Component\DataGrid\Column\ColumnInterface;
+use FSi\Component\DataGrid\DataGridInterface;
+use FSi\Component\DataGrid\Event\PostBuildViewEvent;
+use FSi\Component\DataGrid\Event\PreBuildViewEvent;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Action;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Batch;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\DateTime;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Money;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Number;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Text;
 use FSi\Component\DataGrid\Extension\Core\CoreExtension;
 use FSi\Component\DataGrid\Extension\Core\EventSubscriber\ColumnOrder;
-use FSi\Component\DataGrid\DataGridEventInterface;
 use FSi\Component\DataGrid\DataGridViewInterface;
 use FSi\Component\DataGrid\Column\HeaderViewInterface;
+use FSi\Component\DataGrid\Extension\Doctrine\ColumnType\Entity;
 use PHPUnit\Framework\TestCase;
 
 class CoreExtensionTest extends TestCase
@@ -23,30 +33,33 @@ class CoreExtensionTest extends TestCase
     public function testLoadedTypes(): void
     {
         $extension = new CoreExtension();
-        self::assertTrue($extension->hasColumnType('text'));
-        self::assertTrue($extension->hasColumnType('number'));
-        self::assertTrue($extension->hasColumnType('datetime'));
-        self::assertTrue($extension->hasColumnType('action'));
-        self::assertTrue($extension->hasColumnType('money'));
-        self::assertTrue($extension->hasColumnType('action'));
+        $this->assertTrue($extension->hasColumnType('text'));
+        $this->assertTrue($extension->hasColumnType(Text::class));
+        $this->assertTrue($extension->hasColumnType('number'));
+        $this->assertTrue($extension->hasColumnType(Number::class));
+        $this->assertTrue($extension->hasColumnType('datetime'));
+        $this->assertTrue($extension->hasColumnType(DateTime::class));
+        $this->assertTrue($extension->hasColumnType('action'));
+        $this->assertTrue($extension->hasColumnType(Action::class));
+        $this->assertTrue($extension->hasColumnType('money'));
+        $this->assertTrue($extension->hasColumnType(Money::class));
 
-        self::assertFalse($extension->hasColumnType('foo'));
+        $this->assertFalse($extension->hasColumnType('foo'));
     }
 
     public function testLoadedExtensions(): void
     {
         $extension = new CoreExtension();
-        self::assertTrue($extension->hasColumnTypeExtensions('text'));
-        self::assertTrue($extension->hasColumnTypeExtensions('text'));
-        self::assertTrue($extension->hasColumnTypeExtensions('number'));
-        self::assertTrue($extension->hasColumnTypeExtensions('datetime'));
-        self::assertTrue($extension->hasColumnTypeExtensions('action'));
-        self::assertTrue($extension->hasColumnTypeExtensions('money'));
-        self::assertTrue($extension->hasColumnTypeExtensions('gedmo_tree'));
-        self::assertTrue($extension->hasColumnTypeExtensions('entity'));
+        $this->assertTrue($extension->hasColumnTypeExtensions(new Text()));
+        $this->assertTrue($extension->hasColumnTypeExtensions(new Number()));
+        $this->assertTrue($extension->hasColumnTypeExtensions(new DateTime()));
+        $this->assertTrue($extension->hasColumnTypeExtensions(new Action()));
+        $this->assertTrue($extension->hasColumnTypeExtensions(new Money()));
+        $this->assertTrue($extension->hasColumnTypeExtensions(new Batch()));
+        $this->assertTrue($extension->hasColumnTypeExtensions(new Entity()));
     }
 
-    public function testColumnOrder(): void
+    public function testColumnOrder()
     {
         $subscriber = new ColumnOrder();
 
@@ -91,62 +104,57 @@ class CoreExtensionTest extends TestCase
             $columns = [];
 
             foreach ($case['columns'] as $name => $order) {
-                $columnHeader = $this->createMock(HeaderViewInterface::class);
+                $column = $this->createMock(ColumnInterface::class);
 
-                $columnHeader
-                    ->expects(self::atLeastOnce())
+                $column
+                    ->expects($this->any())
                     ->method('getName')
-                    ->willReturn($name);
+                    ->will($this->returnValue($name));
 
-                $columnHeader
-                    ->expects(self::atLeastOnce())
-                    ->method('hasAttribute')
-                    ->willReturnCallback(
-                        function ($attribute) use ($order) {
-                            if (('display_order' === $attribute) && isset($order)) {
-                                return true;
-                            }
+                $column
+                    ->expects($this->atLeastOnce())
+                    ->method('hasOption')
+                    ->will($this->returnCallback(function ($attribute) use ($order) {
+                        return ('display_order' === $attribute) && (null !== $order);
+                    }));
 
-                            return false;
+                $column
+                    ->expects($this->any())
+                    ->method('getOption')
+                    ->will($this->returnCallback(function ($attribute) use ($order) {
+                        if ('display_order' === $attribute) {
+                            return $order;
                         }
-                    );
 
-                $columnHeader
-                    ->method('getAttribute')
-                    ->willReturnCallback(
-                        function ($attribute) use ($order) {
-                            if (('display_order' === $attribute) && isset($order)) {
-                                return $order;
-                            }
+                        return null;
+                    }));
 
-                            return null;
-                        }
-                    );
-
-                $columns[] = $columnHeader;
+                $columns[$name] = $column;
             }
 
-            $view = $this->createMock(DataGridViewInterface::class);
+            $dataGrid = $this->createMock(DataGridInterface::class);
 
-            $view->expects(self::once())->method('getColumns')->willReturn($columns);
+            $dataGrid->expects(self::once())
+                ->method('getColumns')
+                ->will($this->returnValue($columns));
 
-            $view
-                ->expects(self::once())
-                ->method('setColumns')
-                ->willReturnCallback(
-                    function (array $columns) use ($case) {
-                        $sorted = [];
-                        foreach ($columns as $column) {
-                            $sorted[] = $column->getName();
-                        }
-                        self::assertSame($case['sorted'], $sorted);
-                    }
-                );
+            $dataGrid->expects(self::once())->method('clearColumns');
 
-            $event = $this->createMock(DataGridEventInterface::class);
-            $event->expects(self::once())->method('getData')->willReturn($view);
+            $sortedColumns = array_map(
+                function (string $columnName) use ($columns): array {
+                    return [$columns[$columnName]];
+                },
+                $case['sorted']
+            );
+            $dataGrid
+                ->expects($this->exactly(count($case['sorted'])))
+                ->method('addColumnInstance')
+                ->withConsecutive(...$sortedColumns)
+                ->will($this->returnSelf());
 
-            $subscriber->postBuildView($event);
+            $event = new PreBuildViewEvent($dataGrid);
+
+            $subscriber->preBuildView($event);
         }
     }
 }

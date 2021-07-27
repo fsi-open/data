@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace FSi\Component\DataGrid;
 
 use FSi\Component\DataGrid\Column\CellViewInterface;
-use FSi\Component\DataGrid\Column\ColumnTypeInterface;
+use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
 use InvalidArgumentException;
 use RuntimeException;
@@ -20,7 +20,7 @@ use RuntimeException;
 final class DataGridRowView implements DataGridRowViewInterface
 {
     /**
-     * @var array<CellViewInterface>
+     * @var array<string,CellViewInterface>
      */
     private array $cellViews = [];
     /**
@@ -33,28 +33,25 @@ final class DataGridRowView implements DataGridRowViewInterface
     private $index;
 
     /**
-     * @param DataGridViewInterface $dataGridView
-     * @param ColumnTypeInterface[] $columns
-     * @param array|object $source
+     * @param array<ColumnInterface> $columns
      * @param int|string $index
-     * @throws Exception\UnexpectedTypeException
+     * @param array|object $source
      */
-    public function __construct(DataGridViewInterface $dataGridView, array $columns, $source, $index)
+    public function __construct(array $columns, $index, $source)
     {
         $this->source = $source;
         $this->index = $index;
         foreach ($columns as $name => $column) {
-            if (false === $column instanceof ColumnTypeInterface) {
+            if (false === $column instanceof ColumnInterface) {
                 throw new UnexpectedTypeException(sprintf(
                     'Column object must implement "%s"',
-                    ColumnTypeInterface::class
+                    ColumnInterface::class
                 ));
             }
 
-            $cellView = $column->createCellView($this->source, $index);
-            $cellView->setDataGridView($dataGridView);
-
-            $this->cellViews[$name] = $cellView;
+            $this->cellViews[$name] = $column->getDataGrid()->getFactory()->createCellView($column, $source);
+            $this->cellViews[$name]->setAttribute('row', $index);
+            $this->cellViews[$name]->setAttribute('source', $source);
         }
     }
 
@@ -78,7 +75,7 @@ final class DataGridRowView implements DataGridRowViewInterface
         return current($this->cellViews);
     }
 
-    public function key(): ?string
+    public function key()
     {
         return key($this->cellViews);
     }

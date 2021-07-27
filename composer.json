@@ -12,10 +12,11 @@
     ],
     "require": {
         "php": "^7.4|^8.0",
+        "fsi/reflection" : "0.9.*",
+        "psr/event-dispatcher": "^1.0",
         "symfony/event-dispatcher" : "^4.4|^5.0",
         "symfony/property-access": "^4.4|^5.0",
-        "symfony/options-resolver": "^4.4|^5.0",
-        "fsi/reflection" : "0.9.*"
+        "symfony/options-resolver": "^4.4|^5.0"
     },
     "require-dev": {
         "doctrine/dbal": "^2.11",

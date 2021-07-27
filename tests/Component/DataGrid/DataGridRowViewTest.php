@@ -11,10 +11,11 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataGrid;
 
+use FSi\Component\DataGrid\Column\ColumnInterface;
+use FSi\Component\DataGrid\DataGridFactoryInterface;
+use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\DataGridRowView;
-use FSi\Component\DataGrid\Column\ColumnTypeInterface;
 use FSi\Component\DataGrid\Column\CellViewInterface;
-use FSi\Component\DataGrid\DataGridViewInterface;
 use PHPUnit\Framework\TestCase;
 
 class DataGridRowViewTest extends TestCase
@@ -23,18 +24,21 @@ class DataGridRowViewTest extends TestCase
     {
         $source = ['SOURCE'];
 
-        $dataGridView = $this->createMock(DataGridViewInterface::class);
-
         $cellView = $this->createMock(CellViewInterface::class);
 
-        $column = $this->createMock(ColumnTypeInterface::class);
-        $column->expects(self::atLeastOnce())->method('createCellView')->with($source, 0)->willReturn($cellView);
+        $factory = $this->createMock(DataGridFactoryInterface::class);
+        $dataGrid = $this->createMock(DataGridInterface::class);
+        $column = $this->createMock(ColumnInterface::class);
+
+        $dataGrid->expects(self::atLeastOnce())->method('getFactory')->willReturn($factory);
+        $column->expects(self::atLeastOnce())->method('getDataGrid')->willReturn($dataGrid);
+        $factory->expects(self::atLeastOnce())->method('createCellView')->with($column, $source)->willReturn($cellView);
 
         $columns = [
             'foo' => $column
         ];
 
-        $gridRow = new DataGridRowView($dataGridView, $columns, $source, 0);
+        $gridRow = new DataGridRowView($columns, 0, $source);
         self::assertSame($gridRow->current(), $cellView);
         self::assertSame($gridRow->getSource(), $source);
     }

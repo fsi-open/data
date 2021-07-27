@@ -11,94 +11,113 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnType;
 
+use FSi\Component\DataGrid\DataGridFactory;
+use FSi\Component\DataGrid\DataGridFactoryInterface;
+use FSi\Component\DataGrid\DataGridInterface;
+use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
+use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Action;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use InvalidArgumentException;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
+use Symfony\Component\PropertyAccess\PropertyAccess;
+use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
 class ActionTest extends TestCase
 {
-    /**
-     * @var Action
-     */
-    private $column;
+    private DataGridFactoryInterface $dataGridFactory;
+
+    public function testEmptyActionsOptionType(): void
+    {
+        $this->expectException(InvalidOptionsException::class);
+        $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            Action::class,
+            'action',
+            ['actions' => 'boo']
+        );
+    }
+
+    public function testInvalidActionInActionsOption(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Action::class, 'action', [
+            'actions' => [
+                'edit' => 'asasdas'
+            ],
+            'field_mapping' => ['foo']
+        ]);
+        $this->dataGridFactory->createCellView($column, (object) ['foo' => 'bar']);
+    }
+
+    public function testRequiredActionInActionsOption()
+    {
+        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Action::class, 'action', [
+            'actions' => [
+                'edit' => [
+                    'uri_scheme' => '/test/%s',
+                ]
+            ],
+            'field_mapping' => ['foo'],
+        ]);
+        $cellView = $this->dataGridFactory->createCellView($column, (object) ['foo' => 'bar']);
+
+        $this->assertSame([
+            'edit' => [
+                'url' => '/test/bar',
+                'field_mapping_values' => [
+                    'foo' => 'bar'
+                ]
+            ]
+        ], $cellView->getValue());
+    }
+
+    public function testAvailableActionInActionsOption()
+    {
+        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Action::class, 'action', [
+            'actions' => [
+                'edit' => [
+                    'uri_scheme' => '/test/%s',
+                    'domain' => 'fsi.pl',
+                    'protocol' => 'https://',
+                    'redirect_uri' => 'http://onet.pl/'
+                ]
+            ],
+            'field_mapping' => ['foo']
+        ]);
+        $cellView = $this->dataGridFactory->createCellView($column, (object) ['foo' => 'bar']);
+
+        $this->assertSame([
+            'edit' => [
+                'url' => 'https://fsi.pl/test/bar?redirect_uri=' . urlencode('http://onet.pl/'),
+                'field_mapping_values' => [
+                    'foo' => 'bar'
+                ]
+            ]
+        ], $cellView->getValue());
+    }
 
     protected function setUp(): void
     {
-        $column = new Action();
-        $column->setName('action');
-        $column->initOptions();
-
-        $extension = new DefaultColumnOptionsExtension();
-        $extension->initOptions($column);
-
-        $this->column = $column;
-    }
-
-    public function testFilterValueEmptyActionsOptionType(): void
-    {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage(
-            'The option "actions" with value "boo" is expected to be of type "array", but is of type "string".'
-        );
-        $this->column->setOption('actions', 'boo');
-        $this->column->filterValue([]);
-    }
-
-    public function testFilterValueInvalidActionInActionsOption(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->column->setOption('actions', ['edit' => 'asasdas']);
-        $this->column->filterValue([]);
-    }
-
-    public function testFilterValueRequiredActionInActionsOption(): void
-    {
-        $this->column->setOption('actions', [
-            'edit' => [
-                'uri_scheme' => '/test/%s',
-            ]
-        ]);
-
-        self::assertSame(
-            [
-                'edit' => [
-                    'url' => '/test/bar',
-                    'field_mapping_values' => [
-                        'foo' => 'bar'
-                    ]
-                ]
-            ],
-            $this->column->filterValue([
-                'foo' => 'bar'
-            ])
+        $this->dataGridFactory = new DataGridFactory(
+            [new SimpleDataGridExtension(new DefaultColumnOptionsExtension(), new Action())],
+            $this->createMock(DataMapperInterface::class),
+            $this->createMock(EventDispatcherInterface::class)
         );
     }
 
-    public function testFilterValueAvailableActionInActionsOption(): void
+    /**
+     * @return DataGridInterface&MockObject
+     */
+    private function getDataGridMock(): DataGridInterface
     {
-        $this->column->setOption('actions', [
-            'edit' => [
-                'uri_scheme' => '/test/%s',
-                'domain' => 'fsi.pl',
-                'protocol' => 'https://',
-                'redirect_uri' => 'http://onet.pl/'
-            ]
-        ]);
+        $dataGrid = $this->createMock(DataGridInterface::class);
+        $dataGrid->method('getDataMapper')
+            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
 
-        self::assertSame(
-            [
-                'edit' => [
-                    'url' => 'https://fsi.pl/test/bar?redirect_uri=' . urlencode('http://onet.pl/'),
-                    'field_mapping_values' => [
-                        'foo' => 'bar'
-                    ]
-                ]
-            ],
-            $this->column->filterValue([
-                'foo' => 'bar'
-            ])
-        );
+        return $dataGrid;
     }
 }

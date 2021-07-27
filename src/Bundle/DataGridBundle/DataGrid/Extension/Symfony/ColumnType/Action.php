@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnType;
 
 use FSi\Component\DataGrid\Column\ColumnAbstractType;
+use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -19,20 +20,9 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class Action extends ColumnAbstractType
 {
-    /**
-     * @var UrlGeneratorInterface
-     */
-    protected $urlGenerator;
-
-    /**
-     * @var RequestStack
-     */
-    protected $requestStack;
-
-    /**
-     * @var OptionsResolver
-     */
-    protected $actionOptionsResolver;
+    protected UrlGeneratorInterface $urlGenerator;
+    protected RequestStack $requestStack;
+    protected OptionsResolver $actionOptionsResolver;
 
     public function __construct(UrlGeneratorInterface $urlGenerator, RequestStack $requestStack)
     {
@@ -46,10 +36,10 @@ class Action extends ColumnAbstractType
         return 'action';
     }
 
-    public function filterValue($value)
+    public function filterValue(ColumnInterface $column, $value)
     {
         $return = [];
-        $actions = $this->getOption('actions');
+        $actions = $column->getOption('actions');
 
         foreach ($actions as $name => $options) {
             $options = $this->actionOptionsResolver->resolve((array) $options);
@@ -61,7 +51,7 @@ class Action extends ColumnAbstractType
             if (isset($options['parameters_field_mapping'])) {
                 foreach ($options['parameters_field_mapping'] as $parameterName => $mappingField) {
                     if ($mappingField instanceof \Closure) {
-                        $parameters[$parameterName] = $mappingField($value, $this->getIndex());
+                        $parameters[$parameterName] = $mappingField($value);
                     } else {
                         $parameters[$parameterName] = $value[$mappingField];
                     }
@@ -85,7 +75,7 @@ class Action extends ColumnAbstractType
             }
 
             if ($urlAttributes instanceof \Closure) {
-                $urlAttributes = $urlAttributes($value, $this->getIndex());
+                $urlAttributes = $urlAttributes($value);
 
                 if (!is_array($urlAttributes)) {
                     throw new UnexpectedTypeException(
@@ -101,7 +91,7 @@ class Action extends ColumnAbstractType
             }
 
             if (isset($content) && $content instanceof \Closure) {
-                $content = (string) $content($value, $this->getIndex());
+                $content = (string) $content($value);
             }
 
             $return[$name]['content']  = isset($content) ? $content : $name;
@@ -112,13 +102,13 @@ class Action extends ColumnAbstractType
         return $return;
     }
 
-    public function initOptions(): void
+    public function initOptions(OptionsResolver $optionsResolver): void
     {
-        $this->getOptionsResolver()->setDefaults([
+        $optionsResolver->setDefaults([
             'actions' => [],
         ]);
 
-        $this->getOptionsResolver()->setAllowedTypes('actions', 'array');
+        $optionsResolver->setAllowedTypes('actions', 'array');
 
         $this->actionOptionsResolver->setDefaults([
             'redirect_uri' => true,

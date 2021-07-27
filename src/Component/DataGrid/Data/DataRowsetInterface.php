@@ -15,6 +15,10 @@ use ArrayAccess;
 use Countable;
 use Iterator;
 
+/**
+ * @template-extends Iterator<int|string,array|object>
+ * @template-extends ArrayAccess<int|string,array|object>
+ */
 interface DataRowsetInterface extends Iterator, Countable, ArrayAccess
 {
 }

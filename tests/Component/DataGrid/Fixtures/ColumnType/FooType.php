@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Tests\FSi\Component\DataGrid\Fixtures\ColumnType;
 
 use FSi\Component\DataGrid\Column\ColumnAbstractType;
+use FSi\Component\DataGrid\Column\ColumnInterface;
 
 class FooType extends ColumnAbstractType
 {
@@ -20,7 +21,7 @@ class FooType extends ColumnAbstractType
         return 'foo';
     }
 
-    public function filterValue($value)
+    public function filterValue(ColumnInterface $column, $value)
     {
         return $value;
     }
