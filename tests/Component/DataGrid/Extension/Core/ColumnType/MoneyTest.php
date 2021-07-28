@@ -71,14 +71,19 @@ class MoneyTest extends TestCase
         );
     }
 
-    private function assertCellValue(array $options, $value, array $expectedValue): void
+    /**
+     * @param array<string,mixed> $options
+     * @param object $value
+     * @param array<string,string> $expectedValue
+     */
+    private function assertCellValue(array $options, object $value, array $expectedValue): void
     {
         $options = array_merge([
             'currency' => 'PLN',
         ], $options);
 
         $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Money::class, 'price', $options);
-        $cellView = $this->dataGridFactory->createCellView($column, $value);
+        $cellView = $this->dataGridFactory->createCellView($column, 1, $value);
 
         $this->assertSame($expectedValue, $cellView->getValue());
     }

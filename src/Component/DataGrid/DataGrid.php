@@ -151,16 +151,7 @@ final class DataGrid implements DataGridInterface
     {
         $event = new PreSetDataEvent($this, $data);
         $this->eventDispatcher->dispatch($event);
-        $data = $event->getData();
-        if (false === is_iterable($data)) {
-            throw new InvalidArgumentException(sprintf(
-                'The data returned by the "DataGridEvents::PRE_SET_DATA" class needs to be iterable, "%s" given!',
-                is_object($data) ? get_class($data) : gettype($data)
-            ));
-        }
-
-        $this->rowset = new DataRowset($data);
-
+        $this->rowset = new DataRowset($event->getData());
         $this->eventDispatcher->dispatch(new PostSetDataEvent($this, $this->rowset));
     }
 
@@ -181,7 +172,7 @@ final class DataGrid implements DataGridInterface
                 $columnType = $column->getType();
 
                 foreach ($this->dataGridFactory->getColumnTypeExtensions($columnType) as $extension) {
-                    $extension->bindData($column, $index, $source, $values);
+                    $extension->bindData($column, $values, $source, $index);
                 }
             }
         }

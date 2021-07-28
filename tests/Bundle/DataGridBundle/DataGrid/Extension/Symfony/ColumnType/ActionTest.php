@@ -59,7 +59,7 @@ class ActionTest extends TestCase
             'action',
             ['field_mapping' => ['id'], 'actions' => ['edit' => 'asdasd']]
         );
-        $this->dataGridFactory->createCellView($column, (object) ['id' => 1]);
+        $this->dataGridFactory->createCellView($column, 1, (object) ['id' => 1]);
     }
 
     public function testRequiredActionInActionsOption(): void
@@ -96,7 +96,7 @@ class ActionTest extends TestCase
                     ],
                 ],
             ],
-            $this->dataGridFactory->createCellView($column, (object) ['id' => 1, 'foo' => 'bar'])->getValue()
+            $this->dataGridFactory->createCellView($column, 1, (object) ['id' => 1, 'foo' => 'bar'])->getValue()
         );
     }
 
@@ -140,7 +140,7 @@ class ActionTest extends TestCase
                     ],
                 ],
             ],
-            $this->dataGridFactory->createCellView($column, (object) ['id' => 1, 'foo' => 'bar'])->getValue()
+            $this->dataGridFactory->createCellView($column, 1, (object) ['id' => 1, 'foo' => 'bar'])->getValue()
         );
     }
 
@@ -180,7 +180,7 @@ class ActionTest extends TestCase
                     ],
                 ],
             ],
-            $this->dataGridFactory->createCellView($column, (object) ['id' => 1, 'foo' => 'bar'])->getValue()
+            $this->dataGridFactory->createCellView($column, 1, (object) ['id' => 1, 'foo' => 'bar'])->getValue()
         );
     }
 

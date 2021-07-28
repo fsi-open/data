@@ -16,7 +16,7 @@ use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\DateTime;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Number;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Text;
-use FSi\Component\DataGrid\Extension\Doctrine\ColumnType\Entity;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Entity;
 use FSi\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormFactoryInterface;

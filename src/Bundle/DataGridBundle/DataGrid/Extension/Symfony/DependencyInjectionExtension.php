@@ -14,12 +14,15 @@ namespace FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony;
 use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
 use FSi\Component\DataGrid\Column\ColumnTypeInterface;
 use FSi\Component\DataGrid\DataGridExtensionInterface;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use FSi\Component\DataGrid\Exception\DataGridException;
+use InvalidArgumentException;
+
+use function array_merge;
 
 class DependencyInjectionExtension implements DataGridExtensionInterface
 {
     /**
-     * @var array<ColumnTypeInterface>
+     * @var array<string,ColumnTypeInterface>
      */
     private array $columnTypes = [];
 
@@ -29,18 +32,19 @@ class DependencyInjectionExtension implements DataGridExtensionInterface
     private array $columnTypesExtensions = [];
 
     /**
-     * @param ColumnTypeInterface[] $columnTypes
-     * @param ColumnTypeExtensionInterface[] $columnTypesExtensions
+     * @param iterable<ColumnTypeInterface> $columnTypes
+     * @param iterable<ColumnTypeExtensionInterface> $columnTypesExtensions
      */
-    public function __construct(array $columnTypes, array $columnTypesExtensions)
+    public function __construct(iterable $columnTypes, iterable $columnTypesExtensions)
     {
         foreach ($columnTypes as $columnType) {
             $this->columnTypes[$columnType->getId()] = $columnType;
+            $this->columnTypes[get_class($columnType)] = $columnType;
         }
 
         foreach ($columnTypesExtensions as $columnTypeExtension) {
             foreach ($columnTypeExtension->getExtendedColumnTypes() as $extendedColumnType) {
-                if (!array_key_exists($extendedColumnType, $this->columnTypesExtensions)) {
+                if (false === array_key_exists($extendedColumnType, $this->columnTypesExtensions)) {
                     $this->columnTypesExtensions[$extendedColumnType] = [];
                 }
                 $this->columnTypesExtensions[$extendedColumnType][] = $columnTypeExtension;
@@ -55,11 +59,10 @@ class DependencyInjectionExtension implements DataGridExtensionInterface
 
     public function getColumnType(string $type): ColumnTypeInterface
     {
-        if (!array_key_exists($type, $this->columnTypes)) {
-            throw new \InvalidArgumentException(sprintf(
-                'The column type "%s" is not registered with the service container.',
-                $type
-            ));
+        if (false === array_key_exists($type, $this->columnTypes)) {
+            throw new InvalidArgumentException(
+                "The column type \"{$type}\" is not registered with the service container."
+            );
         }
 
         return $this->columnTypes[$type];
@@ -67,19 +70,31 @@ class DependencyInjectionExtension implements DataGridExtensionInterface
 
     public function hasColumnTypeExtensions(ColumnTypeInterface $type): bool
     {
-        return array_key_exists($type->getId(), $this->columnTypesExtensions);
-    }
-
-    /**
-     * @param ColumnTypeInterface $type
-     * @return array<ColumnTypeExtensionInterface>
-     */
-    public function getColumnTypeExtensions(ColumnTypeInterface $type): array
-    {
-        if (false === array_key_exists($type->getId(), $this->columnTypesExtensions)) {
-            return [];
+        foreach (array_keys($this->columnTypesExtensions) as $extendedType) {
+            if (true === is_a($type, $extendedType)) {
+                return true;
+            }
         }
 
-        return $this->columnTypesExtensions[$type->getId()];
+        return false;
+    }
+
+    public function getColumnTypeExtensions(ColumnTypeInterface $type): array
+    {
+        $result = [];
+        foreach ($this->columnTypesExtensions as $extendedType => $extensions) {
+            if (true === is_a($type, $extendedType)) {
+                $result[] = $extensions;
+            }
+        }
+
+        if (0 !== count($result)) {
+            return array_merge(...$result);
+        }
+
+        throw new DataGridException(sprintf(
+            'Extension for column type "%s" can not be loaded by this DataGrid extension',
+            get_class($type)
+        ));
     }
 }

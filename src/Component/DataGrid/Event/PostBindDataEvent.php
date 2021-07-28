@@ -36,6 +36,9 @@ final class PostBindDataEvent
         return $this->dataGrid;
     }
 
+    /**
+     * @return mixed
+     */
     public function getData()
     {
         return $this->data;

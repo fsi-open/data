@@ -9,13 +9,14 @@
 
 declare(strict_types=1);
 
-namespace FSi\Component\DataGrid\Extension\Doctrine\ColumnType;
+namespace FSi\Component\DataGrid\Extension\Core\ColumnType;
 
-use Doctrine\Common\Collections\Collection;
 use FSi\Component\DataGrid\Column\ColumnAbstractType;
 use FSi\Component\DataGrid\Column\ColumnInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+
+use function is_iterable;
 
 class Entity extends ColumnAbstractType
 {
@@ -34,16 +35,12 @@ class Entity extends ColumnAbstractType
 
     public function filterValue(ColumnInterface $column, $value)
     {
-        if (true === $value instanceof Collection) {
-            $value = $value->toArray();
-        }
-
         $values = [];
         $objectValues = [];
-        /** @var array $mappingFields */
+        /** @var array<string> $mappingFields */
         $mappingFields = $column->getOption('field_mapping');
 
-        if (true === is_array($value)) {
+        if (true === is_iterable($value)) {
             foreach ($value as $object) {
                 foreach ($mappingFields as $field) {
                     $objectValues[$field] = $column->getDataGrid()->getDataMapper()->getData($field, $object);

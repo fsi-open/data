@@ -14,9 +14,13 @@ namespace FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnType;
 use FSi\Component\DataGrid\Column\ColumnAbstractType;
 use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+
+use function array_key_exists;
+use function is_callable;
 
 class Action extends ColumnAbstractType
 {
@@ -48,9 +52,9 @@ class Action extends ColumnAbstractType
             $urlAttributes = $options['url_attr'];
             $content = $options['content'];
 
-            if (isset($options['parameters_field_mapping'])) {
+            if (true === array_key_exists('parameters_field_mapping', $options)) {
                 foreach ($options['parameters_field_mapping'] as $parameterName => $mappingField) {
-                    if ($mappingField instanceof \Closure) {
+                    if (true === is_callable($mappingField)) {
                         $parameters[$parameterName] = $mappingField($value);
                     } else {
                         $parameters[$parameterName] = $value[$mappingField];
@@ -58,26 +62,30 @@ class Action extends ColumnAbstractType
                 }
             }
 
-            if (isset($options['additional_parameters'])) {
+            if (true === array_key_exists('additional_parameters', $options)) {
                 foreach ($options['additional_parameters'] as $parameterValueName => $parameterValue) {
                     $parameters[$parameterValueName] = $parameterValue;
                 }
             }
 
-            if ($options['redirect_uri'] !== false) {
-                if (is_string($options['redirect_uri'])) {
+            if (false !== $options['redirect_uri']) {
+                if (true === is_string($options['redirect_uri'])) {
                     $parameters['redirect_uri'] = $options['redirect_uri'];
                 }
 
-                if ($options['redirect_uri'] === true) {
-                    $parameters['redirect_uri'] = $this->requestStack->getMasterRequest()->getRequestUri();
+                if (true === $options['redirect_uri']) {
+                    $masterRequest = $this->requestStack->getMasterRequest();
+                    if (null === $masterRequest) {
+                        throw new RuntimeException("Unable to generate redirect_uri because of out of request scope");
+                    }
+                    $parameters['redirect_uri'] = $masterRequest->getRequestUri();
                 }
             }
 
-            if ($urlAttributes instanceof \Closure) {
+            if (true === is_callable($urlAttributes)) {
                 $urlAttributes = $urlAttributes($value);
 
-                if (!is_array($urlAttributes)) {
+                if (false === is_array($urlAttributes)) {
                     throw new UnexpectedTypeException(
                         'url_attr option Closure must return new array with url attributes.'
                     );
@@ -86,15 +94,15 @@ class Action extends ColumnAbstractType
 
             $url = $this->urlGenerator->generate($options['route_name'], $parameters, $options['absolute']);
 
-            if (!isset($urlAttributes['href'])) {
+            if (false === array_key_exists('href', $urlAttributes)) {
                 $urlAttributes['href'] = $url;
             }
 
-            if (isset($content) && $content instanceof \Closure) {
+            if (null !== $content && true === is_callable($content)) {
                 $content = (string) $content($value);
             }
 
-            $return[$name]['content']  = isset($content) ? $content : $name;
+            $return[$name]['content']  = $content ?? $name;
             $return[$name]['field_mapping_values'] = $value;
             $return[$name]['url_attr'] = $urlAttributes;
         }

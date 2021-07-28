@@ -27,6 +27,7 @@ class CoreExtension extends DataGridAbstractExtension
             new ColumnType\Action(),
             new ColumnType\Money(),
             new ColumnType\Action(),
+            new ColumnType\Entity(),
         ];
     }
 
@@ -35,6 +36,7 @@ class CoreExtension extends DataGridAbstractExtension
         return [
             new ColumnTypeExtension\DefaultColumnOptionsExtension(),
             new ColumnTypeExtension\ValueFormatColumnOptionsExtension(),
+            new ColumnTypeExtension\EntityValueFormatColumnOptionsExtension(),
         ];
     }
 }

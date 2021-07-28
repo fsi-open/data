@@ -29,12 +29,12 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use function array_key_exists;
 use function count;
 
-class DataGridFactory implements DataGridFactoryInterface
+final class DataGridFactory implements DataGridFactoryInterface
 {
     /**
      * @var array<DataGridExtensionInterface>
      */
-    private array $extensions;
+    private array $extensions = [];
     private DataMapperInterface $dataMapper;
     private EventDispatcherInterface $eventDispatcher;
     /**
@@ -47,12 +47,12 @@ class DataGridFactory implements DataGridFactoryInterface
     private array $columnTypes = [];
 
     /**
-     * @param array<DataGridExtensionInterface> $extensions
+     * @param iterable<DataGridExtensionInterface> $extensions
      * @param DataMapperInterface $dataMapper
      * @param EventDispatcherInterface $eventDispatcher
      */
     public function __construct(
-        array $extensions,
+        iterable $extensions,
         DataMapperInterface $dataMapper,
         EventDispatcherInterface $eventDispatcher
     ) {
@@ -63,10 +63,11 @@ class DataGridFactory implements DataGridFactoryInterface
                     DataGridExtensionInterface::class
                 ));
             }
+
+            $this->extensions[] = $extension;
         }
 
         $this->dataMapper = $dataMapper;
-        $this->extensions = $extensions;
         $this->eventDispatcher = $eventDispatcher;
     }
 
@@ -159,7 +160,7 @@ class DataGridFactory implements DataGridFactoryInterface
         );
     }
 
-    public function createCellView(ColumnInterface $column, $source): CellViewInterface
+    public function createCellView(ColumnInterface $column, $index, $source): CellViewInterface
     {
         $columnType = $column->getType();
         $value = $columnType->filterValue($column, $columnType->getValue($column, $source));
@@ -168,6 +169,8 @@ class DataGridFactory implements DataGridFactoryInterface
         }
 
         $cellView = new CellView($column, $value);
+        $cellView->setAttribute('index', $index);
+        $cellView->setAttribute('source', $source);
         $columnType->buildCellView($column, $cellView);
         foreach ($this->getColumnTypeExtensions($columnType) as $extension) {
             $extension->buildCellView($column, $cellView);

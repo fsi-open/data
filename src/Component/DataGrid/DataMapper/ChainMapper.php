@@ -42,9 +42,6 @@ final class ChainMapper implements DataMapperInterface
         }
     }
 
-    /**
-     * @inheritdoc
-     */
     public function getData(string $field, $object)
     {
         $data = null;

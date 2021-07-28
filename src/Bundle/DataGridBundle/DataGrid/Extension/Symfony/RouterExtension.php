@@ -12,22 +12,14 @@ declare(strict_types=1);
 namespace FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony;
 
 use FSi\Component\DataGrid\DataGridAbstractExtension;
-use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\EventSubscriber;
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnType;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class RouterExtension extends DataGridAbstractExtension
 {
-    /**
-     * @var UrlGeneratorInterface
-     */
-    private $urlGenerator;
-
-    /**
-     * @var RequestStack
-     */
-    private $requestStack;
+    private UrlGeneratorInterface $urlGenerator;
+    private RequestStack $requestStack;
 
     public function __construct(UrlGeneratorInterface $urlGenerator, RequestStack $requestStack)
     {
@@ -39,13 +31,6 @@ class RouterExtension extends DataGridAbstractExtension
     {
         return [
             new ColumnType\Action($this->urlGenerator, $this->requestStack),
-        ];
-    }
-
-    protected function loadSubscribers(): array
-    {
-        return [
-            new EventSubscriber\BindRequest(),
         ];
     }
 }

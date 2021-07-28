@@ -17,7 +17,7 @@ use RuntimeException;
 class DataRowset implements DataRowsetInterface
 {
     /**
-     * @var array<int|string,array|object>
+     * @var array<int|string,array<string,mixed>|object>
      */
     protected array $data = [];
 
@@ -36,11 +36,17 @@ class DataRowset implements DataRowsetInterface
         return count($this->data);
     }
 
+    /**
+     * @return array<string,mixed>|object|false
+     */
     public function current()
     {
         return current($this->data);
     }
 
+    /**
+     * @return int|string|null
+     */
     public function key()
     {
         return key($this->data);

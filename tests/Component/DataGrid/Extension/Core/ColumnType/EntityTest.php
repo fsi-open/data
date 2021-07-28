@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\FSi\Component\DataGrid\Extension\Doctrine\ColumnType;
+namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnType;
 
 use FSi\Component\DataGrid\DataGridFactory;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
@@ -18,13 +18,13 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Tests\FSi\Component\DataGrid\Fixtures\Entity as Fixture;
-use FSi\Component\DataGrid\Extension\Doctrine\ColumnType\Entity;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Entity;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\DataGridInterface;
 use PHPUnit\Framework\TestCase;
 use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
-class EntityTypeTest extends TestCase
+class EntityTest extends TestCase
 {
     public function testGetValue(): void
     {
@@ -40,7 +40,7 @@ class EntityTypeTest extends TestCase
         $object = new Fixture('object');
         $object->setAuthor((object) ['foo' => 'bar']);
 
-        $cellView = $dataGridFactory->createCellView($column, $object);
+        $cellView = $dataGridFactory->createCellView($column, 1, $object);
         $this->assertSame([['foo' => 'bar']], $cellView->getValue());
     }
 

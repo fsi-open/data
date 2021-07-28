@@ -9,23 +9,27 @@
 
 declare(strict_types=1);
 
-namespace FSi\Component\DataGrid\Extension\Doctrine\ColumnTypeExtension;
+namespace FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension;
 
 use FSi\Component\DataGrid\Column\ColumnInterface;
-use FSi\Component\DataGrid\Column\CellViewInterface;
 use FSi\Component\DataGrid\Column\ColumnAbstractTypeExtension;
 use FSi\Component\DataGrid\Exception\DataGridException;
-use FSi\Component\DataGrid\Extension\Doctrine\ColumnType\Entity;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Entity;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 use function array_key_exists;
+use function implode;
+use function is_array;
+use function is_string;
+use function sprintf;
+use function vsprintf;
 
-class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
+class EntityValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
 {
     public function filterValue(ColumnInterface $column, $value)
     {
         $resultValue = [];
-        /** @var array|string|null $emptyValue */
+        /** @var array<string,string>|string|null $emptyValue */
         $emptyValue = $column->getOption('empty_value');
         if (null !== $emptyValue) {
             $value = $this->populateValues($value, $emptyValue);
@@ -83,6 +87,11 @@ class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
         $optionsResolver->setAllowedTypes('empty_value', ['array', 'string', 'null']);
     }
 
+    /**
+     * @param array<string,mixed> $values
+     * @param string|array<string,string> $emptyValue
+     * @return array<string,mixed>
+     */
     private function populateValues(array $values, $emptyValue): array
     {
         foreach ($values as &$val) {

@@ -1,0 +1,28 @@
+---
+columns:
+    name:
+        type: text
+        options:
+            editable: true
+            label: Name
+
+    id:
+        type: number
+        options:
+            display_order: -1
+            label: ID
+
+    category:
+        type: entity
+        options:
+            display_order: 1
+            field_mapping:
+                - name
+            label: Category
+            relation_field: category
+
+    author:
+        type: text
+        options:
+            editable: true
+            label: Author

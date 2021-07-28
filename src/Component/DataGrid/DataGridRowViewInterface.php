@@ -28,7 +28,7 @@ interface DataGridRowViewInterface extends Iterator, Countable, ArrayAccess
     public function getIndex();
 
     /**
-     * @return array|object
+     * @return array<string,mixed>|object
      */
     public function getSource();
 }

@@ -131,7 +131,7 @@ class DataGridTest extends TestCase
         $this->dataMapper = $this->createMock(DataMapperInterface::class);
         $this->dataMapper->method('getData')
             ->willReturnCallback(
-                function ($field, $object) {
+                static function ($field, $object) {
                     if ('name' === $field) {
                         return $object->getName();
                     }
@@ -142,7 +142,7 @@ class DataGridTest extends TestCase
 
         $this->dataMapper->method('setData')
             ->willReturnCallback(
-                function ($field, $object, $value) {
+                static function ($field, $object, $value) {
                     if ('name' === $field) {
                         $object->setName($value);
                     }

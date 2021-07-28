@@ -50,10 +50,10 @@ class ActionTest extends TestCase
             ],
             'field_mapping' => ['foo']
         ]);
-        $this->dataGridFactory->createCellView($column, (object) ['foo' => 'bar']);
+        $this->dataGridFactory->createCellView($column, 1, (object) ['foo' => 'bar']);
     }
 
-    public function testRequiredActionInActionsOption()
+    public function testRequiredActionInActionsOption(): void
     {
         $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Action::class, 'action', [
             'actions' => [
@@ -63,7 +63,7 @@ class ActionTest extends TestCase
             ],
             'field_mapping' => ['foo'],
         ]);
-        $cellView = $this->dataGridFactory->createCellView($column, (object) ['foo' => 'bar']);
+        $cellView = $this->dataGridFactory->createCellView($column, 1, (object) ['foo' => 'bar']);
 
         $this->assertSame([
             'edit' => [
@@ -75,7 +75,7 @@ class ActionTest extends TestCase
         ], $cellView->getValue());
     }
 
-    public function testAvailableActionInActionsOption()
+    public function testAvailableActionInActionsOption(): void
     {
         $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Action::class, 'action', [
             'actions' => [
@@ -88,7 +88,7 @@ class ActionTest extends TestCase
             ],
             'field_mapping' => ['foo']
         ]);
-        $cellView = $this->dataGridFactory->createCellView($column, (object) ['foo' => 'bar']);
+        $cellView = $this->dataGridFactory->createCellView($column, 1, (object) ['foo' => 'bar']);
 
         $this->assertSame([
             'edit' => [

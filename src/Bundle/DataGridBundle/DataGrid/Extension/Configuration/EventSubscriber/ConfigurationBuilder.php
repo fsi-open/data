@@ -12,14 +12,23 @@ declare(strict_types=1);
 namespace FSi\Bundle\DataGridBundle\DataGrid\Extension\Configuration\EventSubscriber;
 
 use FSi\Component\DataGrid\DataGridInterface;
+use FSi\Component\DataGrid\Event\DataGridEventSubscriberInterface;
 use FSi\Component\DataGrid\Event\PreSetDataEvent;
 use RuntimeException;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Yaml\Yaml;
 
-class ConfigurationBuilder implements EventSubscriberInterface
+use function array_filter;
+use function array_reduce;
+use function count;
+use function file_exists;
+use function file_get_contents;
+use function is_dir;
+use function is_string;
+use function sprintf;
+
+class ConfigurationBuilder implements DataGridEventSubscriberInterface
 {
     private const BUNDLE_CONFIG_PATH = '%s/Resources/config/datagrid/%s.yml';
     private const MAIN_CONFIG_DIRECTORY = 'datagrid.yaml.main_config';
@@ -31,12 +40,12 @@ class ConfigurationBuilder implements EventSubscriberInterface
         $this->kernel = $kernel;
     }
 
-    public static function getSubscribedEvents(): array
+    public static function getPriority(): int
     {
-        return [PreSetDataEvent::class => ['readConfiguration', 128]];
+        return 128;
     }
 
-    public function readConfiguration(PreSetDataEvent $event): void
+    public function __invoke(PreSetDataEvent $event): void
     {
         $dataGrid = $event->getDataGrid();
         $mainConfiguration = $this->getMainConfiguration($dataGrid->getName());
@@ -47,6 +56,10 @@ class ConfigurationBuilder implements EventSubscriberInterface
         }
     }
 
+    /**
+     * @param DataGridInterface $dataGrid
+     * @param array<string,mixed> $configuration
+     */
     private function buildConfiguration(DataGridInterface $dataGrid, array $configuration): void
     {
         foreach ($configuration['columns'] as $name => $column) {
@@ -54,15 +67,24 @@ class ConfigurationBuilder implements EventSubscriberInterface
         }
     }
 
+    /**
+     * @param string $dataGridName
+     * @return array<string,mixed>|null
+     */
     private function getMainConfiguration(string $dataGridName): ?array
     {
         $directory = $this->kernel->getContainer()->getParameter(self::MAIN_CONFIG_DIRECTORY);
         if (null === $directory) {
             return null;
         }
+        if (false === is_string($directory)) {
+            throw new RuntimeException(
+                sprintf('"%s" parameter must be a string but is %s', self::MAIN_CONFIG_DIRECTORY, gettype($directory))
+            );
+        }
 
         if (false === is_dir($directory)) {
-            throw new RuntimeException(sprintf('"%s" is not a directory!', $directory));
+            throw new RuntimeException("\"{$directory}\" is not a directory!");
         }
 
         $configurationFile = sprintf('%s/%s.yml', rtrim($directory, '/'), $dataGridName);
@@ -90,6 +112,11 @@ class ConfigurationBuilder implements EventSubscriberInterface
         }
     }
 
+    /**
+     * @param string $dataGridName
+     * @param array<BundleInterface> $eligibleBundles
+     * @return array<string,mixed>
+     */
     private function findLastBundleConfiguration(string $dataGridName, array $eligibleBundles): array
     {
         return array_reduce(
@@ -108,8 +135,17 @@ class ConfigurationBuilder implements EventSubscriberInterface
         );
     }
 
+    /**
+     * @param string $path
+     * @return array<string,mixed>
+     */
     private function parseYamlFile(string $path): array
     {
-        return Yaml::parse(file_get_contents($path));
+        $contents = file_get_contents($path);
+        if (false === is_string($contents)) {
+            throw new RuntimeException("Unable to read contentes of file {$path}");
+        }
+
+        return Yaml::parse($contents);
     }
 }

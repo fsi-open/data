@@ -88,6 +88,11 @@ class DataGridRuntime implements RuntimeExtensionInterface
         return $this->renderTheme($view->getName(), $context, $blockNames);
     }
 
+    /**
+     * @param DataGridViewInterface $view
+     * @param array<string,mixed> $vars
+     * @return string
+     */
     public function dataGridHeader(DataGridViewInterface $view, array $vars = []): string
     {
         $blockNames = [
@@ -106,6 +111,11 @@ class DataGridRuntime implements RuntimeExtensionInterface
         return $this->renderTheme($view->getName(), $context, $blockNames);
     }
 
+    /**
+     * @param HeaderViewInterface $view
+     * @param array<string,mixed> $vars
+     * @return string
+     */
     public function dataGridColumnHeader(HeaderViewInterface $view, array $vars = []): string
     {
         $dataGridName = $view->getDataGridName();
@@ -127,6 +137,11 @@ class DataGridRuntime implements RuntimeExtensionInterface
         return $this->renderTheme($dataGridName, $context, $blockNames);
     }
 
+    /**
+     * @param DataGridViewInterface $view
+     * @param array<string,mixed> $vars
+     * @return string
+     */
     public function dataGridRowset(DataGridViewInterface $view, array $vars = []): string
     {
         $blockNames = [
@@ -142,6 +157,11 @@ class DataGridRuntime implements RuntimeExtensionInterface
         return $this->renderTheme($view->getName(), $context, $blockNames);
     }
 
+    /**
+     * @param CellViewInterface $view
+     * @param array<string,mixed> $vars
+     * @return string
+     */
     public function dataGridColumnCell(CellViewInterface $view, array $vars = []): string
     {
         $dataGridName = $view->getDataGridName();
@@ -156,7 +176,7 @@ class DataGridRuntime implements RuntimeExtensionInterface
 
         $context = [
             'cell' => $view,
-            'row_index' => $view->getAttribute('row'),
+            'row_index' => $view->getAttribute('index'),
             'datagrid_name' => $dataGridName,
             'translation_domain' => $view->getAttribute('translation_domain'),
             'vars' => array_merge($this->getDataGridVars($dataGridName), $vars)
@@ -165,6 +185,11 @@ class DataGridRuntime implements RuntimeExtensionInterface
         return $this->renderTheme($dataGridName, $context, $blockNames);
     }
 
+    /**
+     * @param CellViewInterface $view
+     * @param array<string,mixed> $vars
+     * @return string
+     */
     public function dataGridColumnCellForm(CellViewInterface $view, array $vars = []): string
     {
         if (false === $view->hasAttribute('form')) {
@@ -189,6 +214,14 @@ class DataGridRuntime implements RuntimeExtensionInterface
         return $this->renderTheme($dataGridName, $context, $blockNames);
     }
 
+    /**
+     * @param CellViewInterface $view
+     * @param string $action
+     * @param string $content
+     * @param array<string,string> $urlAttrs
+     * @param array<string,string> $fieldMappingValues
+     * @return string
+     */
     public function dataGridColumnActionCellActionWidget(
         CellViewInterface $view,
         string $action,
@@ -216,6 +249,11 @@ class DataGridRuntime implements RuntimeExtensionInterface
         return $this->renderTheme($dataGridName, $context, $blockNames);
     }
 
+    /**
+     * @param array<string,string> $attributes
+     * @param string|null $translationDomain
+     * @return string
+     */
     public function dataGridAttributes(array $attributes, ?string $translationDomain = null): string
     {
         $attrs = [];
@@ -263,11 +301,21 @@ class DataGridRuntime implements RuntimeExtensionInterface
         }
     }
 
+    /**
+     * @param string $dataGridName
+     * @return array<string,mixed>
+     */
     private function getDataGridVars(string $dataGridName): array
     {
         return $this->themesVars[$dataGridName] ?? [];
     }
 
+    /**
+     * @param string $dataGridName
+     * @param array<string,mixed> $contextVars
+     * @param array<string> $availableBlocks
+     * @return string
+     */
     private function renderTheme(
         string $dataGridName,
         array $contextVars = [],

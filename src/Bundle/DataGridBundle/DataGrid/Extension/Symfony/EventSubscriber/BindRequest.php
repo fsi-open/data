@@ -11,20 +11,20 @@ declare(strict_types=1);
 
 namespace FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\EventSubscriber;
 
+use FSi\Component\DataGrid\Event\DataGridEventSubscriberInterface;
 use FSi\Component\DataGrid\Event\PreBindDataEvent;
 use FSi\Component\DataGrid\Exception\DataGridException;
 use FSi\Bundle\DataGridBundle\HttpFoundation\RequestCompatibilityHelper;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class BindRequest implements EventSubscriberInterface
+class BindRequest implements DataGridEventSubscriberInterface
 {
-    public static function getSubscribedEvents(): array
+    public static function getPriority(): int
     {
-        return [PreBindDataEvent::class => ['preBindData', 128]];
+        return 128;
     }
 
-    public function preBindData(PreBindDataEvent $event): void
+    public function __invoke(PreBindDataEvent $event): void
     {
         $dataGrid = $event->getDataGrid();
         $request = $event->getData();
@@ -46,7 +46,7 @@ class BindRequest implements EventSubscriberInterface
                 break;
 
             default:
-                throw new DataGridException(sprintf('The request method "%s" is not supported', $request->getMethod()));
+                throw new DataGridException("The request method \"{$request->getMethod()}\" is not supported");
         }
 
         $event->setData($data);

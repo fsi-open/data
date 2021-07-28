@@ -13,11 +13,16 @@ namespace FSi\Bundle\DataGridBundle\Twig\TokenParser;
 
 use FSi\Bundle\DataGridBundle\Twig\Node\DataGridThemeNode;
 use Twig\Node\Expression\ArrayExpression;
+use Twig\Node\Node;
 use Twig\Token;
 use Twig\TokenParser\AbstractTokenParser;
 
 class DataGridThemeTokenParser extends AbstractTokenParser
 {
+    /**
+     * @param Token $token
+     * @return DataGridThemeNode<Node>
+     */
     public function parse(Token $token): DataGridThemeNode
     {
         $stream = $this->parser->getStream();

@@ -100,7 +100,7 @@ final class DataGridView implements DataGridViewInterface
 
     public function offsetGet($offset): DataGridRowViewInterface
     {
-        if ($this->offsetExists($offset)) {
+        if (isset($this->rowset[$offset])) {
             return new DataGridRowView($this->columns, $offset, $this->rowset[$offset]);
         }
 

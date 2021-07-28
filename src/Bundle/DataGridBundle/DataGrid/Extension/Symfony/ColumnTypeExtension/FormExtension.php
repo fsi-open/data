@@ -20,7 +20,7 @@ use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\DateTime;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Number;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Text;
-use FSi\Component\DataGrid\Extension\Doctrine\ColumnType\Entity;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Entity;
 use FSi\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
@@ -34,16 +34,16 @@ use function array_key_exists;
 class FormExtension extends ColumnAbstractTypeExtension
 {
     private FormFactoryInterface $formFactory;
-    private bool $csrfTokenEnabled;
+    private bool $csrfProtectionEnabled;
     /**
      * @var array<string,FormInterface>
      */
     private array $forms = [];
 
-    public function __construct(FormFactoryInterface $formFactory, bool $csrfTokenEnabled = true)
+    public function __construct(FormFactoryInterface $formFactory, bool $csrfProtectionEnabled = true)
     {
         $this->formFactory = $formFactory;
-        $this->csrfTokenEnabled = $csrfTokenEnabled;
+        $this->csrfProtectionEnabled = $csrfProtectionEnabled;
     }
 
     public function bindData(ColumnInterface $column, $data, $object, $index): void
@@ -93,7 +93,7 @@ class FormExtension extends ColumnAbstractTypeExtension
         }
 
         $source = $view->getAttribute('source');
-        $index = $view->getAttribute('row');
+        $index = $view->getAttribute('index');
         $form = $this->createForm($column, $index, $source);
 
         $view->setAttribute('form', $form->createView());
@@ -127,13 +127,13 @@ class FormExtension extends ColumnAbstractTypeExtension
     /**
      * @param ColumnInterface $column
      * @param int|string $index
-     * @param array|object $object
-     * @return FormInterface
+     * @param array<string,mixed>|object $object
+     * @return FormInterface<FormInterface>
      */
     private function createForm(ColumnInterface $column, $index, $object): FormInterface
     {
         $formId = implode([$column->getName(), $column->getType()->getId(), $index]);
-        if (array_key_exists($formId, $this->forms)) {
+        if (true === array_key_exists($formId, $this->forms)) {
             return $this->forms[$formId];
         }
 
@@ -142,17 +142,21 @@ class FormExtension extends ColumnAbstractTypeExtension
         $fields = [];
         switch ($column->getType()->getId()) {
             case 'entity':
+                /** @var string $relationField */
+                $relationField = $column->getOption('relation_field');
                 $field = [
-                    'name' => $column->getOption('relation_field'),
+                    'name' => $relationField,
                     'type' => EntityType::class,
                     'options' => [],
                 ];
 
-                $fields[$column->getOption('relation_field')] = $field;
+                $fields[$relationField] = $field;
                 break;
 
             default:
-                foreach ($column->getOption('field_mapping') as $fieldName) {
+                /** @var array<string> $fieldMapping */
+                $fieldMapping = $column->getOption('field_mapping');
+                foreach ($fieldMapping as $fieldName) {
                     $field = [
                         'name' => $fieldName,
                         'type' => null,
@@ -163,16 +167,18 @@ class FormExtension extends ColumnAbstractTypeExtension
         }
 
         //Pass fields form options from column into $fields array.
+        /** @var array<string,array<string,mixed>> $fieldsOptions */
         $fieldsOptions = $column->getOption('form_options');
         foreach ($fieldsOptions as $fieldName => $fieldOptions) {
-            if (array_key_exists($fieldName, $fields)) {
-                if (is_array($fieldOptions)) {
+            if (true === array_key_exists($fieldName, $fields)) {
+                if (true === is_array($fieldOptions)) {
                     $fields[$fieldName]['options'] = $fieldOptions;
                 }
             }
         }
 
         //Pass fields form type from column into $fields array.
+        /** @var array<string,string> $fieldsTypes */
         $fieldsTypes = $column->getOption('form_type');
         foreach ($fieldsTypes as $fieldName => $fieldType) {
             if (true === array_key_exists($fieldName, $fields)) {
@@ -208,11 +214,11 @@ class FormExtension extends ColumnAbstractTypeExtension
         }
 
         $formBuilderOptions = ['entry_type' => RowType::class];
-        if ($this->csrfTokenEnabled) {
+        if (true === $this->csrfProtectionEnabled) {
             $formBuilderOptions['csrf_protection'] = false;
         }
-
         $formBuilderOptions['entry_options']['fields'] = $fields;
+
         $formData = [];
         foreach (array_keys($fields) as $fieldName) {
             $formData[$fieldName] = $column->getDataGrid()->getDataMapper()->getData($fieldName, $object);

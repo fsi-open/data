@@ -13,112 +13,108 @@ namespace Tests\FSi\Component\DataGrid\Fixtures;
 
 class EntityMapper
 {
-    public $id;
+    public ?string $id = null;
+    private ?string $private_id = null;
+    private ?string $name = null;
+    private ?string $surname = null;
+    private ?string $collection = null;
+    private ?string $private_collection = null;
+    private bool $ready = false;
+    private bool $protected_ready = false;
+    /**
+     * @var array<string>
+     */
+    private array $tags = [];
 
-    private $private_id;
-
-    private $name;
-
-    private $surname;
-
-    private $collection;
-
-    private $private_collection;
-
-    private $ready;
-
-    private $protected_ready;
-
-    private $tags = [];
-
-    public function setId($id)
+    public function setId(string $id): void
     {
         $this->id = $id;
     }
 
-    public function setName($name)
+    public function setName(string $name): void
     {
         $this->name = $name;
-        return $this;
     }
 
-    protected function setProtectedName($name)
+    protected function setProtectedName(string $name): void
     {
         $this->name = $name;
-        return $this;
     }
 
-    public function setPrivateId($id)
+    public function setPrivateId(string $id): void
     {
         $this->private_id = $id;
     }
 
-    public function getName()
+    public function getName(): ?string
     {
         return $this->name;
     }
 
-    protected function getSurname()
+    protected function getSurname(): ?string
     {
         return $this->surname;
     }
 
-    public function setSurname($surname)
+    public function setSurname(string $surname): void
     {
         $this->surname = $surname;
     }
 
-    public function hasCollection()
+    public function hasCollection(): bool
     {
-        return isset($this->collection);
+        return null !== $this->collection;
     }
 
-    public function setCollection($collection)
+    public function setCollection(string $collection): void
     {
         $this->collection = $collection;
     }
 
-    public function setPrivateCollection($collection)
+    public function setPrivateCollection(string $collection): void
     {
         $this->private_collection = $collection;
     }
 
-    private function hasPrivateCollection()
+    private function hasPrivateCollection(): bool
     {
-        return isset($this->privatecollection);
+        return null !== $this->private_collection;
     }
 
-    public function setReady($ready)
+    public function setReady(bool $ready): void
     {
-        $this->ready = (bool) $ready;
+        $this->ready = $ready;
     }
 
-    public function isReady()
+    public function isReady(): bool
     {
         return $this->ready;
     }
 
-    public function setProtectedReady($ready)
+    public function setProtectedReady(bool $ready): void
     {
-        $this->protected_ready = (bool) $ready;
+        $this->protected_ready = $ready;
     }
 
-    protected function isProtectedReady()
+    protected function isProtectedReady(): bool
     {
         return $this->protected_ready;
     }
 
-    public function addTag($tag)
+    public function addTag(string $tag): void
     {
         $this->tags[] = $tag;
     }
 
-    public function getTags()
+    /**
+     * @return array<string>
+     */
+    public function getTags(): array
     {
         return $this->tags;
     }
 
-    protected function addProtectedTag($tag)
+    protected function addProtectedTag(string $tag): void
     {
         $this->tags[] = $tag;
     }

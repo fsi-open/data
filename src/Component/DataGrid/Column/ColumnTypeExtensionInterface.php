@@ -18,7 +18,7 @@ interface ColumnTypeExtensionInterface
     /**
      * @param ColumnInterface $column
      * @param mixed $data
-     * @param array|object $object
+     * @param array<string,mixed>|object $object
      * @param int|string $index
      */
     public function bindData(ColumnInterface $column, $data, $object, $index): void;

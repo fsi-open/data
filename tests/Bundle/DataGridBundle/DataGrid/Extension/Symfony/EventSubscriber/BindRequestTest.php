@@ -30,7 +30,7 @@ class BindRequestTest extends TestCase
 
         $subscriber = new BindRequest();
 
-        $subscriber->preBindData($event);
+        $subscriber($event);
 
         self::assertSame([], $event->getData());
     }
@@ -42,11 +42,11 @@ class BindRequestTest extends TestCase
         $request->expects(self::once())->method('getMethod')->willReturn('POST');
 
         if (true === class_exists(InputBag::class)) {
+            /** @var ParameterBag<string,mixed> $requestBag */
             $requestBag = new InputBag();
         } else {
             $requestBag = new ParameterBag();
         }
-        /** @var ParameterBag $requestBag */
         $requestBag->set('grid', ['foo' => 'bar']);
 
         $request->request = $requestBag;
@@ -58,7 +58,7 @@ class BindRequestTest extends TestCase
 
         $subscriber = new BindRequest();
 
-        $subscriber->preBindData($event);
+        $subscriber($event);
 
         self::assertSame(['foo' => 'bar'], $event->getData());
     }
@@ -76,7 +76,7 @@ class BindRequestTest extends TestCase
 
         $subscriber = new BindRequest();
 
-        $subscriber->preBindData($event);
+        $subscriber($event);
 
         self::assertSame(['foo' => 'bar'], $event->getData());
     }

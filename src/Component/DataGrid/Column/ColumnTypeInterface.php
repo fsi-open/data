@@ -21,7 +21,7 @@ interface ColumnTypeInterface
 
     /**
      * @param ColumnInterface $column
-     * @param array|object $object
+     * @param array<string,mixed>|object $object
      * @return mixed
      */
     public function getValue(ColumnInterface $column, $object);

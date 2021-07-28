@@ -19,7 +19,7 @@ use Doctrine\Persistence\Mapping\ClassMetadataFactory;
 use Doctrine\Persistence\ObjectManager;
 use FSi\Component\DataGrid\DataGridFactory;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
-use FSi\Component\DataGrid\Extension\Doctrine\ColumnType\Entity;
+use InvalidArgumentException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Tests\FSi\Component\DataGrid\Fixtures\EntityTree;
@@ -49,10 +49,10 @@ class TreeTest extends TestCase
 
         $column = $dataGridFactory->createColumn($dataGrid, Tree::class, 'tree', ['field_mapping' => ['id']]);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Column "gedmo_tree" must read value from object.');
 
-        $dataGridFactory->createCellView($column, ['This is string, not object']);
+        $dataGridFactory->createCellView($column, 1, ['key' => 'This is string, not object']);
     }
 
     public function testGetValue(): void
@@ -67,7 +67,7 @@ class TreeTest extends TestCase
         $dataGrid = $this->getDataGridMock();
 
         $column = $dataGridFactory->createColumn($dataGrid, Tree::class, 'tree', ['field_mapping' => ['id']]);
-        $view = $dataGridFactory->createCellView($column, new EntityTree("foo"));
+        $view = $dataGridFactory->createCellView($column, 1, new EntityTree("foo"));
 
         self::assertSame(
             [
@@ -125,7 +125,9 @@ class TreeTest extends TestCase
                         ->willReturnCallback(
                             function ($class) {
                                 if (EntityTree::class === $class) {
-                                    /** @var ClassMetadataInfo&MockObject $metadata */
+                                    /**
+                                     * @var ClassMetadataInfo<EntityTree>&MockObject $metadata
+                                     */
                                     $metadata = $this->createMock(ClassMetadataInfo::class);
                                     $metadata->method('getIdentifierFieldNames')->willReturn(['id']);
                                     $metadata->isMappedSuperclass = false;

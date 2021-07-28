@@ -13,6 +13,7 @@ namespace FSi\Component\DataGrid\Extension\Core\ColumnType;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use Exception;
 use FSi\Component\DataGrid\Column\ColumnAbstractType;
 use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Exception\DataGridColumnException;
@@ -76,15 +77,22 @@ class DateTime extends ColumnAbstractType
         ]);
     }
 
-    private function getInputData(ColumnInterface $column, $value)
+    /**
+     * @param ColumnInterface $column
+     * @param array<string,mixed> $value
+     * @return array<string,mixed>
+     */
+    private function getInputData(ColumnInterface $column, array $value)
     {
         $inputType = $column->getOption('input_type');
+        /** @var array<string,string|array<string>>|string|null $mappingFormat */
         $mappingFormat = $column->getOption('input_field_format');
 
         if (null === $inputType) {
             $inputType = $this->guessInputType($value);
         }
 
+        /** @var array<int,string> $mappingFields */
         $mappingFields = $column->getOption('field_mapping');
         $inputData = [];
         foreach ($mappingFields as $field) {
@@ -115,7 +123,7 @@ class DateTime extends ColumnAbstractType
                 }
 
                 foreach ($mappingFormat as $field => $inputType) {
-                    if (false === array_key_exists($field, $value)) {
+                    if (false === is_string($field) || false === array_key_exists($field, $value)) {
                         throw new DataGridColumnException(
                             sprintf('Unknown mapping field "%s".', $field)
                         );
@@ -235,6 +243,10 @@ class DateTime extends ColumnAbstractType
         return $inputData;
     }
 
+    /**
+     * @param mixed $value
+     * @return string|null
+     */
     private function guessInputType($value): ?string
     {
         if (true === is_array($value)) {
@@ -250,7 +262,7 @@ class DateTime extends ColumnAbstractType
             return 'datetime';
         }
 
-        if (is_numeric($value)) {
+        if (true === is_numeric($value)) {
             return 'timestamp';
         }
 
@@ -261,7 +273,12 @@ class DateTime extends ColumnAbstractType
         return null;
     }
 
-    private function transformStringToDateTime(?string $value, $mappingFormat): DateTimeImmutable
+    /**
+     * @param string $value
+     * @param mixed $mappingFormat
+     * @return DateTimeImmutable
+     */
+    private function transformStringToDateTime(string $value, $mappingFormat): DateTimeImmutable
     {
         if (null === $mappingFormat) {
             throw new DataGridColumnException(
@@ -286,6 +303,10 @@ class DateTime extends ColumnAbstractType
         return $dateTime;
     }
 
+    /**
+     * @param int|string $value
+     * @return DateTimeImmutable
+     */
     private function transformTimestampToDateTime($value): DateTimeImmutable
     {
         if (false === is_numeric($value)) {
@@ -300,6 +321,6 @@ class DateTime extends ColumnAbstractType
 
         $dateTime = new DateTimeImmutable();
 
-        return $dateTime->setTimestamp($value);
+        return $dateTime->setTimestamp((int) $value);
     }
 }

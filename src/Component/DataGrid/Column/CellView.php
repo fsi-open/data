@@ -20,6 +20,9 @@ final class CellView implements CellViewInterface
      * @var mixed
      */
     private $value;
+    /**
+     * @var array<string,mixed>
+     */
     private array $attributes = [];
 
     /**

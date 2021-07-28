@@ -106,10 +106,15 @@ class NumberTest extends TestCase
         );
     }
 
-    private function assertCellValue(array $options, $value, array $expectedValue): void
+    /**
+     * @param array<string,mixed> $options
+     * @param object $value
+     * @param array<string,mixed> $expectedValue
+     */
+    private function assertCellValue(array $options, object $value, array $expectedValue): void
     {
         $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Number::class, 'number', $options);
-        $cellView = $this->dataGridFactory->createCellView($column, $value);
+        $cellView = $this->dataGridFactory->createCellView($column, 1, $value);
 
         $this->assertSame($expectedValue, $cellView->getValue());
     }

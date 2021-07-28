@@ -27,6 +27,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
 use function array_merge;
+use function is_array;
 
 class Tree extends ColumnAbstractType
 {
@@ -108,7 +109,11 @@ class Tree extends ColumnAbstractType
             return $this->classStrategies[$class];
         }
 
-        $classParents = array_merge([$class], class_parents($class));
+        $classParents = class_parents($class);
+        if (false === is_array($classParents)) {
+            throw new DataGridColumnException("Unable to determine parent classes of class {$class}");
+        }
+        $classParents = array_merge([$class], $classParents);
 
         foreach ($classParents as $parent) {
             try {
@@ -126,6 +131,7 @@ class Tree extends ColumnAbstractType
     {
         if (true === $om instanceof EntityManager) {
             foreach ($om->getEventManager()->getListeners() as $listeners) {
+                $listeners = (array) $listeners;
                 foreach ($listeners as $listener) {
                     if (true === $listener instanceof TreeListener) {
                         return $listener;
@@ -137,6 +143,11 @@ class Tree extends ColumnAbstractType
         throw new DataGridColumnException('Gedmo TreeListener was not found in your entity manager.');
     }
 
+    /**
+     * @param class-string $class
+     * @param ObjectManager $em
+     * @return TreeRepositoryInterface
+     */
     private function getTreeRepository(string $class, ObjectManager $em): TreeRepositoryInterface
     {
         $repository = $em->getRepository($class);

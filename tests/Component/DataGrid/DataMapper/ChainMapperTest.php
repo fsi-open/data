@@ -36,7 +36,7 @@ class ChainMapperTest extends TestCase
 
         $chain = new ChainMapper([$mapper, $mapper1]);
 
-        self::assertSame('foo', $chain->getData('foo', ['bar']));
+        self::assertSame('foo', $chain->getData('foo', ['bar' => 'boo']));
     }
 
     public function testSetDataWithTwoMappers(): void
@@ -45,10 +45,10 @@ class ChainMapperTest extends TestCase
         $mapper1 = $this->createMock(DataMapperInterface::class);
 
         $mapper->expects(self::once())->method('setData')->willThrowException(new DataMappingException());
-        $mapper1->expects(self::once())->method('setData')->with('foo', ['bar'], 'test');
+        $mapper1->expects(self::once())->method('setData')->with('foo', ['bar' => 'boo'], 'test');
 
         $chain = new ChainMapper([$mapper, $mapper1]);
 
-        $chain->setData('foo', ['bar'], 'test');
+        $chain->setData('foo', ['bar' => 'boo'], 'test');
     }
 }

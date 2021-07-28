@@ -58,10 +58,11 @@ interface DataGridFactoryInterface
 
     /**
      * @param ColumnInterface $column
-     * @param array|object $source
+     * @param int|string $index
+     * @param array<string,mixed>|object $source
      * @return CellViewInterface
      */
-    public function createCellView(ColumnInterface $column, $source): CellViewInterface;
+    public function createCellView(ColumnInterface $column, $index, $source): CellViewInterface;
 
     public function createHeaderView(ColumnInterface $column): HeaderViewInterface;
 }

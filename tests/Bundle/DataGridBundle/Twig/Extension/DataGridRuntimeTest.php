@@ -320,8 +320,8 @@ class DataGridRuntimeTest extends TestCase
         $cellView
             ->method('getAttribute')
             ->willReturnCallback(
-                function ($key) {
-                    if ('row' === $key) {
+                static function ($key) {
+                    if ('index' === $key) {
                         return 0;
                     }
 
@@ -475,10 +475,15 @@ class DataGridRuntimeTest extends TestCase
     {
         $path = __DIR__ . '/../../Resources/views/expected/' . $filename;
         if (false === file_exists($path)) {
-            throw new RuntimeException(sprintf('Invalid expected html file path "%s"', $path));
+            throw new RuntimeException("Invalid expected html file path \"{$path}\"");
         }
 
-        return file_get_contents($path);
+        $contents = file_get_contents($path);
+        if (false === $contents) {
+            throw new RuntimeException("Unable to read expected html from file \"{$path}\"");
+        }
+
+        return $contents;
     }
 
     /**

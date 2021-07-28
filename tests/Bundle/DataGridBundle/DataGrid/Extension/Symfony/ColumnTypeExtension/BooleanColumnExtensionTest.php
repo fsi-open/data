@@ -9,10 +9,10 @@
 
 declare(strict_types=1);
 
-namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\Extension\View\ColumnTypeExtension;
+namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension;
 
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\FormExtension;
-use FSi\Bundle\DataGridBundle\DataGrid\Extension\View\ColumnTypeExtension\BooleanColumnExtension;
+use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\BooleanColumnExtension;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;

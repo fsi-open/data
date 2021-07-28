@@ -22,7 +22,7 @@ class DataGridRowViewTest extends TestCase
 {
     public function testCreateDataGridRowView(): void
     {
-        $source = ['SOURCE'];
+        $source = ['SOURCE' => 'VALUE'];
 
         $cellView = $this->createMock(CellViewInterface::class);
 
@@ -32,7 +32,10 @@ class DataGridRowViewTest extends TestCase
 
         $dataGrid->expects(self::atLeastOnce())->method('getFactory')->willReturn($factory);
         $column->expects(self::atLeastOnce())->method('getDataGrid')->willReturn($dataGrid);
-        $factory->expects(self::atLeastOnce())->method('createCellView')->with($column, $source)->willReturn($cellView);
+        $factory->expects(self::atLeastOnce())
+            ->method('createCellView')
+            ->with($column, 0, $source)
+            ->willReturn($cellView);
 
         $columns = [
             'foo' => $column

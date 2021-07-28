@@ -16,14 +16,8 @@ use Symfony\Component\Form\FormFactoryInterface;
 
 class FormExtension extends DataGridAbstractExtension
 {
-    /**
-     * @var FormFactoryInterface
-     */
-    protected $formFactory;
+    protected FormFactoryInterface $formFactory;
 
-    /**
-     * @param FormFactoryInterface $formFactory
-     */
     public function __construct(FormFactoryInterface $formFactory)
     {
         $this->formFactory = $formFactory;

@@ -38,7 +38,7 @@ class CollectionTest extends TestCase
             'field_mapping' => ['collection1', 'collection2'],
         ]);
 
-        $cellView = $dataGridFactory->createCellView($column, (object) [
+        $cellView = $dataGridFactory->createCellView($column, 1, (object) [
             'collection1' => ['foo', 'bar'],
             'collection2' => 'test',
         ]);

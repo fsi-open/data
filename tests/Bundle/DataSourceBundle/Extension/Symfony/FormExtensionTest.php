@@ -148,7 +148,7 @@ class FormExtensionTest extends TestCase
         $datasource
             ->method('getField')
             ->willReturnCallback(
-                function ($field) use ($fields) {
+                static function ($field) use ($fields) {
                     return $fields[$field];
                 }
             )
@@ -286,7 +286,7 @@ class FormExtensionTest extends TestCase
             ->expects(self::atLeastOnce())
             ->method('setAttribute')
             ->willReturnCallback(
-                function (string $attribute, $value): void {
+                static function (string $attribute, $value): void {
                     if ($attribute === 'form') {
                         self::assertInstanceOf(FormView::class, $value);
                     }
@@ -479,7 +479,7 @@ class FormExtensionTest extends TestCase
         $translator = $this->createMock(TranslatorInterface::class);
         $translator->method('trans')
             ->willReturnCallback(
-                function ($id, array $params, $translation_domain): string {
+                static function ($id, array $params, $translation_domain): string {
                     if ($translation_domain !== 'DataSourceBundle') {
                         throw new RuntimeException(sprintf('Unknown translation domain %s', $translation_domain));
                     }

@@ -13,7 +13,6 @@ namespace Tests\FSi\Component\DataGrid\Extension\Core;
 
 use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\DataGridInterface;
-use FSi\Component\DataGrid\Event\PostBuildViewEvent;
 use FSi\Component\DataGrid\Event\PreBuildViewEvent;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Action;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Batch;
@@ -23,9 +22,7 @@ use FSi\Component\DataGrid\Extension\Core\ColumnType\Number;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Text;
 use FSi\Component\DataGrid\Extension\Core\CoreExtension;
 use FSi\Component\DataGrid\Extension\Core\EventSubscriber\ColumnOrder;
-use FSi\Component\DataGrid\DataGridViewInterface;
-use FSi\Component\DataGrid\Column\HeaderViewInterface;
-use FSi\Component\DataGrid\Extension\Doctrine\ColumnType\Entity;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Entity;
 use PHPUnit\Framework\TestCase;
 
 class CoreExtensionTest extends TestCase
@@ -43,6 +40,8 @@ class CoreExtensionTest extends TestCase
         $this->assertTrue($extension->hasColumnType(Action::class));
         $this->assertTrue($extension->hasColumnType('money'));
         $this->assertTrue($extension->hasColumnType(Money::class));
+        $this->assertTrue($extension->hasColumnType('entity'));
+        $this->assertTrue($extension->hasColumnType(Entity::class));
 
         $this->assertFalse($extension->hasColumnType('foo'));
     }
@@ -59,7 +58,7 @@ class CoreExtensionTest extends TestCase
         $this->assertTrue($extension->hasColumnTypeExtensions(new Entity()));
     }
 
-    public function testColumnOrder()
+    public function testColumnOrder(): void
     {
         $subscriber = new ColumnOrder();
 
@@ -106,28 +105,23 @@ class CoreExtensionTest extends TestCase
             foreach ($case['columns'] as $name => $order) {
                 $column = $this->createMock(ColumnInterface::class);
 
-                $column
-                    ->expects($this->any())
-                    ->method('getName')
-                    ->will($this->returnValue($name));
+                $column->method('getName')->willReturn($name);
 
                 $column
                     ->expects($this->atLeastOnce())
                     ->method('hasOption')
-                    ->will($this->returnCallback(function ($attribute) use ($order) {
+                    ->willReturnCallback(static function ($attribute) use ($order) {
                         return ('display_order' === $attribute) && (null !== $order);
-                    }));
+                    });
 
-                $column
-                    ->expects($this->any())
-                    ->method('getOption')
-                    ->will($this->returnCallback(function ($attribute) use ($order) {
+                $column->method('getOption')
+                    ->willReturnCallback(static function ($attribute) use ($order) {
                         if ('display_order' === $attribute) {
                             return $order;
                         }
 
                         return null;
-                    }));
+                    });
 
                 $columns[$name] = $column;
             }
@@ -136,7 +130,7 @@ class CoreExtensionTest extends TestCase
 
             $dataGrid->expects(self::once())
                 ->method('getColumns')
-                ->will($this->returnValue($columns));
+                ->willReturn($columns);
 
             $dataGrid->expects(self::once())->method('clearColumns');
 
@@ -154,7 +148,7 @@ class CoreExtensionTest extends TestCase
 
             $event = new PreBuildViewEvent($dataGrid);
 
-            $subscriber->preBuildView($event);
+            $subscriber($event);
         }
     }
 }

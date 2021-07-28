@@ -24,7 +24,7 @@ final class DataGridRowView implements DataGridRowViewInterface
      */
     private array $cellViews = [];
     /**
-     * @var array|object
+     * @var array<string,mixed>|object
      */
     private $source;
     /**
@@ -33,9 +33,9 @@ final class DataGridRowView implements DataGridRowViewInterface
     private $index;
 
     /**
-     * @param array<ColumnInterface> $columns
+     * @param array<string,ColumnInterface> $columns
      * @param int|string $index
-     * @param array|object $source
+     * @param array<string,mixed>|object $source
      */
     public function __construct(array $columns, $index, $source)
     {
@@ -49,9 +49,7 @@ final class DataGridRowView implements DataGridRowViewInterface
                 ));
             }
 
-            $this->cellViews[$name] = $column->getDataGrid()->getFactory()->createCellView($column, $source);
-            $this->cellViews[$name]->setAttribute('row', $index);
-            $this->cellViews[$name]->setAttribute('source', $source);
+            $this->cellViews[$name] = $column->getDataGrid()->getFactory()->createCellView($column, $index, $source);
         }
     }
 
@@ -70,11 +68,17 @@ final class DataGridRowView implements DataGridRowViewInterface
         return count($this->cellViews);
     }
 
-    public function current(): CellViewInterface
+    /**
+     * @return CellViewInterface|false
+     */
+    public function current()
     {
         return current($this->cellViews);
     }
 
+    /**
+     * @return string|null
+     */
     public function key()
     {
         return key($this->cellViews);

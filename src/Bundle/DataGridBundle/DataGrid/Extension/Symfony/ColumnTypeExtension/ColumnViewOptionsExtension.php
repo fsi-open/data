@@ -9,21 +9,13 @@
 
 declare(strict_types=1);
 
-namespace FSi\Bundle\DataGridBundle\DataGrid\Extension\View\ColumnTypeExtension;
+namespace FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension;
 
+use FSi\Component\DataGrid\Column\ColumnAbstractType;
 use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Column\ColumnAbstractTypeExtension;
 use FSi\Component\DataGrid\Column\CellViewInterface;
 use FSi\Component\DataGrid\Column\HeaderViewInterface;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Action;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Collection;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\DateTime;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Money;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Number;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Text;
-use FSi\Component\DataGrid\Extension\Doctrine\ColumnType\Entity;
-use FSi\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ColumnViewOptionsExtension extends ColumnAbstractTypeExtension
@@ -40,17 +32,7 @@ class ColumnViewOptionsExtension extends ColumnAbstractTypeExtension
 
     public function getExtendedColumnTypes(): array
     {
-        return [
-            Action::class,
-            Boolean::class,
-            Text::class,
-            DateTime::class,
-            Number::class,
-            Money::class,
-            Tree::class,
-            Entity::class,
-            Collection::class,
-        ];
+        return [ColumnAbstractType::class];
     }
 
     public function initOptions(OptionsResolver $optionsResolver): void

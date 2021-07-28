@@ -35,7 +35,7 @@ class SimpleDataGridExtension implements DataGridExtensionInterface
 
     public function getColumnType(string $type): ColumnTypeInterface
     {
-        if (false === $this->hasColumnType($type)) {
+        if (null === $this->columnType) {
             throw new RuntimeException(sprintf('Column of type "%s" does not exist', $type));
         }
 

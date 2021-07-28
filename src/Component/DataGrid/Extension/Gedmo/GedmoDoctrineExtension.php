@@ -17,10 +17,7 @@ use FSi\Component\DataGrid\Extension\Gedmo\ColumnType;
 
 class GedmoDoctrineExtension extends DataGridAbstractExtension
 {
-    /**
-     * @var ManagerRegistry
-     */
-    protected $registry;
+    private ManagerRegistry $registry;
 
     public function __construct(ManagerRegistry $registry)
     {

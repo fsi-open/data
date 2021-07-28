@@ -155,7 +155,7 @@ class FormExtensionTest extends TestCase
             ]
         ]);
 
-        $object = new Entity('old_name');
+        $object = new Entity(1, 'old_name');
         $data = [
             'name' => 'object',
             'author' => 'norbert@fsi.pl',
@@ -163,7 +163,7 @@ class FormExtensionTest extends TestCase
         ];
 
         $this->extension->bindData($column, $data, $object, 1);
-        $this->dataGridFactory->createCellView($column, $object);
+        $this->dataGridFactory->createCellView($column, 1, $object);
 
         self::assertSame('norbert@fsi.pl', $object->getAuthor());
         self::assertSame('object', $object->getName());
@@ -191,7 +191,7 @@ class FormExtensionTest extends TestCase
             ],
         ]);
 
-        $object = new Entity('old_name');
+        $object = new Entity(1, 'old_name');
 
         $data = [
             'name' => 'object',
@@ -199,7 +199,7 @@ class FormExtensionTest extends TestCase
         ];
 
         $this->extension->bindData($column, $data, $object, 1);
-        $this->dataGridFactory->createCellView($column, $object);
+        $this->dataGridFactory->createCellView($column, 1, $object);
 
         self::assertNull($object->getAuthor());
         self::assertSame('old_name', $object->getName());
@@ -225,7 +225,7 @@ class FormExtensionTest extends TestCase
             'form_type' => [],
         ]);
 
-        $object = new Entity('name123');
+        $object = new Entity(1, 'name123');
         $data = [
             'category' => 1,
         ];
@@ -233,7 +233,7 @@ class FormExtensionTest extends TestCase
         self::assertNull($object->getCategory());
 
         $this->extension->bindData($column, $data, $object, 1);
-        $this->dataGridFactory->createCellView($column, $object);
+        $this->dataGridFactory->createCellView($column, 1, $object);
 
         self::assertInstanceOf($nestedEntityClass, $object->getCategory());
         self::assertSame('category name 1', $object->getCategory()->getName());
@@ -260,7 +260,7 @@ class FormExtensionTest extends TestCase
         $dataMapper = $this->createMock(DataMapperInterface::class);
         $dataMapper->method('getData')
             ->willReturnCallback(
-                function ($field, $object) {
+                static function ($field, $object) {
                     $method = 'get' . ucfirst($field);
 
                     return $object->$method();
@@ -269,7 +269,7 @@ class FormExtensionTest extends TestCase
 
         $dataMapper->method('setData')
             ->willReturnCallback(
-                function ($field, $object, $value) {
+                static function ($field, $object, $value) {
                     $method = 'set' . ucfirst($field);
 
                     return $object->$method($value);
@@ -281,13 +281,13 @@ class FormExtensionTest extends TestCase
 
     /**
      * @param ColumnInterface&MockObject $column
-     * @param array $options
+     * @param array<string,mixed> $options
      */
     private function setColumnOptions(ColumnInterface $column, array $options): void
     {
         $column->method('getOption')
             ->willReturnCallback(
-                function ($option) use ($options) {
+                static function ($option) use ($options) {
                     return $options[$option] ?? null;
                 }
             );

@@ -93,7 +93,7 @@ class PaginationExtensionTest extends TestCase
         $view = $this->createMock(DataSourceViewInterface::class);
         $view->method('setAttribute')
             ->willReturnCallback(
-                function ($attribute, $value) use ($currentPage) {
+                static function ($attribute, $value) use ($currentPage) {
                     if ('page' === $attribute) {
                         self::assertEquals($currentPage, $value);
                     }

@@ -24,4 +24,5 @@ before_script:
 script:
     - vendor/bin/phpcs
     - vendor/bin/phpstan analyze -c phpstan.neon
+    - vendor/bin/phpstan analyze -c phpstan_max.neon
     - vendor/bin/phpunit

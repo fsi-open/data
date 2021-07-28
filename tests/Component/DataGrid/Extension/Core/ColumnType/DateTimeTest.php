@@ -42,7 +42,7 @@ class DateTimeTest extends TestCase
         );
 
         $dateTimeObject = new DateTime('2012-05-03 12:41:11');
-        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+        $cellView = $this->dataGridFactory->createCellView($column, 1, (object) [
             'datetime' => $dateTimeObject,
         ]);
 
@@ -62,7 +62,7 @@ class DateTimeTest extends TestCase
         );
 
         $dateTimeObject = new DateTimeImmutable('2012-05-03 12:41:11');
-        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+        $cellView = $this->dataGridFactory->createCellView($column, 1, (object) [
             'datetime' => $dateTimeObject,
         ]);
 
@@ -81,7 +81,7 @@ class DateTimeTest extends TestCase
             ['field_mapping' => ['datetime']]
         );
 
-        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+        $cellView = $this->dataGridFactory->createCellView($column, 1, (object) [
             'datetime' => null,
         ]);
 
@@ -100,7 +100,7 @@ class DateTimeTest extends TestCase
                 ]
             );
 
-            $cellView = $this->dataGridFactory->createCellView($column, (object) [
+            $cellView = $this->dataGridFactory->createCellView($column, 1, (object) [
                 'datetime' => null,
             ]);
 
@@ -121,7 +121,7 @@ class DateTimeTest extends TestCase
         );
 
         $dateTimeObject = new DateTime('2012-05-03 12:41:11');
-        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+        $cellView = $this->dataGridFactory->createCellView($column, 1, (object) [
             'datetime' => $dateTimeObject,
         ]);
 
@@ -144,7 +144,7 @@ class DateTimeTest extends TestCase
         );
 
         $dateTimeObject = new DateTimeImmutable('2012-05-03 12:41:11');
-        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+        $cellView = $this->dataGridFactory->createCellView($column, 1, (object) [
             'datetime' => $dateTimeObject,
         ]);
 
@@ -174,7 +174,7 @@ class DateTimeTest extends TestCase
             ]
         );
 
-        $cellView = $this->dataGridFactory->createCellView($column, $value);
+        $cellView = $this->dataGridFactory->createCellView($column, 1, $value);
 
         $this->assertSame(
             ['datetime' => $dateTimeObject->format('Y-m-d H:i:s')],
@@ -182,7 +182,7 @@ class DateTimeTest extends TestCase
         );
 
         $this->expectException(InvalidArgumentException::class);
-        $this->dataGridFactory->createCellView($column, $brokenValue);
+        $this->dataGridFactory->createCellView($column, 1, $brokenValue);
     }
 
     public function testStringValueWithMissingFieldsFormat(): void
@@ -203,7 +203,7 @@ class DateTimeTest extends TestCase
         );
 
         $this->expectException(DataGridColumnException::class);
-        $this->dataGridFactory->createCellView($column, $value);
+        $this->dataGridFactory->createCellView($column, 1, $value);
     }
 
     public function testStringValue(): void
@@ -226,7 +226,7 @@ class DateTimeTest extends TestCase
                 'input_type' => 'string',
             ]
         );
-        $cellView = $this->dataGridFactory->createCellView($column, $value);
+        $cellView = $this->dataGridFactory->createCellView($column, 1, $value);
 
         $this->assertSame(
             ['datetime' => $dateTimeObject->format('Y-m-d H:i:s')],
@@ -234,7 +234,7 @@ class DateTimeTest extends TestCase
         );
 
         $this->expectException(DataGridColumnException::class);
-        $this->dataGridFactory->createCellView($column, $brokenValue);
+        $this->dataGridFactory->createCellView($column, 1, $brokenValue);
     }
 
     public function testArrayValueWithMissingFieldsFormat(): void
@@ -257,7 +257,7 @@ class DateTimeTest extends TestCase
         );
 
         $this->expectException(DataGridColumnException::class);
-        $this->dataGridFactory->createCellView($column, $value);
+        $this->dataGridFactory->createCellView($column, 1, $value);
     }
 
     public function testArrayValueWithMissingFieldsFormatForDateTimeImmutable(): void
@@ -280,7 +280,7 @@ class DateTimeTest extends TestCase
         );
 
         $this->expectException(DataGridColumnException::class);
-        $this->dataGridFactory->createCellView($column, $value);
+        $this->dataGridFactory->createCellView($column, 1, $value);
     }
 
     public function testArrayValueWithWrongFieldsFormat(): void
@@ -307,7 +307,7 @@ class DateTimeTest extends TestCase
         );
 
         $this->expectException(DataGridColumnException::class);
-        $this->dataGridFactory->createCellView($column, $value);
+        $this->dataGridFactory->createCellView($column, 1, $value);
     }
 
     public function testArrayValue(): void
@@ -339,7 +339,7 @@ class DateTimeTest extends TestCase
                 ],
             ]
         );
-        $cellView = $this->dataGridFactory->createCellView($column, $value);
+        $cellView = $this->dataGridFactory->createCellView($column, 1, $value);
 
         $expectedResult = [
             'datetime' => $dateTimeObject->format('Y-m-d H:i:s'),
@@ -382,7 +382,7 @@ class DateTimeTest extends TestCase
                 ],
             ]
         );
-        $cellView = $this->dataGridFactory->createCellView($column, $value);
+        $cellView = $this->dataGridFactory->createCellView($column, 1, $value);
 
         $expectedResult = [
             'datetime' => $dateTimeObject->format('Y.d.m'),
