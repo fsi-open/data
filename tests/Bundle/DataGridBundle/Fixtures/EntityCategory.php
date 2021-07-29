@@ -13,37 +13,32 @@ namespace Tests\FSi\Bundle\DataGridBundle\Fixtures;
 
 class EntityCategory
 {
-    public $id;
-    public $name;
+    public int $id;
+    public string $name;
 
-    public function __construct($id, $name)
+    public function __construct(int $id, string $name)
     {
         $this->name = $name;
         $this->id = $id;
     }
 
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
-    public function setName($name)
+    public function setName(string $name): void
     {
         $this->name = $name;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return $this->name;
     }
 
-    public function getId()
+    public function getId(): int
     {
         return $this->id;
-    }
-
-    public function setId($id)
-    {
-        $this->id = $id;
     }
 }

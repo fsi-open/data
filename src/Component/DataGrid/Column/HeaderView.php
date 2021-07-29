@@ -11,78 +11,26 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid\Column;
 
-use FSi\Component\DataGrid\DataGridViewInterface;
-
-class HeaderView implements HeaderViewInterface
+final class HeaderView implements HeaderViewInterface
 {
+    private string $dataGridName;
+    private string $name;
+    private string $type;
     /**
-     * @var string|null
+     * @var array<string,mixed>
      */
-    protected $label;
+    private array $attributes = [];
 
-    /**
-     * @var string
-     */
-    protected $name;
-
-    /**
-     * @var string
-     */
-    protected $type;
-
-    /**
-     * @var array
-     */
-    protected $attributes = [];
-
-    /**
-     * @var DataGridViewInterface
-     */
-    protected $datagrid;
-
-    public function __construct(string $name, string $type)
+    public function __construct(ColumnInterface $column)
     {
-        $this->name = $name;
-        $this->type = $type;
+        $this->dataGridName = $column->getDataGrid()->getName();
+        $this->name = $column->getName();
+        $this->type = $column->getType()->getId();
     }
 
-    public function setAttribute(string $name, $value): void
+    public function getDataGridName(): string
     {
-        $this->attributes[$name] = $value;
-    }
-
-    public function getAttribute(string $name)
-    {
-        if (array_key_exists($name, $this->attributes)) {
-            return $this->attributes[$name];
-        }
-
-        return null;
-    }
-
-    public function hasAttribute(string $name): bool
-    {
-        return array_key_exists($name, $this->attributes);
-    }
-
-    public function getAttributes(): array
-    {
-        return $this->attributes;
-    }
-
-    public function setLabel(string $label): void
-    {
-        $this->label = $label;
-    }
-
-    public function getLabel(): ?string
-    {
-        return $this->label;
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
+        return $this->dataGridName;
     }
 
     public function getType(): string
@@ -90,13 +38,28 @@ class HeaderView implements HeaderViewInterface
         return $this->type;
     }
 
-    public function setDataGridView(DataGridViewInterface $dataGrid): void
+    public function getName(): string
     {
-        $this->datagrid = $dataGrid;
+        return $this->name;
     }
 
-    public function getDataGridView(): DataGridViewInterface
+    public function hasAttribute(string $name): bool
     {
-        return $this->datagrid;
+        return array_key_exists($name, $this->attributes);
+    }
+
+    public function getAttribute(string $name)
+    {
+        return $this->attributes[$name] ?? null;
+    }
+
+    public function getAttributes(): array
+    {
+        return $this->attributes;
+    }
+
+    public function setAttribute(string $name, $value): void
+    {
+        $this->attributes[$name] = $value;
     }
 }

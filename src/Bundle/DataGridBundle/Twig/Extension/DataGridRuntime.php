@@ -20,16 +20,15 @@ use Twig\Extension\RuntimeExtensionInterface;
 use Twig\TemplateWrapper;
 
 use function array_key_exists;
-use function spl_object_id;
 
 class DataGridRuntime implements RuntimeExtensionInterface
 {
     /**
-     * @var array<int,TemplateWrapper>
+     * @var array<string,TemplateWrapper>
      */
     private array $themes;
     /**
-     * @var array<int,array<string,mixed>>
+     * @var array<string,array<string,mixed>>
      */
     private array $themesVars;
     /**
@@ -69,9 +68,9 @@ class DataGridRuntime implements RuntimeExtensionInterface
             $theme = $this->environment->load($theme);
         }
 
-        $dataGridId = spl_object_id($dataGrid);
-        $this->themes[$dataGridId] = $theme;
-        $this->themesVars[$dataGridId] = $vars;
+        $dataGridName = $dataGrid->getName();
+        $this->themes[$dataGridName] = $theme;
+        $this->themesVars[$dataGridName] = $vars;
     }
 
     public function dataGrid(DataGridViewInterface $view): string
@@ -83,10 +82,10 @@ class DataGridRuntime implements RuntimeExtensionInterface
 
         $context = [
             'datagrid' => $view,
-            'vars' => $this->getDataGridVars($view)
+            'vars' => $this->getDataGridVars($view->getName())
         ];
 
-        return $this->renderTheme($view, $context, $blockNames);
+        return $this->renderTheme($view->getName(), $context, $blockNames);
     }
 
     public function dataGridHeader(DataGridViewInterface $view, array $vars = []): string
@@ -97,38 +96,35 @@ class DataGridRuntime implements RuntimeExtensionInterface
         ];
 
         $context = [
-            'headers' => $view->getColumns(),
+            'headers' => $view->getHeaders(),
             'vars' => array_merge(
-                $this->getDataGridVars($view),
+                $this->getDataGridVars($view->getName()),
                 $vars
             )
         ];
 
-        return $this->renderTheme($view, $context, $blockNames);
+        return $this->renderTheme($view->getName(), $context, $blockNames);
     }
 
     public function dataGridColumnHeader(HeaderViewInterface $view, array $vars = []): string
     {
-        $dataGridView = $view->getDataGridView();
+        $dataGridName = $view->getDataGridName();
         $blockNames = [
-            "datagrid_{$dataGridView->getName()}_column_name_{$view->getName()}_header",
-            "datagrid_{$dataGridView->getName()}_column_type_{$view->getType()}_header",
+            "datagrid_{$dataGridName}_column_name_{$view->getName()}_header",
+            "datagrid_{$dataGridName}_column_type_{$view->getType()}_header",
             "datagrid_column_name_{$view->getName()}_header",
             "datagrid_column_type_{$view->getType()}_header",
-            "datagrid_{$dataGridView->getName()}_column_header",
+            "datagrid_{$dataGridName}_column_header",
             'datagrid_column_header',
         ];
 
         $context = [
             'header' => $view,
             'translation_domain' => $view->getAttribute('translation_domain'),
-            'vars' => array_merge(
-                $this->getDataGridVars($view->getDataGridView()),
-                $vars
-            )
+            'vars' => array_merge($this->getDataGridVars($dataGridName), $vars)
         ];
 
-        return $this->renderTheme($dataGridView, $context, $blockNames);
+        return $this->renderTheme($dataGridName, $context, $blockNames);
     }
 
     public function dataGridRowset(DataGridViewInterface $view, array $vars = []): string
@@ -140,33 +136,33 @@ class DataGridRuntime implements RuntimeExtensionInterface
 
         $context = [
             'datagrid' => $view,
-            'vars' => array_merge($this->getDataGridVars($view), $vars)
+            'vars' => array_merge($this->getDataGridVars($view->getName()), $vars)
         ];
 
-        return $this->renderTheme($view, $context, $blockNames);
+        return $this->renderTheme($view->getName(), $context, $blockNames);
     }
 
     public function dataGridColumnCell(CellViewInterface $view, array $vars = []): string
     {
-        $dataGridView = $view->getDataGridView();
+        $dataGridName = $view->getDataGridName();
         $blockNames = [
-            "datagrid_{$dataGridView->getName()}_column_name_{$view->getName()}_cell",
-            "datagrid_{$dataGridView->getName()}_column_type_{$view->getType()}_cell",
+            "datagrid_{$dataGridName}_column_name_{$view->getName()}_cell",
+            "datagrid_{$dataGridName}_column_type_{$view->getType()}_cell",
             "datagrid_column_name_{$view->getName()}_cell",
             "datagrid_column_type_{$view->getType()}_cell",
-            "datagrid_{$dataGridView->getName()}_column_cell",
+            "datagrid_{$dataGridName}_column_cell",
             'datagrid_column_cell',
         ];
 
         $context = [
             'cell' => $view,
             'row_index' => $view->getAttribute('row'),
-            'datagrid_name' => $dataGridView->getName(),
+            'datagrid_name' => $dataGridName,
             'translation_domain' => $view->getAttribute('translation_domain'),
-            'vars' => array_merge($this->getDataGridVars($dataGridView), $vars)
+            'vars' => array_merge($this->getDataGridVars($dataGridName), $vars)
         ];
 
-        return $this->renderTheme($dataGridView, $context, $blockNames);
+        return $this->renderTheme($dataGridName, $context, $blockNames);
     }
 
     public function dataGridColumnCellForm(CellViewInterface $view, array $vars = []): string
@@ -175,22 +171,22 @@ class DataGridRuntime implements RuntimeExtensionInterface
             return '';
         }
 
-        $dataGridView = $view->getDataGridView();
+        $dataGridName = $view->getDataGridName();
         $blockNames = [
-            "datagrid_{$dataGridView->getName()}_column_name_{$view->getName()}_cell_form",
-            "datagrid_{$dataGridView->getName()}_column_type_{$view->getType()}_cell_form",
+            "datagrid_{$dataGridName}_column_name_{$view->getName()}_cell_form",
+            "datagrid_{$dataGridName}_column_type_{$view->getType()}_cell_form",
             "datagrid_column_name_{$view->getName()}_cell_form",
             "datagrid_column_type_{$view->getType()}_cell_form",
-            "datagrid_{$dataGridView->getName()}_column_cell_form",
+            "datagrid_{$dataGridName}_column_cell_form",
             'datagrid_column_cell_form',
         ];
 
         $context = [
             'form' => $view->getAttribute('form'),
-            'vars' => array_merge($this->getDataGridVars($view->getDataGridView()), $vars)
+            'vars' => array_merge($this->getDataGridVars($dataGridName), $vars)
         ];
 
-        return $this->renderTheme($dataGridView, $context, $blockNames);
+        return $this->renderTheme($dataGridName, $context, $blockNames);
     }
 
     public function dataGridColumnActionCellActionWidget(
@@ -200,11 +196,11 @@ class DataGridRuntime implements RuntimeExtensionInterface
         array $urlAttrs = [],
         array $fieldMappingValues = []
     ): string {
-        $dataGridView = $view->getDataGridView();
+        $dataGridName = $view->getDataGridName();
         $blockNames = [
-            "datagrid_{$dataGridView->getName()}_column_type_action_cell_action_{$action}",
+            "datagrid_{$dataGridName}_column_type_action_cell_action_{$action}",
             "datagrid_column_type_action_cell_action_{$action}",
-            "datagrid_{$dataGridView->getName()}_column_type_action_cell_action",
+            "datagrid_{$dataGridName}_column_type_action_cell_action",
             'datagrid_column_type_action_cell_action',
         ];
 
@@ -217,7 +213,7 @@ class DataGridRuntime implements RuntimeExtensionInterface
             'field_mapping_values' => $fieldMappingValues
         ];
 
-        return $this->renderTheme($dataGridView, $context, $blockNames);
+        return $this->renderTheme($dataGridName, $context, $blockNames);
     }
 
     public function dataGridAttributes(array $attributes, ?string $translationDomain = null): string
@@ -236,18 +232,17 @@ class DataGridRuntime implements RuntimeExtensionInterface
     }
 
     /**
-     * @param DataGridViewInterface $dataGrid
+     * @param string $dataGridName
      * @return array<TemplateWrapper>
      */
-    private function getTemplates(DataGridViewInterface $dataGrid): array
+    private function getTemplates(string $dataGridName): array
     {
         $this->initThemes();
 
         $templates = [];
 
-        $dataGridId = spl_object_id($dataGrid);
-        if (true === array_key_exists($dataGridId, $this->themes)) {
-            $templates[] = $this->themes[$dataGridId];
+        if (true === array_key_exists($dataGridName, $this->themes)) {
+            $templates[] = $this->themes[$dataGridName];
         }
 
         for ($i = count($this->baseThemes) - 1; $i >= 0; $i--) {
@@ -268,17 +263,17 @@ class DataGridRuntime implements RuntimeExtensionInterface
         }
     }
 
-    private function getDataGridVars(DataGridViewInterface $dataGrid): array
+    private function getDataGridVars(string $dataGridName): array
     {
-        return $this->themesVars[spl_object_id($dataGrid)] ?? [];
+        return $this->themesVars[$dataGridName] ?? [];
     }
 
     private function renderTheme(
-        DataGridViewInterface $dataGrid,
+        string $dataGridName,
         array $contextVars = [],
         array $availableBlocks = []
     ): string {
-        $templates = $this->getTemplates($dataGrid);
+        $templates = $this->getTemplates($dataGridName);
         $contextVars = $this->environment->mergeGlobals($contextVars);
 
         foreach ($availableBlocks as $blockName) {

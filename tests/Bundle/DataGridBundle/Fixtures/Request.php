@@ -22,12 +22,12 @@ class Request extends BaseRequest
     {
     }
 
-    public function getUri()
+    public function getUri(): string
     {
         return self::ABSOLUTE_URI;
     }
 
-    public function getRequestUri()
+    public function getRequestUri(): string
     {
         return self::RELATIVE_URI;
     }

@@ -41,11 +41,4 @@ class DriverFactoryManagerTest extends TestCase
         self::assertSame($doctrineOrmFactory, $manager->getFactory('doctrine-orm'));
         self::assertSame($collectionFactory, $manager->getFactory('collection'));
     }
-
-    public function testAddInvalidFactory(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-
-        new DriverFactoryManager([new DateTimeImmutable()]);
-    }
 }

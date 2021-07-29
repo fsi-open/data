@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace FSi\Component\DataGrid\Extension\Core\ColumnType;
 
 use FSi\Component\DataGrid\Column\ColumnAbstractType;
+use FSi\Component\DataGrid\Column\ColumnInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class Text extends ColumnAbstractType
 {
@@ -20,9 +22,9 @@ class Text extends ColumnAbstractType
         return 'text';
     }
 
-    public function filterValue($value)
+    public function filterValue(ColumnInterface $column, $value)
     {
-        $trim = $this->getOption('trim');
+        $trim = $column->getOption('trim');
         if ($trim === true) {
             foreach ($value as &$val) {
                 if (empty($val)) {
@@ -36,12 +38,12 @@ class Text extends ColumnAbstractType
         return $value;
     }
 
-    public function initOptions(): void
+    public function initOptions(OptionsResolver $optionsResolver): void
     {
-        $this->getOptionsResolver()->setDefaults([
+        $optionsResolver->setDefaults([
             'trim' => false
         ]);
 
-        $this->getOptionsResolver()->setAllowedTypes('trim', 'bool');
+        $optionsResolver->setAllowedTypes('trim', 'bool');
     }
 }

@@ -16,14 +16,12 @@ use FSi\Component\DataSource\Field\FieldAbstractType;
 
 final class TestFieldType extends FieldAbstractType
 {
-    /**
-     * @var string
-     */
-    private $type;
+    private string $type;
 
     public function __construct(DataSourceInterface $dataSource, string $type, string $comparison)
     {
         parent::setDataSource($dataSource);
+
         $this->type = $type;
         $this->comparison = $comparison;
     }

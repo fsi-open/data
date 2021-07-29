@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony;
 
+use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnType\Action;
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\RouterExtension;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Routing\RouterInterface;
@@ -25,5 +26,6 @@ class RouterExtensionTest extends TestCase
         $extension = new RouterExtension($router, $requestStack);
 
         self::assertTrue($extension->hasColumnType('action'));
+        self::assertTrue($extension->hasColumnType(Action::class));
     }
 }

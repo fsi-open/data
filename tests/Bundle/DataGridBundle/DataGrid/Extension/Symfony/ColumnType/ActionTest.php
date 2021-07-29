@@ -12,6 +12,14 @@ declare(strict_types=1);
 namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnType;
 
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnType\Action;
+use FSi\Component\DataGrid\Column\ColumnInterface;
+use FSi\Component\DataGrid\DataGridFactory;
+use FSi\Component\DataGrid\DataGridInterface;
+use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
+use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
+use InvalidArgumentException;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\PropertyAccess\PropertyAccess;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\Request;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -20,91 +28,79 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
+use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
 class ActionTest extends TestCase
 {
     /**
      * @var RouterInterface&MockObject
      */
-    private $router;
-
+    private RouterInterface $router;
     /**
-     * @var Action
+     * @var RequestStack&MockObject
      */
-    private $column;
+    private RequestStack $requestStack;
+    private DataGridFactory $dataGridFactory;
 
-    protected function setUp(): void
-    {
-        /** @var RouterInterface&MockObject $router */
-        $router = $this->createMock(RouterInterface::class);
-        $this->router = $router;
-
-        $requestStack = $this->createMock(RequestStack::class);
-        $requestStack->method('getMasterRequest')->willReturn(new Request());
-
-        $column = new Action($this->router, $requestStack);
-        $column->setName('action');
-        $column->initOptions();
-
-        $extension = new DefaultColumnOptionsExtension();
-        $extension->initOptions($column);
-
-        $this->column = $column;
-    }
-
-    public function testFilterValueWrongActionsOptionType()
+    public function testWrongActionsOptionType(): void
     {
         $this->expectException(InvalidOptionsException::class);
-        $this->column->setOption('actions', 'boo');
+
+        $this->dataGridFactory->createColumn($this->getDataGridMock(), Action::class, 'action', ['actions' => 'boo']);
     }
 
-    public function testFilterValueInvalidActionInActionsOption()
+    public function testInvalidActionInActionsOption(): void
     {
-        $this->column->setOption('actions', ['edit' => 'asdasd']);
+        $this->expectException(InvalidArgumentException::class);
 
-        $this->expectException(\InvalidArgumentException::class);
-        $this->column->filterValue([]);
+        $column = $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            Action::class,
+            'action',
+            ['field_mapping' => ['id'], 'actions' => ['edit' => 'asdasd']]
+        );
+        $this->dataGridFactory->createCellView($column, (object) ['id' => 1]);
     }
 
-    public function testFilterValueRequiredActionInActionsOption()
+    public function testRequiredActionInActionsOption(): void
     {
         $this->router->method('generate')
             ->with('foo', ['redirect_uri' => Request::RELATIVE_URI], UrlGeneratorInterface::ABSOLUTE_PATH)
             ->willReturn('/test/bar?redirect_uri=' . urlencode(Request::ABSOLUTE_URI));
 
-        $this->column->setName('action');
-        $this->column->initOptions();
-
-        $extension = new DefaultColumnOptionsExtension();
-        $extension->initOptions($this->column);
-
-
-        $this->column->setOption('actions', [
-            'edit' => [
-                'route_name' => 'foo',
-                'absolute' => UrlGeneratorInterface::ABSOLUTE_PATH
+        $column = $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            Action::class,
+            'action',
+            [
+                'field_mapping' => ['id', 'foo'],
+                'actions' => [
+                    'edit' => [
+                        'route_name' => 'foo',
+                        'absolute' => UrlGeneratorInterface::ABSOLUTE_PATH,
+                    ],
+                ],
             ]
-        ]);
+        );
 
         self::assertSame(
             [
                 'edit' => [
                     'content' => 'edit',
                     'field_mapping_values' => [
-                            'foo' => 'bar'
+                        'id' => 1,
+                        'foo' => 'bar',
                     ],
                     'url_attr' => [
-                        'href' => '/test/bar?redirect_uri=http%3A%2F%2Fexample.com%2F%3Ftest%3D1%26test%3D2'
-                    ]
-                ]
+                        'href' => '/test/bar?redirect_uri=http%3A%2F%2Fexample.com%2F%3Ftest%3D1%26test%3D2',
+                    ],
+                ],
             ],
-            $this->column->filterValue([
-                'foo' => 'bar'
-            ])
+            $this->dataGridFactory->createCellView($column, (object) ['id' => 1, 'foo' => 'bar'])->getValue()
         );
     }
 
-    public function testFilterValueAvailableActionInActionsOption()
+    public function testAvailableActionInActionsOption(): void
     {
         $this->router->expects(self::once())
             ->method('generate')
@@ -115,76 +111,105 @@ class ActionTest extends TestCase
             )
             ->willReturn('https://fsi.pl/test/bar?redirect_uri=' . urlencode(Request::RELATIVE_URI));
 
-        $this->column->setName('action');
-        $this->column->initOptions();
-
-        $extension = new DefaultColumnOptionsExtension();
-        $extension->initOptions($this->column);
-
-        $this->column->setOption('field_mapping', ['foo']);
-        $this->column->setOption('actions', [
-            'edit' => [
-                'route_name' => 'foo',
-                'parameters_field_mapping' => ['foo' => 'foo'],
-                'absolute' => UrlGeneratorInterface::ABSOLUTE_URL
+        $column = $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            Action::class,
+            'action',
+            [
+                'field_mapping' => ['id', 'foo'],
+                'actions' => [
+                    'edit' => [
+                        'route_name' => 'foo',
+                        'parameters_field_mapping' => ['foo' => 'foo'],
+                        'absolute' => UrlGeneratorInterface::ABSOLUTE_URL,
+                    ],
+                ],
             ]
-        ]);
+        );
 
         self::assertSame(
             [
                 'edit' => [
                     'content' => 'edit',
                     'field_mapping_values' => [
-                        'foo' => 'bar'
+                        'id' => 1,
+                        'foo' => 'bar',
                     ],
                     'url_attr' => [
-                        'href' => 'https://fsi.pl/test/bar?redirect_uri=' . urlencode(Request::RELATIVE_URI)
-                    ]
-                ]
+                        'href' => 'https://fsi.pl/test/bar?redirect_uri=' . urlencode(Request::RELATIVE_URI),
+                    ],
+                ],
             ],
-            $this->column->filterValue([
-                'foo' => 'bar'
-            ])
+            $this->dataGridFactory->createCellView($column, (object) ['id' => 1, 'foo' => 'bar'])->getValue()
         );
     }
 
-
-    public function testFilterValueWithRedirectUriFalse()
+    public function testDisablingRedirectUri(): void
     {
         $this->router->expects(self::once())
             ->method('generate')
             ->with('foo', [], UrlGeneratorInterface::ABSOLUTE_PATH)
             ->willReturn('/test/bar');
 
-        $this->column->setName('action');
-        $this->column->initOptions();
-
-        $extension = new DefaultColumnOptionsExtension();
-        $extension->initOptions($this->column);
-
-        $this->column->setOption('actions', [
-            'edit' => [
-                'route_name' => 'foo',
-                'absolute' => UrlGeneratorInterface::ABSOLUTE_PATH,
-                'redirect_uri' => false
+        $column = $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            Action::class,
+            'action',
+            [
+                'field_mapping' => ['id', 'foo'],
+                'actions' => [
+                    'edit' => [
+                        'route_name' => 'foo',
+                        'absolute' => UrlGeneratorInterface::ABSOLUTE_PATH,
+                        'redirect_uri' => false,
+                    ],
+                ],
             ]
-        ]);
+        );
 
         self::assertSame(
             [
                 'edit' => [
                     'content' => 'edit',
                     'field_mapping_values' => [
-                        'foo' => 'bar'
+                        'id' => 1,
+                        'foo' => 'bar',
                     ],
                     'url_attr' => [
-                        'href' => '/test/bar'
-                    ]
-                ]
+                        'href' => '/test/bar',
+                    ],
+                ],
             ],
-            $this->column->filterValue([
-                'foo' => 'bar'
-            ])
+            $this->dataGridFactory->createCellView($column, (object) ['id' => 1, 'foo' => 'bar'])->getValue()
         );
+    }
+
+    protected function setUp(): void
+    {
+        $this->router = $this->createMock(RouterInterface::class);
+        $this->requestStack = $this->createMock(RequestStack::class);
+        $this->requestStack->method('getMasterRequest')->willReturn(new Request());
+        $this->dataGridFactory = new DataGridFactory(
+            [
+                new SimpleDataGridExtension(
+                    new DefaultColumnOptionsExtension(),
+                    new Action($this->router, $this->requestStack)
+                ),
+            ],
+            $this->createMock(DataMapperInterface::class),
+            $this->createMock(EventDispatcherInterface::class)
+        );
+    }
+
+    /**
+     * @return DataGridInterface&MockObject
+     */
+    private function getDataGridMock(): DataGridInterface
+    {
+        $dataGrid = $this->createMock(DataGridInterface::class);
+        $dataGrid->method('getDataMapper')
+            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
+
+        return $dataGrid;
     }
 }

@@ -11,15 +11,18 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension;
 
-use FSi\Component\DataGrid\Column\ColumnTypeInterface;
+use FSi\Component\DataGrid\Column\ColumnAbstractType;
+use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Column\HeaderViewInterface;
 use FSi\Component\DataGrid\Column\ColumnAbstractTypeExtension;
+use Symfony\Component\OptionsResolver\Options;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class DefaultColumnOptionsExtension extends ColumnAbstractTypeExtension
 {
-    public function buildHeaderView(ColumnTypeInterface $column, HeaderViewInterface $view): void
+    public function buildHeaderView(ColumnInterface $column, HeaderViewInterface $view): void
     {
-        $view->setLabel($column->getOption('label'));
+        $view->setAttribute('label', $column->getOption('label'));
         $order = $column->getOption('display_order');
         if (null !== $order) {
             $view->setAttribute('display_order', $order);
@@ -28,30 +31,18 @@ class DefaultColumnOptionsExtension extends ColumnAbstractTypeExtension
 
     public function getExtendedColumnTypes(): array
     {
-        return [
-            'batch',
-            'text',
-            'boolean',
-            'collection',
-            'datetime',
-            'number',
-            'money',
-            'gedmo_tree',
-            'entity',
-            'action',
-        ];
+        return [ColumnAbstractType::class];
     }
 
-    public function initOptions(ColumnTypeInterface $column): void
+    public function initOptions(OptionsResolver $optionsResolver): void
     {
-        $column->getOptionsResolver()->setDefaults([
-            'label' => $column->getName(),
+        $optionsResolver->setDefaults([
+            'label' => static fn(Options $options, $previousValue) => $previousValue ?? $options['name'],
             'display_order' => null,
-            'field_mapping' => [$column->getName()]
+            'field_mapping' => static fn(Options $options, $previousValue) => $previousValue ?? [$options['name']],
         ]);
-
-        $column->getOptionsResolver()->setAllowedTypes('label', 'string');
-        $column->getOptionsResolver()->setAllowedTypes('field_mapping', 'array');
-        $column->getOptionsResolver()->setAllowedTypes('display_order', ['integer', 'null']);
+        $optionsResolver->setAllowedTypes('label', 'string');
+        $optionsResolver->setAllowedTypes('field_mapping', 'array');
+        $optionsResolver->setAllowedTypes('display_order', ['integer', 'null']);
     }
 }

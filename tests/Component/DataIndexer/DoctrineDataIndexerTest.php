@@ -98,7 +98,7 @@ final class DoctrineDataIndexerTest extends TestCase
 
         $news = new Post("foo", "bar");
 
-        self::assertSame($dataIndexer->getIndex($news), "foo" . $dataIndexer->getSeparator() . "bar");
+        self::assertSame($dataIndexer->getIndex($news), "foo|bar");
     }
 
     public function testGetDataWithSimpleKey(): void
@@ -111,6 +111,7 @@ final class DoctrineDataIndexerTest extends TestCase
         $this->em->clear();
 
         $news = $dataIndexer->getData("foo");
+        self::assertInstanceOf(News::class, $news);
 
         self::assertSame($news->getId(), "foo");
     }
@@ -125,6 +126,7 @@ final class DoctrineDataIndexerTest extends TestCase
         $this->em->clear();
 
         $post = $dataIndexer->getData("foo|bar");
+        self::assertInstanceOf(Post::class, $post);
 
         self::assertSame($post->getIdFirstPart(), "foo");
         self::assertSame($post->getIdSecondPart(), "bar");

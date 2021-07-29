@@ -18,13 +18,6 @@ use TypeError;
 
 class DataRowsetTest extends TestCase
 {
-    public function testCreateWithInvalidData(): void
-    {
-        $this->expectException(TypeError::class);
-
-        new DataRowset('Invalid Data');
-    }
-
     public function testCreateRowset(): void
     {
         $data = [

@@ -50,7 +50,7 @@ abstract class DriverExtension extends DriverAbstractExtension
 
     /**
      * @param array<FieldTypeInterface> $fields
-     * @return array<FieldTypeInterface>
+     * @return array<string,string>
      */
     protected function sortFields(array $fields): array
     {

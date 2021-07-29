@@ -17,10 +17,7 @@ use FSi\Component\DataSource\Result;
 
 class Paginator implements Result
 {
-    /**
-     * @var QueryBuilder
-     */
-    private $query;
+    private QueryBuilder $query;
 
     public function __construct(QueryBuilder $query)
     {
@@ -35,7 +32,7 @@ class Paginator implements Result
     public function count(): int
     {
         $query = clone $this->query;
-        $query->setFirstResult(null);
+        $query->setFirstResult(0);
         $query->setMaxResults(null);
 
         $sql = $query->getSQL();

@@ -11,6 +11,14 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid\Data;
 
-interface DataRowsetInterface extends \Iterator, \Countable, \ArrayAccess
+use ArrayAccess;
+use Countable;
+use Iterator;
+
+/**
+ * @template-extends Iterator<int|string,array|object>
+ * @template-extends ArrayAccess<int|string,array|object>
+ */
+interface DataRowsetInterface extends Iterator, Countable, ArrayAccess
 {
 }

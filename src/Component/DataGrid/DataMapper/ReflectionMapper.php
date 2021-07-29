@@ -14,14 +14,11 @@ namespace FSi\Component\DataGrid\DataMapper;
 use FSi\Component\Reflection\ReflectionClass;
 use FSi\Component\DataGrid\Exception\DataMappingException;
 
-class ReflectionMapper implements DataMapperInterface
+final class ReflectionMapper implements DataMapperInterface
 {
-    /**
-     * @inheritdoc
-     */
     public function getData(string $field, $object)
     {
-        if (!is_object($object)) {
+        if (false === is_object($object)) {
             throw new DataMappingException('Reflection mapper needs object to retrieve data.');
         }
 
@@ -31,8 +28,8 @@ class ReflectionMapper implements DataMapperInterface
         $isser = 'is' . $camelField;
         $hasser = 'has' . $camelField;
 
-        if ($objectReflection->hasMethod($getter)) {
-            if (!$objectReflection->getMethod($getter)->isPublic()) {
+        if (true === $objectReflection->hasMethod($getter)) {
+            if (false === $objectReflection->getMethod($getter)->isPublic()) {
                 throw new DataMappingException(
                     sprintf('Method "%s()" is not public in class "%s"', $getter, $objectReflection->name)
                 );
@@ -41,8 +38,8 @@ class ReflectionMapper implements DataMapperInterface
             return $object->$getter();
         }
 
-        if ($objectReflection->hasMethod($isser)) {
-            if (!$objectReflection->getMethod($isser)->isPublic()) {
+        if (true === $objectReflection->hasMethod($isser)) {
+            if (false === $objectReflection->getMethod($isser)->isPublic()) {
                 throw new DataMappingException(
                     sprintf('Method "%s()" is not public in class "%s"', $isser, $objectReflection->name)
                 );
@@ -51,8 +48,8 @@ class ReflectionMapper implements DataMapperInterface
             return $object->$isser();
         }
 
-        if ($objectReflection->hasMethod($hasser)) {
-            if (!$objectReflection->getMethod($hasser)->isPublic()) {
+        if (true === $objectReflection->hasMethod($hasser)) {
+            if (false === $objectReflection->getMethod($hasser)->isPublic()) {
                 throw new DataMappingException(
                     sprintf('Method "%s()" is not public in class "%s"', $hasser, $objectReflection->name)
                 );
@@ -61,8 +58,8 @@ class ReflectionMapper implements DataMapperInterface
             return $object->$hasser();
         }
 
-        if ($objectReflection->hasProperty($field)) {
-            if (!$objectReflection->getProperty($field)->isPublic()) {
+        if (true === $objectReflection->hasProperty($field)) {
+            if (false === $objectReflection->getProperty($field)->isPublic()) {
                 throw new DataMappingException(sprintf(
                     'Property "%s" is not public in class "%s". Maybe you should create the method "%s()" or "%s()"?',
                     $field,
@@ -71,6 +68,7 @@ class ReflectionMapper implements DataMapperInterface
                     $isser
                 ));
             }
+
             $property = $objectReflection->getProperty($field);
             return $property->getValue($object);
         }
@@ -84,12 +82,9 @@ class ReflectionMapper implements DataMapperInterface
         ));
     }
 
-    /**
-     * @inheritdoc
-     */
     public function setData(string $field, $object, $value): void
     {
-        if (!is_object($object)) {
+        if (false === is_object($object)) {
             throw new DataMappingException('Reflection mapper needs object to retrieve data.');
         }
 
@@ -98,8 +93,8 @@ class ReflectionMapper implements DataMapperInterface
         $setter = 'set' . $camelField;
         $adder = 'add' . $camelField;
 
-        if ($objectReflection->hasMethod($setter)) {
-            if (!$objectReflection->getMethod($setter)->isPublic()) {
+        if (true === $objectReflection->hasMethod($setter)) {
+            if (false === $objectReflection->getMethod($setter)->isPublic()) {
                 throw new DataMappingException(sprintf(
                     'Method "%s()" is not public in class "%s"',
                     $setter,
@@ -112,8 +107,8 @@ class ReflectionMapper implements DataMapperInterface
             return;
         }
 
-        if ($objectReflection->hasMethod($adder)) {
-            if (!$objectReflection->getMethod($adder)->isPublic()) {
+        if (true === $objectReflection->hasMethod($adder)) {
+            if (false === $objectReflection->getMethod($adder)->isPublic()) {
                 throw new DataMappingException(sprintf(
                     'Method "%s()" is not public in class "%s"',
                     $adder,
@@ -126,8 +121,8 @@ class ReflectionMapper implements DataMapperInterface
             return;
         }
 
-        if ($objectReflection->hasProperty($field)) {
-            if (!$objectReflection->getProperty($field)->isPublic()) {
+        if (true === $objectReflection->hasProperty($field)) {
+            if (false === $objectReflection->getProperty($field)->isPublic()) {
                 throw new DataMappingException(sprintf(
                     'Property "%s" is not public in class "%s". Maybe you should create method "%s()" or "%s()"?',
                     $field,
@@ -153,8 +148,15 @@ class ReflectionMapper implements DataMapperInterface
 
     private function camelize(string $string): string
     {
-        return preg_replace_callback('/(^|_|\.)+(.)/', function ($match) {
-            return ('.' === $match[1] ? '_' : '') . strtoupper($match[2]);
-        }, $string);
+        $result = preg_replace_callback(
+            '/(^|_|\.)+(.)/',
+            static fn($match): string => ('.' === $match[1] ? '_' : '') . strtoupper($match[2]),
+            $string
+        );
+        if (false === is_string($result)) {
+            throw new DataMappingException("Unable to camelize name {$string}");
+        }
+
+        return $result;
     }
 }

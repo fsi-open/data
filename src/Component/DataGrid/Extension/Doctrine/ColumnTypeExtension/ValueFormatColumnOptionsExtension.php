@@ -11,32 +11,39 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid\Extension\Doctrine\ColumnTypeExtension;
 
-use FSi\Component\DataGrid\Column\ColumnTypeInterface;
+use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Column\CellViewInterface;
 use FSi\Component\DataGrid\Column\ColumnAbstractTypeExtension;
 use FSi\Component\DataGrid\Exception\DataGridException;
+use FSi\Component\DataGrid\Extension\Doctrine\ColumnType\Entity;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+
+use function array_key_exists;
 
 class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
 {
-    public function buildCellView(ColumnTypeInterface $column, CellViewInterface $view): void
+    public function filterValue(ColumnInterface $column, $value)
     {
-        $value = [];
-        $values = $view->getValue();
-        if (($emptyValue = $column->getOption('empty_value')) !== null) {
-            $values = $this->populateValues($values, $emptyValue);
+        $resultValue = [];
+        /** @var array|string|null $emptyValue */
+        $emptyValue = $column->getOption('empty_value');
+        if (null !== $emptyValue) {
+            $value = $this->populateValues($value, $emptyValue);
         }
+        /** @var string|null $glue */
         $glue = $column->getOption('value_glue');
+        /** @var string|null $format */
         $format = $column->getOption('value_format');
 
-        foreach ($values as $val) {
+        foreach ($value as $val) {
             $objectValue = null;
 
-            if (isset($glue) && !isset($format)) {
+            if (null !== $glue && null === $format) {
                 $objectValue = implode($glue, $val);
             }
 
-            if (isset($format)) {
-                if (isset($glue)) {
+            if (null !== $format) {
+                if (null !== $glue) {
                     $formattedValues = [];
                     foreach ($val as $fieldValue) {
                         $formattedValues[] = sprintf($format, $fieldValue);
@@ -48,41 +55,39 @@ class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
                 }
             }
 
-            $value[] = $objectValue;
+            $resultValue[] = $objectValue;
         }
 
-        $value = implode($column->getOption('glue_multiple'), $value);
-
-        $view->setValue($value);
+        return implode($column->getOption('glue_multiple'), $resultValue);
     }
 
     public function getExtendedColumnTypes(): array
     {
         return [
-            'entity',
+            Entity::class,
         ];
     }
 
-    public function initOptions(ColumnTypeInterface $column): void
+    public function initOptions(OptionsResolver $optionsResolver): void
     {
-        $column->getOptionsResolver()->setDefaults([
+        $optionsResolver->setDefaults([
             'glue_multiple' => ' ',
             'value_glue' => ' ',
             'value_format' => '%s',
             'empty_value' => null
         ]);
 
-        $column->getOptionsResolver()->setAllowedTypes('glue_multiple', ['string']);
-        $column->getOptionsResolver()->setAllowedTypes('value_glue', ['string', 'null']);
-        $column->getOptionsResolver()->setAllowedTypes('value_format', ['string', 'null']);
-        $column->getOptionsResolver()->setAllowedTypes('empty_value', ['array', 'string', 'null']);
+        $optionsResolver->setAllowedTypes('glue_multiple', ['string']);
+        $optionsResolver->setAllowedTypes('value_glue', ['string', 'null']);
+        $optionsResolver->setAllowedTypes('value_format', ['string', 'null']);
+        $optionsResolver->setAllowedTypes('empty_value', ['array', 'string', 'null']);
     }
 
     private function populateValues(array $values, $emptyValue): array
     {
         foreach ($values as &$val) {
             foreach ($val as $fieldKey => &$fieldValue) {
-                if (!isset($fieldValue)) {
+                if (null === $fieldValue) {
                     $fieldValue = $this->populateValue($fieldKey, $fieldValue, $emptyValue);
                 }
             }
@@ -96,16 +101,13 @@ class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
      * @param mixed $value
      * @param mixed $emptyValue
      * @return mixed
-     * @throws \FSi\Component\DataGrid\Exception\DataGridException
      */
     private function populateValue(string $key, $value, $emptyValue)
     {
-        if (is_string($emptyValue)) {
+        if (true === is_string($emptyValue)) {
             $value = $emptyValue;
-        }
-
-        if (is_array($emptyValue)) {
-            if (isset($emptyValue[$key])) {
+        } elseif (true === is_array($emptyValue)) {
+            if (true === array_key_exists($key, $emptyValue)) {
                 $value = $emptyValue[$key];
             } else {
                 throw new DataGridException(

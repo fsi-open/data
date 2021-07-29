@@ -50,27 +50,6 @@ class FactoryTest extends TestCase
     }
 
     /**
-     * Checks exception thrown when loading improper extensions.
-     */
-    public function testFactoryException2(): void
-    {
-        $driveFactoryManager = new DriverFactoryManager([new CollectionFactory()]);
-        $this->expectException(DataSourceException::class);
-        new DataSourceFactory($driveFactoryManager, [new \stdClass()]);
-    }
-
-    /**
-     * Checks exception thrown when loading scalars in place of extensions.
-     */
-    public function testFactoryException3(): void
-    {
-        $this->expectException(DataSourceException::class);
-
-        $driveFactoryManager = new DriverFactoryManager([new CollectionFactory()]);
-        new DataSourceFactory($driveFactoryManager, ['scalar']);
-    }
-
-    /**
      * Checks exception thrown when creating DataSource with non-existing driver
      */
     public function testFactoryException6(): void

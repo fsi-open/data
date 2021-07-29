@@ -105,17 +105,6 @@ class DoctrineDriverBasicTest extends TestCase
     }
 
     /**
-     * Checks creation exception.
-     */
-    public function testCreationException(): void
-    {
-        $em = $this->getEntityManagerMock();
-        $qb = $this->getQueryBuilderMock($em);
-        $this->expectException(DataSourceException::class);
-        new DoctrineDriver([new stdClass()], $qb);
-    }
-
-    /**
      * Checks basic getResult call.
      */
     public function testGetResult(): void

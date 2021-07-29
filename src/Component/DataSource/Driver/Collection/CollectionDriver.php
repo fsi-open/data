@@ -16,6 +16,7 @@ use Doctrine\Common\Collections\Selectable;
 use FSi\Component\DataSource\Driver\DriverAbstract;
 use FSi\Component\DataSource\Driver\Collection\Exception\CollectionDriverException;
 use FSi\Component\DataSource\Exception\DataSourceException;
+use FSi\Component\DataSource\Result;
 use IteratorAggregate;
 use Traversable;
 
@@ -72,7 +73,7 @@ class CollectionDriver extends DriverAbstract
      * @return CollectionResult
      * @throws CollectionDriverException
      */
-    protected function buildResult(array $fields, ?int $first, ?int $max): IteratorAggregate
+    protected function buildResult(array $fields, ?int $first, ?int $max): Result
     {
         foreach ($fields as $field) {
             if (false === $field instanceof CollectionFieldInterface) {

@@ -14,36 +14,26 @@ namespace FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony;
 use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
 use FSi\Component\DataGrid\Column\ColumnTypeInterface;
 use FSi\Component\DataGrid\DataGridExtensionInterface;
-use FSi\Component\DataGrid\DataGridInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class DependencyInjectionExtension implements DataGridExtensionInterface
 {
     /**
-     * @var ColumnTypeInterface[]
+     * @var array<ColumnTypeInterface>
      */
-    private $columnTypes = [];
+    private array $columnTypes = [];
 
     /**
-     * @var ColumnTypeExtensionInterface[][]
+     * @var array<string,array<ColumnTypeExtensionInterface>>
      */
-    private $columnTypesExtensions = [];
-
-    /**
-     * @var EventSubscriberInterface[]
-     */
-    private $eventSubscribers = [];
+    private array $columnTypesExtensions = [];
 
     /**
      * @param ColumnTypeInterface[] $columnTypes
      * @param ColumnTypeExtensionInterface[] $columnTypesExtensions
-     * @param EventSubscriberInterface[] $eventSubscribers
      */
-    public function __construct(
-        array $columnTypes,
-        array $columnTypesExtensions,
-        array $eventSubscribers
-    ) {
+    public function __construct(array $columnTypes, array $columnTypesExtensions)
+    {
         foreach ($columnTypes as $columnType) {
             $this->columnTypes[$columnType->getId()] = $columnType;
         }
@@ -56,8 +46,6 @@ class DependencyInjectionExtension implements DataGridExtensionInterface
                 $this->columnTypesExtensions[$extendedColumnType][] = $columnTypeExtension;
             }
         }
-
-        $this->eventSubscribers = $eventSubscribers;
     }
 
     public function hasColumnType(string $type): bool
@@ -77,28 +65,21 @@ class DependencyInjectionExtension implements DataGridExtensionInterface
         return $this->columnTypes[$type];
     }
 
-    public function hasColumnTypeExtensions(string $type): bool
+    public function hasColumnTypeExtensions(ColumnTypeInterface $type): bool
     {
-        return array_key_exists($type, $this->columnTypesExtensions);
+        return array_key_exists($type->getId(), $this->columnTypesExtensions);
     }
 
     /**
-     * @param string $type
-     * @return ColumnTypeExtensionInterface[]
+     * @param ColumnTypeInterface $type
+     * @return array<ColumnTypeExtensionInterface>
      */
-    public function getColumnTypeExtensions(string $type): array
+    public function getColumnTypeExtensions(ColumnTypeInterface $type): array
     {
-        if (!array_key_exists($type, $this->columnTypesExtensions)) {
+        if (false === array_key_exists($type->getId(), $this->columnTypesExtensions)) {
             return [];
         }
 
-        return $this->columnTypesExtensions[$type];
-    }
-
-    public function registerSubscribers(DataGridInterface $dataGrid): void
-    {
-        foreach ($this->eventSubscribers as $eventSubscriber) {
-            $dataGrid->addEventSubscriber($eventSubscriber);
-        }
+        return $this->columnTypesExtensions[$type->getId()];
     }
 }

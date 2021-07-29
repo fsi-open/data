@@ -20,14 +20,17 @@ use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\FormExtension;
+use FSi\Component\DataGrid\Column\CellView;
+use FSi\Component\DataGrid\Column\ColumnInterface;
+use FSi\Component\DataGrid\DataGridFactory;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use ReflectionProperty;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\Entity;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\EntityCategory;
 use FSi\Component\DataGrid\Column\ColumnTypeInterface;
 use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\MockObject\RuntimeException;
-use PHPUnit\Framework\MockObject\Stub\ReturnCallback;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Doctrine\Form\DoctrineOrmExtension;
 use Symfony\Component\Form\Extension\Core\CoreExtension;
@@ -40,20 +43,16 @@ use Symfony\Component\Form\ResolvedFormTypeFactory;
 use Symfony\Component\Security\Csrf\CsrfTokenManager;
 use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\ValidatorBuilder;
-
-use function interface_exists;
+use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
 class FormExtensionTest extends TestCase
 {
     /**
-     * @var FormExtension
-     */
-    private $extension;
-
-    /**
      * @var DataGridInterface&MockObject
      */
-    private $dataGrid;
+    private DataGridInterface $dataGrid;
+    private DataGridFactory $dataGridFactory;
+    private FormExtension $extension;
 
     protected function setUp(): void
     {
@@ -94,7 +93,7 @@ class FormExtensionTest extends TestCase
             ]
         ];
         $classMetadata->reflFields = [
-            'id' => new \ReflectionProperty($entityClass, 'id'),
+            'id' => new ReflectionProperty($entityClass, 'id'),
         ];
 
         $repository = $this->getMockBuilder(EntityRepository::class)
@@ -130,14 +129,22 @@ class FormExtensionTest extends TestCase
         $dataGrid = $this->createMock(DataGridInterface::class);
         $this->dataGrid = $dataGrid;
         $this->dataGrid->method('getName')->willReturn('grid');
+        $this->dataGrid->method('getDataMapper')->willReturn($this->getDataMapper());
 
         $this->extension = new FormExtension($formFactory);
+        $this->dataGridFactory = new DataGridFactory(
+            [new SimpleDataGridExtension($this->extension, null)],
+            $this->getDataMapper(),
+            $this->createMock(EventDispatcherInterface::class)
+        );
     }
 
     public function testSimpleBindData(): void
     {
-        $column = $this->createColumnMock();
-        $this->setColumnId($column, 'text');
+        $type = $this->createMock(ColumnTypeInterface::class);
+        $type->method('getId')->willReturn('text');
+
+        $column = $this->createColumnMock($type);
         $this->setColumnOptions($column, [
             'field_mapping' => ['name', 'author'],
             'editable' => true,
@@ -156,16 +163,18 @@ class FormExtensionTest extends TestCase
         ];
 
         $this->extension->bindData($column, $data, $object, 1);
+        $this->dataGridFactory->createCellView($column, $object);
 
         self::assertSame('norbert@fsi.pl', $object->getAuthor());
         self::assertSame('object', $object->getName());
     }
 
-
     public function testAvoidBindingDataWhenFormIsNotValid(): void
     {
-        $column = $this->createColumnMock();
-        $this->setColumnId($column, 'text');
+        $type = $this->createMock(ColumnTypeInterface::class);
+        $type->method('getId')->willReturn('text');
+
+        $column = $this->createColumnMock($type);
         $this->setColumnOptions($column, [
             'field_mapping' => ['name', 'author'],
             'editable' => true,
@@ -179,7 +188,7 @@ class FormExtensionTest extends TestCase
             'form_type' => [
                 'name' => ['type' => TextType::class],
                 'author' => ['type' => TextType::class],
-            ]
+            ],
         ]);
 
         $object = new Entity('old_name');
@@ -190,6 +199,7 @@ class FormExtensionTest extends TestCase
         ];
 
         $this->extension->bindData($column, $data, $object, 1);
+        $this->dataGridFactory->createCellView($column, $object);
 
         self::assertNull($object->getAuthor());
         self::assertSame('old_name', $object->getName());
@@ -199,8 +209,10 @@ class FormExtensionTest extends TestCase
     {
         $nestedEntityClass = EntityCategory::class;
 
-        $column = $this->createColumnMock();
-        $this->setColumnId($column, 'entity');
+        $type = $this->createMock(ColumnTypeInterface::class);
+        $type->method('getId')->willReturn('entity');
+
+        $column = $this->createColumnMock($type);
         $this->setColumnOptions($column, [
             'editable' => true,
             'relation_field' => 'category',
@@ -221,40 +233,29 @@ class FormExtensionTest extends TestCase
         self::assertNull($object->getCategory());
 
         $this->extension->bindData($column, $data, $object, 1);
+        $this->dataGridFactory->createCellView($column, $object);
 
         self::assertInstanceOf($nestedEntityClass, $object->getCategory());
         self::assertSame('category name 1', $object->getCategory()->getName());
     }
 
     /**
-     * @return ColumnTypeInterface&MockObject
+     * @return ColumnInterface&MockObject
      */
-    private function createColumnMock(): ColumnTypeInterface
+    private function createColumnMock(ColumnTypeInterface $type): ColumnInterface
     {
-        /** @var ColumnTypeInterface&MockObject $column */
-        $column = $this->createMock(ColumnTypeInterface::class);
-        $column->method('getDataMapper')->will($this->getDataMapperReturnCallback());
+        /** @var ColumnInterface&MockObject $column */
+        $column = $this->createMock(ColumnInterface::class);
         $column->method('getDataGrid')->willReturn($this->dataGrid);
+        $column->method('getType')->willReturn($type);
 
         return $column;
     }
 
-    private function setColumnId($column, $id): void
-    {
-        $column->method('getId')->willReturn($id);
-    }
-
-    private function setColumnOptions($column, $optionsMap): void
-    {
-        $column->method('getOption')
-            ->willReturnCallback(
-                function ($option) use ($optionsMap) {
-                    return $optionsMap[$option];
-                }
-            );
-    }
-
-    private function getDataMapperReturnCallback(): ReturnCallback
+    /**
+     * @return DataMapperInterface&MockObject
+     */
+    private function getDataMapper(): DataMapperInterface
     {
         $dataMapper = $this->createMock(DataMapperInterface::class);
         $dataMapper->method('getData')
@@ -275,8 +276,20 @@ class FormExtensionTest extends TestCase
                 }
             );
 
-        return self::returnCallback(function () use ($dataMapper) {
-            return $dataMapper;
-        });
+        return $dataMapper;
+    }
+
+    /**
+     * @param ColumnInterface&MockObject $column
+     * @param array $options
+     */
+    private function setColumnOptions(ColumnInterface $column, array $options): void
+    {
+        $column->method('getOption')
+            ->willReturnCallback(
+                function ($option) use ($options) {
+                    return $options[$option] ?? null;
+                }
+            );
     }
 }

@@ -12,6 +12,9 @@ declare(strict_types=1);
 namespace Tests\FSi\Component\DataGrid;
 
 use FSi\Component\DataGrid\DataGrid;
+use FSi\Component\DataGrid\DataGridFactory;
+use FSi\Component\DataGrid\DataGridInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Tests\FSi\Component\DataGrid\Fixtures\FooExtension;
 use Tests\FSi\Component\DataGrid\Fixtures\ColumnType\FooType;
 use Tests\FSi\Component\DataGrid\Fixtures\Entity;
@@ -24,54 +27,9 @@ use TypeError;
 
 class DataGridTest extends TestCase
 {
-    /**
-     * @var DataGridFactoryInterface
-     */
-    private $factory;
-
-    /**
-     * @var DataMapperInterface
-     */
-    private $dataMapper;
-
-    /**
-     * @var DataGrid
-     */
-    private $datagrid;
-
-    protected function setUp(): void
-    {
-        $this->dataMapper = $this->createMock(DataMapperInterface::class);
-        $this->dataMapper->method('getData')
-            ->willReturnCallback(
-                function ($field, $object) {
-                    if ('name' === $field) {
-                        return $object->getName();
-                    }
-
-                    return null;
-                }
-            );
-
-        $this->dataMapper
-            ->method('setData')
-            ->willReturnCallback(
-                function ($field, $object, $value) {
-                    if ('name' === $field) {
-                        $object->setName($value);
-                    }
-                }
-            );
-
-        $this->factory = $this->createMock(DataGridFactoryInterface::class);
-        $this->factory->method('getExtensions')
-            ->willReturn([new FooExtension()]);
-
-        $this->factory->method('getColumnType')->with(self::equalTo('foo'))->willReturn(new FooType());
-        $this->factory->method('hasColumnType')->with(self::equalTo('foo'))->willReturn(true);
-
-        $this->datagrid = new DataGrid('grid', $this->factory, $this->dataMapper);
-    }
+    private DataGridFactoryInterface $factory;
+    private DataMapperInterface $dataMapper;
+    private DataGridInterface $datagrid;
 
     public function testGetName(): void
     {
@@ -86,7 +44,7 @@ class DataGridTest extends TestCase
         self::assertTrue($this->datagrid->hasColumnType('foo'));
         self::assertFalse($this->datagrid->hasColumnType('this_type_cant_exists'));
 
-        self::assertInstanceOf(FooType::class, $this->datagrid->getColumn('foo1'));
+        self::assertInstanceOf(FooType::class, $this->datagrid->getColumn('foo1')->getType());
 
         self::assertTrue($this->datagrid->hasColumn('foo1'));
         $column = $this->datagrid->getColumn('foo1');
@@ -94,7 +52,7 @@ class DataGridTest extends TestCase
         $this->datagrid->removeColumn('foo1');
         self::assertFalse($this->datagrid->hasColumn('foo1'));
 
-        $this->datagrid->addColumn($column);
+        $this->datagrid->addColumnInstance($column);
         self::assertEquals($column, $this->datagrid->getColumn('foo1'));
 
         self::assertCount(1, $this->datagrid->getColumns());
@@ -131,10 +89,6 @@ class DataGridTest extends TestCase
         $this->datagrid->setData($gridData);
 
         self::assertSameSize($gridData, $this->datagrid->createView());
-
-        $gridBrokenData = false;
-        $this->expectException(TypeError::class);
-        $this->datagrid->setData($gridBrokenData);
     }
 
     public function testCreateView(): void
@@ -170,5 +124,39 @@ class DataGridTest extends TestCase
         }
 
         self::assertEquals(array_keys($gridData), $keys);
+    }
+
+    protected function setUp(): void
+    {
+        $this->dataMapper = $this->createMock(DataMapperInterface::class);
+        $this->dataMapper->method('getData')
+            ->willReturnCallback(
+                function ($field, $object) {
+                    if ('name' === $field) {
+                        return $object->getName();
+                    }
+
+                    return null;
+                }
+            );
+
+        $this->dataMapper->method('setData')
+            ->willReturnCallback(
+                function ($field, $object, $value) {
+                    if ('name' === $field) {
+                        $object->setName($value);
+                    }
+                }
+            );
+
+        $this->factory = new DataGridFactory(
+            [new FooExtension()],
+            $this->dataMapper,
+            $this->createMock(EventDispatcherInterface::class)
+        );
+
+        $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
+
+        $this->datagrid = new DataGrid('grid', $this->factory, $this->dataMapper, $eventDispatcher);
     }
 }

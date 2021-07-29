@@ -26,6 +26,7 @@ class DBALExtension extends DriverExtension
 
     public function preGetResult(DriverEvent\DriverEventArgs $event): void
     {
+        /** @var array<DBALFieldInterface> $fields */
         $fields = $event->getFields();
         $sortedFields = $this->sortFields($fields);
 

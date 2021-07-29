@@ -9,75 +9,68 @@
 
 declare(strict_types=1);
 
-namespace Tests\FSi\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
+namespace Tests\FSi\Component\DataGrid\Extension\Gedmo\ColumnType;
 
 use Doctrine\Common\EventManager;
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\Mapping\ClassMetadataFactory;
 use Doctrine\Persistence\ObjectManager;
+use FSi\Component\DataGrid\DataGridFactory;
+use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
+use FSi\Component\DataGrid\Extension\Doctrine\ColumnType\Entity;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\PropertyAccess\PropertyAccess;
 use Tests\FSi\Component\DataGrid\Fixtures\EntityTree;
 use FSi\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\DataGridInterface;
-use Gedmo\Tree\Entity\Repository\NestedTreeRepository;
 use Gedmo\Tree\RepositoryInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Gedmo\Tree\Strategy;
 use Gedmo\Tree\TreeListener;
+use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
-class TreeTypeTest extends TestCase
+class TreeTest extends TestCase
 {
     public function testWrongValue(): void
     {
         $registry = $this->createMock(ManagerRegistry::class);
+        $dataGridFactory = new DataGridFactory(
+            [new SimpleDataGridExtension(new DefaultColumnOptionsExtension(), new Tree($registry))],
+            $this->createMock(DataMapperInterface::class),
+            $this->createMock(EventDispatcherInterface::class)
+        );
 
-        $column = new Tree($registry);
-        $column->setName('tree');
-        $column->initOptions();
+        $dataGrid = $this->getDataGridMock();
 
-        $extension = new DefaultColumnOptionsExtension();
-        $extension->initOptions($column);
-
-        $object = 'This is string, not object';
+        $column = $dataGridFactory->createColumn($dataGrid, Tree::class, 'tree', ['field_mapping' => ['id']]);
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Column "gedmo_tree" must read value from object.');
-        $column->getValue($object);
+
+        $dataGridFactory->createCellView($column, ['This is string, not object']);
     }
 
     public function testGetValue(): void
     {
-        $dataGrid = $this->createMock(DataGridInterface::class);
         $registry = $this->getManagerRegistry();
-        $dataMapper = $this->createMock(DataMapperInterface::class);
+        $dataGridFactory = new DataGridFactory(
+            [new SimpleDataGridExtension(new DefaultColumnOptionsExtension(), new Tree($registry))],
+            $this->createMock(DataMapperInterface::class),
+            $this->createMock(EventDispatcherInterface::class)
+        );
 
-        $dataMapper->method('getData')->willReturn(new EntityTree('foo'));
+        $dataGrid = $this->getDataGridMock();
 
-        $column = new Tree($registry);
-        $column->setName('tree');
-        $column->initOptions();
-
-        $extension = new DefaultColumnOptionsExtension();
-        $extension->initOptions($column);
-
-        $column->setDataMapper($dataMapper);
-        $column->setOption('field_mapping', ['foo']);
-        $column->setDataGrid($dataGrid);
-        $object = new EntityTree("foo");
-
-        $column->getValue($object);
-
-        $view = $column->createCellView($object, '0');
-        $column->buildCellView($view);
+        $column = $dataGridFactory->createColumn($dataGrid, Tree::class, 'tree', ['field_mapping' => ['id']]);
+        $view = $dataGridFactory->createCellView($column, new EntityTree("foo"));
 
         self::assertSame(
             [
-                "row" => "0",
                 "id" => "foo",
                 "root" => "root",
                 "left" => "left",
@@ -86,11 +79,14 @@ class TreeTypeTest extends TestCase
                 "children" => 2,
                 "parent" => "bar",
             ],
-            $view->getAttributes()
+            $view->getValue()
         );
     }
 
-    protected function getManagerRegistry(): MockObject
+    /**
+     * @return ManagerRegistry&MockObject
+     */
+    protected function getManagerRegistry(): ManagerRegistry
     {
         $managerRegistry = $this->createMock(ManagerRegistry::class);
 
@@ -177,5 +173,17 @@ class TreeTypeTest extends TestCase
         $managerRegistry->method('getManager')->willReturn($em);
 
         return $managerRegistry;
+    }
+
+    /**
+     * @return DataGridInterface&MockObject
+     */
+    private function getDataGridMock(): DataGridInterface
+    {
+        $dataGrid = $this->createMock(DataGridInterface::class);
+        $dataGrid->method('getDataMapper')
+            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
+
+        return $dataGrid;
     }
 }

@@ -9,6 +9,7 @@
 
 namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures;
 
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -21,54 +22,34 @@ class Category
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $id;
+    private ?int $id = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $name;
+    private ?string $name;
 
     /**
      * @ORM\OneToMany(targetEntity="Tests\FSi\Bundle\DataSourceBundle\Fixtures\News", mappedBy="category")
      */
-    private $news;
+    private Collection $news;
 
-    /**
-     * Get id.
-     *
-     * @return integer
-     */
-    public function getId()
+    public function getId(): ?int
     {
         return $this->id;
     }
 
-    /**
-     * Set name.
-     *
-     * @param string $name
-     */
-    public function setName($name)
+    public function setName(string $name): void
     {
         $this->name = $name;
     }
 
-    /**
-     * Get name.
-     *
-     * @return string
-     */
-    public function getName()
+    public function getName(): ?string
     {
         return $this->name;
     }
 
-    /**
-     * Returns name.
-     *
-     * @return string
-     */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->getName();
     }

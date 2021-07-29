@@ -12,6 +12,12 @@ declare(strict_types=1);
 namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony;
 
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\FormExtension;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\DateTime;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Number;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\Text;
+use FSi\Component\DataGrid\Extension\Doctrine\ColumnType\Entity;
+use FSi\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormFactoryInterface;
 
@@ -23,6 +29,11 @@ class FormExtensionTest extends TestCase
         $extension = new FormExtension($formFactory);
 
         self::assertFalse($extension->hasColumnType('foo'));
-        self::assertTrue($extension->hasColumnTypeExtensions('text'));
+        self::assertTrue($extension->hasColumnTypeExtensions($this->createMock(Text::class)));
+        self::assertTrue($extension->hasColumnTypeExtensions($this->createMock(Boolean::class)));
+        self::assertTrue($extension->hasColumnTypeExtensions($this->createMock(Number::class)));
+        self::assertTrue($extension->hasColumnTypeExtensions($this->createMock(DateTime::class)));
+        self::assertTrue($extension->hasColumnTypeExtensions($this->createMock(Entity::class)));
+        self::assertTrue($extension->hasColumnTypeExtensions($this->createMock(Tree::class)));
     }
 }

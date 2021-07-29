@@ -14,25 +14,25 @@ namespace FSi\Component\DataGrid\DataMapper;
 use FSi\Component\DataGrid\Exception\DataMappingException;
 use InvalidArgumentException;
 
-class ChainMapper implements DataMapperInterface
+final class ChainMapper implements DataMapperInterface
 {
     /**
-     * @var DataMapperInterface[]
+     * @var array<DataMapperInterface>
      */
-    protected $mappers = [];
+    private array $mappers = [];
 
     /**
-     * @param DataMapperInterface[] $mappers
+     * @param array<DataMapperInterface> $mappers
      * @throws InvalidArgumentException
      */
     public function __construct(array $mappers)
     {
-        if (!count($mappers)) {
+        if (0 === count($mappers)) {
             throw new InvalidArgumentException('There must be at least one mapper in chain.');
         }
 
         foreach ($mappers as $mapper) {
-            if (!$mapper instanceof DataMapperInterface) {
+            if (false === $mapper instanceof DataMapperInterface) {
                 throw new InvalidArgumentException(
                     sprintf('Mapper needs to implement "%s"', DataMapperInterface::class)
                 );

@@ -15,24 +15,19 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 class StubTranslator implements TranslatorInterface
 {
-    private $locale;
+    private string $locale = 'en';
 
-    public function trans($id, array $parameters = array(), $domain = null, $locale = null)
+    public function trans($id, array $parameters = array(), $domain = null, $locale = null): string
     {
         return '[trans]' . $id . '[/trans]';
     }
 
-    public function transChoice($id, $number, array $parameters = [], $domain = null, $locale = null)
-    {
-        return '[trans]' . $id . '[/trans]';
-    }
-
-    public function setLocale($locale)
+    public function setLocale(string $locale): void
     {
         $this->locale = $locale;
     }
 
-    public function getLocale()
+    public function getLocale(): string
     {
         return $this->locale;
     }

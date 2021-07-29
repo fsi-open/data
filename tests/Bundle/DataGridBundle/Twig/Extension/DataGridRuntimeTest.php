@@ -94,12 +94,12 @@ class DataGridRuntimeTest extends TestCase
         $this->twig->addExtension($this->extension);
 
         $dataGridView = $this->getDataGridView('grid');
-        $dataGridView->method('getColumns')
-            ->willReturn(['title' => $this->getColumnHeaderView($dataGridView, 'text', 'title', 'Title')]);
+        $dataGridView->method('getHeaders')
+            ->willReturn(['title' => $this->getColumnHeaderView($dataGridView, 'text', 'title')]);
 
         $dataGridWithThemeView = $this->getDataGridView('grid_with_theme');
-        $dataGridWithThemeView->method('getColumns')
-            ->willReturn(['title' => $this->getColumnHeaderView($dataGridWithThemeView, 'text', 'title', 'Title')]);
+        $dataGridWithThemeView->method('getHeaders')
+            ->willReturn(['title' => $this->getColumnHeaderView($dataGridWithThemeView, 'text', 'title')]);
 
         $html = $this->twig->render('datagrid/datagrid_widget_test.html.twig', [
             'datagrid' => $dataGridView,
@@ -116,8 +116,8 @@ class DataGridRuntimeTest extends TestCase
         $dataGridView = $this->getDataGridView('grid');
         $dataGridWithThemeView = $this->getDataGridView('grid_with_header_theme');
 
-        $headerView = $this->getColumnHeaderView($dataGridView, 'text', 'title', 'title');
-        $headerWithThemeView = $this->getColumnHeaderView($dataGridWithThemeView, 'text', 'title', 'title');
+        $headerView = $this->getColumnHeaderView($dataGridView, 'text', 'title');
+        $headerWithThemeView = $this->getColumnHeaderView($dataGridWithThemeView, 'text', 'title');
 
         $html = $this->twig->render('datagrid/header_widget_test.html.twig', [
             'grid_with_header_theme' => $dataGridWithThemeView,
@@ -221,7 +221,7 @@ class DataGridRuntimeTest extends TestCase
         ;
 
         $dataGridView = $this->getDataGridView('grid');
-        $dataGridView->method('getColumns')->willReturn([]);
+        $dataGridView->method('getHeaders')->willReturn([]);
         $this->runtime->setTheme($dataGridView, new TemplateWrapper($this->twig, $template));
 
 
@@ -256,7 +256,7 @@ class DataGridRuntimeTest extends TestCase
         $dataGridView = $this->getDataGridView('grid');
         $this->runtime->setTheme($dataGridView, new TemplateWrapper($this->twig, $template));
 
-        $headerView = $this->getColumnHeaderView($dataGridView, 'text', 'title', 'Title');
+        $headerView = $this->getColumnHeaderView($dataGridView, 'text', 'title');
         $headerView->method('getAttribute')->with('translation_domain')->willReturn(null);
 
         $template->expects(self::once())
@@ -432,21 +432,18 @@ class DataGridRuntimeTest extends TestCase
      * @param DataGridViewInterface $dataGridView
      * @param string $type
      * @param string $name
-     * @param string|null $label
      * @return HeaderViewInterface&MockObject
      */
     private function getColumnHeaderView(
         DataGridViewInterface $dataGridView,
         string $type,
-        string $name,
-        ?string $label = null
+        string $name
     ): HeaderViewInterface {
         /** @var HeaderViewInterface&MockObject $column */
         $column = $this->createMock(HeaderViewInterface::class);
         $column->method('getType')->willReturn($type);
-        $column->method('getLabel')->willReturn($label);
         $column->method('getName')->willReturn($name);
-        $column->method('getDataGridView')->willReturn($dataGridView);
+        $column->method('getDataGridName')->willReturn($dataGridView->getName());
 
         return $column;
     }
@@ -469,7 +466,7 @@ class DataGridRuntimeTest extends TestCase
         $column->method('getType')->willReturn($type);
         $column->method('getValue')->willReturn($value);
         $column->method('getName')->willReturn($name);
-        $column->method('getDataGridView')->willReturn($dataGridView);
+        $column->method('getDataGridName')->willReturn($dataGridView->getName());
 
         return $column;
     }

@@ -12,634 +12,287 @@ declare(strict_types=1);
 namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension;
 
 use FSi\Component\DataGrid\Column\CellViewInterface;
+use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Column\ColumnTypeInterface;
+use FSi\Component\DataGrid\DataGridFactory;
+use FSi\Component\DataGrid\DataGridInterface;
+use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
+use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Text;
+use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\ValueFormatColumnOptionsExtension;
 use InvalidArgumentException;
 use PHPUnit\Framework\Error\Error;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\PropertyAccess\PropertyAccess;
+use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 use ValueError;
 
 use const PHP_VERSION_ID;
 
 class ValueFormatColumnOptionsExtensionTest extends TestCase
 {
-    public function testBuildCellView(): void
+    private ValueFormatColumnOptionsExtension $extension;
+
+    public function testValueGlueOption(): void
     {
-        $extension = new ValueFormatColumnOptionsExtension();
+        $options = [
+            'empty_value' => '',
+            'field_mapping' => [],
+            'value_glue' => '-',
+        ];
 
-        $column = $this->createMock(ColumnTypeInterface::class);
-        $view = $this->createMock(CellViewInterface::class);
-
-        $column->expects(self::exactly(5))
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'value_glue':
-                            return '-';
-
-                        case 'empty_value':
-                            return '';
-
-                        case 'field_mapping':
-                            return [];
-                    }
-
-                    return null;
-                }
-            );
-
-        $view->method('getValue')->willReturn(['foo', 'bar']);
-        $view->method('setValue')->with('foo-bar');
-
-        $extension->buildCellView($column, $view);
+        $this->assertFilteredValue($options, ['foo', 'bar'], 'foo-bar');
     }
 
-    public function testBuildCellViewWithoutFormatAndGlue(): void
+    public function testEmptyFormatOptions(): void
     {
-        $extension = new ValueFormatColumnOptionsExtension();
-        $view = $this->createMock(CellViewInterface::class);
-        $column = $this->createMock(ColumnTypeInterface::class);
+        $options = [
+            'empty_value' => '',
+            'field_mapping' => [],
+            'value_glue' => null,
+            'value_format' => null,
+        ];
 
-        $column->expects(self::exactly(5))
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'value_glue':
-                        case 'value_format':
-                            return null;
-
-                        case 'empty_value':
-                            return '';
-
-                        case 'field_mapping':
-                            return [];
-                    }
-
-                    return null;
-                }
-            );
-
-        $view->expects(self::once())->method('getValue')->willReturn(['foo']);
-        $view->expects(self::once())->method('setValue')->with('foo');
-
-        $extension->buildCellView($column, $view);
+        $this->assertFilteredValue($options, ['foo'], 'foo');
     }
 
-    public function testBuildCellViewWithFormatAndGlue(): void
+    public function testFormatAndGlueOptions(): void
     {
-        $extension = new ValueFormatColumnOptionsExtension();
-        $view = $this->createMock(CellViewInterface::class);
-        $column = $this->createMock(ColumnTypeInterface::class);
+        $options = [
+            'value_format' => '<b>%s</b>',
+            'value_glue' => '<br/>',
+            'empty_value' => '',
+            'field_mapping' => [],
+        ];
 
-        $column->expects(self::exactly(5))
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'value_format':
-                            return '<b>%s</b>';
-
-                        case 'value_glue':
-                            return '<br/>';
-
-                        case 'empty_value':
-                            return '';
-
-                        case 'field_mapping':
-                            return [];
-                    }
-
-                    return null;
-                }
-            );
-
-        $view->expects(self::once())->method('getValue')->willReturn(['foo', 'bar']);
-        $view->expects(self::once())->method('setValue')->with('<b>foo</b><br/><b>bar</b>');
-
-        $extension->buildCellView($column, $view);
+        $this->assertFilteredValue($options, ['foo', 'bar'], '<b>foo</b><br/><b>bar</b>');
     }
 
-    public function testBuildCellViewWithoutFormatAndGlueWithValueArray(): void
+    public function testEmptyFormatAndGlueWithArrayValue(): void
     {
-        $extension = new ValueFormatColumnOptionsExtension();
-        $view = $this->createMock(CellViewInterface::class);
-        $column = $this->createMock(ColumnTypeInterface::class);
+        $options = [
+            'value_format' => null,
+            'value_glue' => null,
+            'empty_value' => '',
+            'field_mapping' => [],
+        ];
 
-        $column->expects(self::exactly(5))
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'value_format':
-                        case 'value_glue':
-                            return null;
-
-                        case 'empty_value':
-                            return '';
-
-                        case 'field_mapping':
-                            return [];
-                    }
-
-                    return null;
-                }
-            );
-
-        $view->expects(self::once())->method('getValue')->willReturn(['foo', 'bar']);
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'At least one of "value_format" or "value_glue" option is missing in column: "".'
-        );
-        $extension->buildCellView($column, $view);
+        $this->assertFilteredValue($options, ['foo', 'bar'], 'unreachable');
     }
 
-    public function testBuildCellViewWithValidTemplate(): void
+    public function testTemplate(): void
     {
-        $extension = new ValueFormatColumnOptionsExtension();
-        $view = $this->createMock(CellViewInterface::class);
-        $column = $this->createMock(ColumnTypeInterface::class);
+        $options = [
+            'value_format' => '<b>%s</b>',
+            'value_glue' => '',
+            'empty_value' => '',
+            'field_mapping' => [],
+        ];
 
-        $column->expects(self::exactly(5))
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'value_format':
-                            return '<b>%s</b>';
-
-                        case 'value_glue':
-                        case 'empty_value':
-                            return '';
-
-                        case 'field_mapping':
-                            return [];
-                    }
-
-                    return null;
-                }
-            );
-
-        $view->expects(self::once())->method('getValue')->willReturn(['foo']);
-        $view->expects(self::once())->method('setValue')->with('<b>foo</b>');
-
-        $extension->buildCellView($column, $view);
+        $this->assertFilteredValue($options, ['foo'], '<b>foo</b>');
     }
 
-    public function testBuildCellViewWithValidFormatAndValueArray(): void
+    public function testFormatWithoutGlueWithArrayValue(): void
     {
-        $extension = new ValueFormatColumnOptionsExtension();
-        $view = $this->createMock(CellViewInterface::class);
-        $column = $this->createMock(ColumnTypeInterface::class);
+        $options = [
+            'value_format' => '<b>%s</b><br/><b>%s</b>',
+            'value_glue' => null,
+            'empty_value' => '',
+            'field_mapping' => [],
+        ];
 
-        $column->expects(self::exactly(5))
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'value_format':
-                            return '<b>%s</b><br/><b>%s</b>';
-
-                        case 'value_glue':
-                            return null;
-
-                        case 'empty_value':
-                            return '';
-
-                        case 'field_mapping':
-                            return [];
-                    }
-
-                    return null;
-                }
-            );
-
-        $view->expects(self::once())->method('getValue')->willReturn(['foo', 'bar']);
-        $view->expects(self::once())->method('setValue')->with('<b>foo</b><br/><b>bar</b>');
-
-        $extension->buildCellView($column, $view);
+        $this->assertFilteredValue($options, ['foo', 'bar'], '<b>foo</b><br/><b>bar</b>');
     }
 
-    public function testBuildCellViewWithFormatThatHaveTooManyPlaceholders(): void
+    public function testFormatThatHaveTooManyPlaceholders(): void
     {
-        $extension = new ValueFormatColumnOptionsExtension();
-        $view = $this->createMock(CellViewInterface::class);
-        $column = $this->createMock(ColumnTypeInterface::class);
-
-        $column->expects(self::exactly(5))
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'value_format':
-                            return '%s%s';
-
-                        case 'value_glue':
-                            return null;
-
-                        case 'empty_value':
-                            return '';
-
-                        case 'field_mapping':
-                            return [];
-                    }
-
-                    return null;
-                }
-            );
-
-        $view->expects(self::once())->method('getValue')->willReturn(['foo']);
+        $options = [
+            'value_format' => '%s%s',
+            'value_glue' => null,
+            'empty_value' => '',
+            'field_mapping' => [],
+        ];
 
         $this->expectError();
-        $extension->buildCellView($column, $view);
+        $this->assertFilteredValue($options, ['foo'], 'unreachable');
     }
 
-    public function testBuildCellViewWithFormatThatHaveNotEnoughPlaceholders(): void
+    public function testFormatThatHaveNotEnoughPlaceholders(): void
     {
-        $extension = new ValueFormatColumnOptionsExtension();
-        $view = $this->createMock(CellViewInterface::class);
-        $column = $this->createMock(ColumnTypeInterface::class);
+        $options = [
+            'value_format' => '<b>%s</b>',
+            'value_glue' => null,
+            'empty_value' => '',
+            'field_mapping' => [],
+        ];
 
-        $column->expects(self::exactly(5))
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'value_format':
-                            return '<b>%s</b>';
-
-                        case 'value_glue':
-                            return null;
-
-                        case 'empty_value':
-                            return '';
-
-                        case 'field_mapping':
-                            return [];
-                    }
-
-                    return null;
-                }
-            );
-
-        $view->expects(self::once())->method('getValue')->willReturn(['foo', 'bar']);
-        $view->expects(self::once())->method('setValue')->with('<b>foo</b>');
-
-        $extension->buildCellView($column, $view);
+        $this->assertFilteredValue($options, ['foo', 'bar'], '<b>foo</b>');
     }
 
-    public function testBuildCellViewWithEmptyTemplate(): void
+    public function testEmptyTemplate(): void
     {
-        $extension = new ValueFormatColumnOptionsExtension();
-        $view = $this->createMock(CellViewInterface::class);
-        $column = $this->createMock(ColumnTypeInterface::class);
+        $options = [
+            'empty_value' => '',
+            'value_format' => '',
+            'field_mapping' => [],
+        ];
 
-        $column->expects(self::exactly(5))
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'empty_value':
-                        case 'value_format':
-                            return '';
-
-                        case 'value_glue':
-                            break;
-
-                        case 'field_mapping':
-                            return [];
-                    }
-
-                    return null;
-                }
-            );
-
-        $view->expects(self::once())->method('getValue')->willReturn(['foo']);
-        $view->expects(self::once())->method('setValue')->with('');
-
-        $extension->buildCellView($column, $view);
+        $this->assertFilteredValue($options, ['foo', 'bar'], '');
     }
 
-    public function testBuildCellViewWithoutEmptyValue(): void
+    public function testArrayEmptyValue(): void
     {
-        $extension = new ValueFormatColumnOptionsExtension();
-        $view = $this->createMock(CellViewInterface::class);
-        $column = $this->createMock(ColumnTypeInterface::class);
+        $options = [
+            'empty_value' => [],
+            'field_mapping' => [],
+        ];
 
-        $column->expects(self::exactly(5))
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'value_format':
-                            return null;
-
-                        case 'value_glue':
-                            return ' ';
-
-                        case 'empty_value':
-                            return '';
-
-                        case 'field_mapping':
-                            return [];
-                    }
-
-                    return null;
-                }
-            );
-
-        $view->expects(self::once())->method('getValue')->willReturn([null]);
-        $view->expects(self::once())->method('setValue')->with('');
-
-        $extension->buildCellView($column, $view);
+        $this->assertFilteredValue($options, [null], '');
     }
 
-    public function testBuildCellViewWithEmptyValue(): void
+    public function testEmptyValue(): void
     {
-        $extension = new ValueFormatColumnOptionsExtension();
-        $view = $this->createMock(CellViewInterface::class);
-        $column = $this->createMock(ColumnTypeInterface::class);
+        $options = [
+            'empty_value' => 'empty',
+            'field_mapping' => [],
+        ];
 
-        $column->expects(self::exactly(5))
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'value_format':
-                        case 'value_glue':
-                            return null;
-
-                        case 'empty_value':
-                            return 'empty';
-
-                        case 'field_mapping':
-                            return [];
-                    }
-
-                    return null;
-                }
-            );
-
-        $view->expects(self::once())->method('getValue')->willReturn([null]);
-        $view->expects(self::once())->method('setValue')->with('empty');
-
-        $extension->buildCellView($column, $view);
+        $this->assertFilteredValue($options, [null], 'empty');
     }
 
-    public function testBuildCellViewWithEmptyValueAndMultipleValues(): void
+    public function testSingleEmptyValueWithArrayValue(): void
     {
-        $extension = new ValueFormatColumnOptionsExtension();
-        $view = $this->createMock(CellViewInterface::class);
-        $column = $this->createMock(ColumnTypeInterface::class);
+        $options = [
+            'empty_value' => 'empty',
+            'value_glue' => ' ',
+            'field_mapping' => [],
+        ];
 
-        $column->expects(self::exactly(5))
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'value_format':
-                            return null;
-
-                        case 'value_glue':
-                            return ' ';
-
-                        case 'empty_value':
-                            return 'empty';
-
-                        case 'field_mapping':
-                            return [];
-                    }
-
-                    return null;
-                }
-            );
-
-        $view->expects(self::once())
-            ->method('getValue')
-            ->willReturn(
-                [
-                    'val',
-                    '',
-                    null,
-                ]
-            );
-
-        $view->expects(self::once())->method('setValue')->with('val empty empty');
-
-        $extension->buildCellView($column, $view);
+        $this->assertFilteredValue($options, ['val', '', null], 'val empty empty');
     }
 
-    public function testBuildCellViewWithMultipleEmptyValueAndMultipleValues(): void
+    public function testMultipleEmptyValueWithArrayValue(): void
     {
-        $extension = new ValueFormatColumnOptionsExtension();
-        $view = $this->createMock(CellViewInterface::class);
-        $column = $this->createMock(ColumnTypeInterface::class);
+        $options = [
+            'empty_value' => [
+                'fo' => 'foo',
+                'ba' => 'bar'
+            ],
+            'value_glue' => ' ',
+            'field_mapping' => ['fo', 'ba'],
+        ];
 
-        $column->expects(self::exactly(5))
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'value_format':
-                        case 'value_glue':
-                            return null;
-
-                        case 'empty_value':
-                            return [
-                                'fo' => 'foo',
-                                'ba' => 'bar'
-                            ];
-
-                        case 'field_mapping':
-                            return ['fo', 'ba'];
-                    }
-
-                    return null;
-                }
-            );
-
-        $view->expects(self::once())->method('getValue')->willReturn('default');
-        $view->expects(self::once())->method('setValue')->with('default');
-
-        $extension->buildCellView($column, $view);
+        $this->assertFilteredValue($options, ['fo' => null, 'ba' => null], 'foo bar');
     }
 
-    public function testBuildCellViewWithEmptyValueThatNotExistsInMappingFields(): void
+    public function testEmptyValueThatNotExistsInMappingFields(): void
     {
-        $extension = new ValueFormatColumnOptionsExtension();
-        $view = $this->createMock(CellViewInterface::class);
-        $column = $this->createMock(ColumnTypeInterface::class);
-
-        $column->expects(self::exactly(2))
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'value_format':
-                        case 'value_glue':
-                            return null;
-
-                        case 'empty_value':
-                            return [
-                                'fo' => 'empty',
-                            ];
-
-                        case 'field_mapping':
-                            return ['fos'];
-                    }
-
-                    return null;
-                }
-            );
+        $options = [
+            'empty_value' => [
+                'fo' => 'empty',
+            ],
+            'field_mapping' => ['fos'],
+        ];
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Mapping field "fo" doesn\'t exist in column: "".');
-        $extension->buildCellView($column, $view);
+        $this->assertFilteredValue($options, ['unused'], 'unreachable');
     }
 
-    public function testBuildCellViewWithMultipleEmptyValueMultipleValuesAndTemplate(): void
+    public function testMultipleEmptyValueWithArrayValueAndTemplate(): void
     {
-        $extension = new ValueFormatColumnOptionsExtension();
-        $view = $this->createMock(CellViewInterface::class);
-        $column = $this->createMock(ColumnTypeInterface::class);
+        $options = [
+            'empty_value' => [
+                'fo' => 'empty-foo',
+                'ba' => 'empty-bar'
+            ],
+            'value_format' => '"%s" "%s" "%s"',
+            'field_mapping' => ['fo', 'ba', 'ca'],
+        ];
 
-        $column->expects(self::exactly(5))
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'value_format':
-                            return '"%s" "%s" "%s"';
-
-                        case 'value_glue':
-                            return null;
-
-                        case 'empty_value':
-                            return [
-                                'fo' => 'empty-fo',
-                                'ba' => 'empty-bar'
-                            ];
-
-                        case 'field_mapping':
-                            return ['fo', 'ba', 'ca'];
-                    }
-                }
-            );
-
-        $view->expects(self::once())
-            ->method('getValue')
-            ->willReturn(
-                [
-                    'fo' => '',
-                    'ba' => '',
-                    'ca' => null,
-                ]
-            );
-
-        $view->expects(self::once())->method('setValue')->with('"empty-fo" "empty-bar" ""');
-
-        $extension->buildCellView($column, $view);
+        $this->assertFilteredValue($options, ['fo' => '', 'ba' => '', 'ca' => null], '"empty-foo" "empty-bar" ""');
     }
 
-    public function testBuildCellViewWithFormatThatIsClosure(): void
+    public function testClosureFormat(): void
     {
-        $extension = new ValueFormatColumnOptionsExtension();
-        $view = $this->createMock(CellViewInterface::class);
-        $column = $this->createMock(ColumnTypeInterface::class);
-
-        $column->expects(self::exactly(5))
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'value_format':
-                            return static function ($data) {
-                                return $data['fo'] . '-' . $data['ba'];
-                            };
-
-                        case 'value_glue':
-                            return null;
-
-                        case 'empty_value':
-                            return [];
-
-                        case 'field_mapping':
-                            return ['fo', 'ba'];
-                    }
-
-                    return null;
-                }
-            );
-
-        $view->expects(self::once())
-            ->method('getValue')
-            ->willReturn(
-                [
-                    'fo' => 'fo',
-                    'ba' => 'ba',
-                ]
-            );
-
-        $view->expects(self::once())->method('setValue')->with('fo-ba');
-
-        $extension->buildCellView($column, $view);
-    }
-
-    public function testBuildCellViewWithValueThatIsZero(): void
-    {
-        $extension = new ValueFormatColumnOptionsExtension();
-        $view = $this->createMock(CellViewInterface::class);
-        $column = $this->createMock(ColumnTypeInterface::class);
-
-        $column->expects(self::exactly(5))
-            ->method('getOption')
-            ->willReturnCallback(
-                function ($option) {
-                    switch ($option) {
-                        case 'value_glue':
-                            return '';
-
-                        case 'empty_value':
-                            return 'This should not be used.';
-
-                        case 'field_mapping':
-                            return ['fo'];
-                    }
-
-                    return null;
-                }
-            );
-
-        $view->expects(self::once())
-            ->method('getValue')
-            ->willReturn(
-                [
-                    'fo' => 0,
-                ]
-            );
-
-        $view->expects(self::once())->method('setValue')->with(0);
-
-        $extension->buildCellView($column, $view);
-    }
-
-    public function testSetValueFormatThatIsClosure(): void
-    {
-        $column = new Text();
-        $extension = new ValueFormatColumnOptionsExtension();
-        $column->addExtension($extension);
-
-        $column->initOptions();
-        $extension->initOptions($column);
-
-        $column->setOptions([
+        $options = [
+            'empty_value' => [],
             'value_format' => function ($data) {
-                return (string) $data;
+                return $data['fo'] . '-' . $data['ba'];
+            },
+            'field_mapping' => ['fo', 'ba'],
+        ];
+
+        $this->assertFilteredValue($options, ['fo' => 'foo', 'ba' => 'bar'], 'foo-bar');
+    }
+
+    public function testZeroValue(): void
+    {
+        $options = [
+            'empty_value' => 'should not be used',
+            'value_glue' => '',
+            'field_mapping' => ['fo'],
+        ];
+
+        $this->assertFilteredValue($options, ['fo' => 0], '0');
+    }
+
+    public function testFormatClosure(): void
+    {
+        $dataGridFactory = new DataGridFactory(
+            [
+                new SimpleDataGridExtension(new DefaultColumnOptionsExtension(), new Text()),
+                new SimpleDataGridExtension($this->extension, null),
+            ],
+            $this->createMock(DataMapperInterface::class),
+            $this->createMock(EventDispatcherInterface::class)
+        );
+
+        $column = $dataGridFactory->createColumn($this->getDataGridMock(), Text::class, 'text', [
+            'field_mapping' => ['text'],
+            'value_format' => function ($data) {
+                return sprintf('%s %s', $data['text'], $data['text']);
             }
         ]);
+        $cellView = $dataGridFactory->createCellView($column, (object) ['text' => 'bar']);
 
-        self::assertEquals(['for' => 'bar'], $extension->filterValue($column, ['for' => 'bar']));
+        $this->assertSame('bar bar', $cellView->getValue());
+    }
+
+    protected function setUp(): void
+    {
+        $this->extension = new ValueFormatColumnOptionsExtension();
+    }
+
+    /**
+     * @return DataGridInterface&MockObject
+     */
+    private function getDataGridMock(): DataGridInterface
+    {
+        $dataGrid = $this->createMock(DataGridInterface::class);
+        $dataGrid->method('getDataMapper')
+            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
+
+        return $dataGrid;
+    }
+
+    private function assertFilteredValue(array $options, $value, $filteredValue): void
+    {
+        $column = $this->createMock(ColumnInterface::class);
+
+        $column->expects($this->any())
+            ->method('getOption')
+            ->will($this->returnCallback(function (string $option) use ($options) {
+                if (true === array_key_exists($option, $options)) {
+                    return $options[$option];
+                }
+
+                return null;
+            }));
+
+        $this->assertSame($filteredValue, $this->extension->filterValue($column, $value));
     }
 }

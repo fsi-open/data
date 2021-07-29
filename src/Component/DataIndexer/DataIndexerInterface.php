@@ -14,25 +14,23 @@ namespace FSi\Component\DataIndexer;
 interface DataIndexerInterface
 {
     /**
-     * @param mixed $data
+     * @param array|object $data
      * @return string
      */
     public function getIndex($data): string;
 
     /**
      * @param string $index
-     * @return mixed
+     * @return array|object
      */
     public function getData(string $index);
 
     public function getDataSlice(array $indexes): array;
 
-    public function getSeparator(): string;
-
     /**
      * Check if data can be indexed by DataIndexer.
      *
-     * @param mixed $data
+     * @param array|object $data
      * @return void
      */
     public function validateData($data): void;

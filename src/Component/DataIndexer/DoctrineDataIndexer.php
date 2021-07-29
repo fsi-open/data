@@ -21,20 +21,10 @@ use FSi\Component\DataIndexer\Exception\RuntimeException;
 
 class DoctrineDataIndexer implements DataIndexerInterface
 {
-    /**
-     * @var string
-     */
-    protected $separator = "|";
+    private const SEPARATOR = "|";
 
-    /**
-     * @var ObjectManager
-     */
-    protected $manager;
-
-    /**
-     * @var string
-     */
-    protected $class;
+    private ObjectManager $manager;
+    private string $class;
 
     /**
      * @param ManagerRegistry $registry
@@ -78,11 +68,6 @@ class DoctrineDataIndexer implements DataIndexerInterface
                 get_class($data)
             ));
         }
-    }
-
-    public function getSeparator(): string
-    {
-        return $this->separator;
     }
 
     public function getClass(): string
@@ -137,11 +122,7 @@ class DoctrineDataIndexer implements DataIndexerInterface
         return $classMetadata->rootEntityName;
     }
 
-    /**
-     * @param mixed $object
-     * @return array
-     */
-    private function getIndexParts($object): array
+    private function getIndexParts(object $object): array
     {
         $identifiers = $this->getIdentifierFieldNames();
 
@@ -156,12 +137,12 @@ class DoctrineDataIndexer implements DataIndexerInterface
 
     private function joinIndexParts(array $indexes): string
     {
-        return implode($this->separator, $indexes);
+        return implode(self::SEPARATOR, $indexes);
     }
 
     private function splitIndex(string $index, int $identifiersCount): array
     {
-        $indexParts = explode($this->getSeparator(), $index);
+        $indexParts = explode(self::SEPARATOR, $index);
         if (count($indexParts) !== $identifiersCount) {
             throw new RuntimeException(
                 "Can't split index into parts. Maybe you should consider using different separator?"
@@ -194,12 +175,7 @@ class DoctrineDataIndexer implements DataIndexerInterface
         return array_combine($identifiers, $indexParts);
     }
 
-    /**
-     * @param array $searchCriteria
-     * @return object
-     * @throws Exception\RuntimeException
-     */
-    private function tryToFindEntity(array $searchCriteria)
+    private function tryToFindEntity(array $searchCriteria): object
     {
         $entity = $this->getRepository()->findOneBy($searchCriteria);
 

@@ -17,10 +17,7 @@ use FSi\Component\DataSource\Result;
 
 class ResultEventArgs extends DriverEventArgs
 {
-    /**
-     * @var Result
-     */
-    private $result;
+    private Result $result;
 
     /**
      * @param DriverInterface $driver

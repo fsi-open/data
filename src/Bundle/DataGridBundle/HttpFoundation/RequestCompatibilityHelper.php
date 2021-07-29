@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace FSi\Component;
+namespace FSi\Bundle\DataGridBundle\HttpFoundation;
 
 use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\ParameterBag;

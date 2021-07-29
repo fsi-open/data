@@ -12,51 +12,46 @@ declare(strict_types=1);
 namespace FSi\Component\DataGrid;
 
 use FSi\Component\DataGrid\Column\CellViewInterface;
-use FSi\Component\DataGrid\Column\ColumnTypeInterface;
+use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
 use InvalidArgumentException;
 use RuntimeException;
 
-class DataGridRowView implements DataGridRowViewInterface
+final class DataGridRowView implements DataGridRowViewInterface
 {
     /**
-     * @var CellViewInterface[]
+     * @var array<string,CellViewInterface>
      */
-    protected $cellViews = [];
+    private array $cellViews = [];
+    /**
+     * @var array|object
+     */
+    private $source;
+    /**
+     * @var int|string
+     */
+    private $index;
 
     /**
-     * @var mixed
+     * @param array<ColumnInterface> $columns
+     * @param int|string $index
+     * @param array|object $source
      */
-    protected $source;
-
-    /**
-     * @var int
-     */
-    protected $index;
-
-    /**
-     * @param DataGridViewInterface $dataGridView
-     * @param ColumnTypeInterface[] $columns
-     * @param mixed $source
-     * @param int $index
-     * @throws Exception\UnexpectedTypeException
-     */
-    public function __construct(DataGridViewInterface $dataGridView, array $columns, $source, $index)
+    public function __construct(array $columns, $index, $source)
     {
         $this->source = $source;
         $this->index = $index;
         foreach ($columns as $name => $column) {
-            if (!$column instanceof ColumnTypeInterface) {
+            if (false === $column instanceof ColumnInterface) {
                 throw new UnexpectedTypeException(sprintf(
                     'Column object must implement "%s"',
-                    ColumnTypeInterface::class
+                    ColumnInterface::class
                 ));
             }
 
-            $cellView = $column->createCellView($this->source, $index);
-            $cellView->setDataGridView($dataGridView);
-
-            $this->cellViews[$name] = $cellView;
+            $this->cellViews[$name] = $column->getDataGrid()->getFactory()->createCellView($column, $source);
+            $this->cellViews[$name]->setAttribute('row', $index);
+            $this->cellViews[$name]->setAttribute('source', $source);
         }
     }
 
@@ -80,7 +75,7 @@ class DataGridRowView implements DataGridRowViewInterface
         return current($this->cellViews);
     }
 
-    public function key(): ?string
+    public function key()
     {
         return key($this->cellViews);
     }

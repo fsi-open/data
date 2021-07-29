@@ -30,6 +30,7 @@ class DoctrineExtension extends DriverExtension
 
     public function preGetResult(DriverEvent\DriverEventArgs $event): void
     {
+        /** @var array<DoctrineORMFieldInterface> $fields */
         $fields = $event->getFields();
         $sortedFields = $this->sortFields($fields);
 

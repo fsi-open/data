@@ -11,381 +11,408 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnType;
 
-use FSi\Component\DataGrid\Extension\Core\ColumnType\DateTime;
+use DateTime;
+use DateTimeImmutable;
+use FSi\Component\DataGrid\DataGridFactory;
+use FSi\Component\DataGrid\DataGridFactoryInterface;
+use FSi\Component\DataGrid\DataGridInterface;
+use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
+use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
+use FSi\Component\DataGrid\Extension\Core\ColumnType\DateTime as DateTimeColumnType;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\Exception\DataGridColumnException;
+use InvalidArgumentException;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\PropertyAccess\PropertyAccess;
+use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
 class DateTimeTest extends TestCase
 {
-    /**
-     * @var DateTime
-     */
-    private $column;
+    private DataGridFactoryInterface $dataGridFactory;
 
-    protected function setUp(): void
+    public function testDateTimeValue(): void
     {
-        $column = new DateTime();
-        $column->setName('datetime');
-        $column->initOptions();
-
-        $extension = new DefaultColumnOptionsExtension();
-        $extension->initOptions($column);
-
-        $this->column = $column;
-    }
-
-    public function testBasicFilterValue(): void
-    {
-        $dateTimeObject = new \DateTime('2012-05-03 12:41:11');
-
-        $value = [
-            'datetime' => $dateTimeObject
-        ];
-
-        $this->column->setOption('field_mapping', ['datetime']);
-
-        self::assertSame(
-            $this->column->filterValue($value),
-            [
-                'datetime' => $dateTimeObject->format('Y-m-d H:i:s')
-            ]
+        $column = $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            DateTimeColumnType::class,
+            'datetime',
+            ['field_mapping' => ['datetime']]
         );
-    }
 
-    public function testFilterValueFromDateTimeImmutable(): void
-    {
-        if (!class_exists(\DateTimeImmutable::class)) {
-            self::markTestSkipped();
-        }
-
-        $dateTimeObject = new \DateTimeImmutable('2012-05-03 12:41:11');
-
-        $value = [
-            'datetime' => $dateTimeObject
-        ];
-
-        $this->column->setOption('field_mapping', ['datetime']);
-
-        self::assertSame(
-            $this->column->filterValue($value),
-            [
-                'datetime' => $dateTimeObject->format('Y-m-d H:i:s')
-            ]
-        );
-    }
-
-    public function testFilterValueWithNull(): void
-    {
-        $value = [
-            'datetime' => null
-        ];
-
-        $this->column->setOptions([
+        $dateTimeObject = new DateTime('2012-05-03 12:41:11');
+        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+            'datetime' => $dateTimeObject,
         ]);
 
-        self::assertSame(
-            $this->column->filterValue($value),
-            [
-                'datetime' => null
-            ]
+        $this->assertSame(
+            ['datetime' => $dateTimeObject->format('Y-m-d H:i:s')],
+            $cellView->getValue()
+        );
+    }
+
+    public function testDateTimeImmutableValue(): void
+    {
+        $column = $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            DateTimeColumnType::class,
+            'datetime',
+            ['field_mapping' => ['datetime']]
         );
 
+        $dateTimeObject = new DateTimeImmutable('2012-05-03 12:41:11');
+        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+            'datetime' => $dateTimeObject,
+        ]);
+
+        $this->assertSame(
+            ['datetime' => $dateTimeObject->format('Y-m-d H:i:s')],
+            $cellView->getValue()
+        );
+    }
+
+    public function testNullValue(): void
+    {
+        $column = $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            DateTimeColumnType::class,
+            'datetime',
+            ['field_mapping' => ['datetime']]
+        );
+
+        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+            'datetime' => null,
+        ]);
+
+        $this->assertSame(['datetime' => null], $cellView->getValue());
+
         $inputTypes = ['datetime', 'string', 'timestamp'];
-        if (interface_exists(\DateTimeInterface::class)) {
-            $inputTypes[] = 'datetime_interface';
-        }
 
         foreach ($inputTypes as $input_type) {
-            $this->column->setOptions([
-                'input_type' => $input_type
-            ]);
-
-            self::assertSame(
-                $this->column->filterValue($value),
+            $column = $this->dataGridFactory->createColumn(
+                $this->getDataGridMock(),
+                DateTimeColumnType::class,
+                'datetime',
                 [
-                    'datetime' => null
+                    'field_mapping' => ['datetime'],
+                    'input_type' => $input_type,
                 ]
             );
+
+            $cellView = $this->dataGridFactory->createCellView($column, (object) [
+                'datetime' => null,
+            ]);
+
+            $this->assertSame(['datetime' => null], $cellView->getValue());
         }
     }
 
     public function testFormatOption(): void
     {
-        $dateTimeObject = new \DateTime('2012-05-03 12:41:11');
+        $column = $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            DateTimeColumnType::class,
+            'datetime',
+            [
+                'field_mapping' => ['datetime'],
+                'datetime_format' => 'Y.d.m',
+            ]
+        );
 
-        $value = [
-            'datetime' => $dateTimeObject
-        ];
-
-        $this->column->setOptions([
-            'field_mapping' => ['datetime'],
-            'datetime_format' => 'Y.d.m'
+        $dateTimeObject = new DateTime('2012-05-03 12:41:11');
+        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+            'datetime' => $dateTimeObject,
         ]);
 
-        self::assertSame(
-            $this->column->filterValue($value),
-            [
-                'datetime' => $dateTimeObject->format('Y.d.m')
-            ]
+        $this->assertSame(
+            ['datetime' => $dateTimeObject->format('Y.d.m')],
+            $cellView->getValue()
         );
     }
 
     public function testFormatOptionWithDateTimeImmutable(): void
     {
-        if (!class_exists(\DateTimeImmutable::class)) {
-            self::markTestSkipped();
-        }
+        $column = $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            DateTimeColumnType::class,
+            'datetime',
+            [
+                'field_mapping' => ['datetime'],
+                'datetime_format' => 'Y.d.m',
+            ]
+        );
 
-        $dateTimeObject = new \DateTimeImmutable('2012-05-03 12:41:11');
-
-        $value = [
-            'datetime' => $dateTimeObject
-        ];
-
-        $this->column->setOptions([
-            'field_mapping' => ['datetime'],
-            'datetime_format' => 'Y.d.m'
+        $dateTimeObject = new DateTimeImmutable('2012-05-03 12:41:11');
+        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+            'datetime' => $dateTimeObject,
         ]);
 
-        self::assertSame(
-            $this->column->filterValue($value),
-            [
-                'datetime' => $dateTimeObject->format('Y.d.m')
-            ]
+        $this->assertSame(
+            ['datetime' => $dateTimeObject->format('Y.d.m')],
+            $cellView->getValue()
         );
     }
 
-    public function testMappingFieldsOptionInputTimestamp(): void
+    public function testTimestampValue(): void
     {
-        $dateTimeObject = new \DateTime('2012-05-03 12:41:11');
-        $brokenValue = [
+        $dateTimeObject = new DateTime('2012-05-03 12:41:11');
+        $brokenValue = (object) [
             'datetime' => $dateTimeObject
         ];
-        $value = [
+        $value = (object) [
             'datetime' => $dateTimeObject->getTimestamp()
         ];
 
-        $this->column->setOptions([
-            'input_type' => 'timestamp',
-        ]);
-
-        $this->column->filterValue($value);
-        self::assertSame(
-            $this->column->filterValue($value),
+        $column = $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            DateTimeColumnType::class,
+            'datetime',
             [
-                'datetime' => $dateTimeObject->format('Y-m-d H:i:s')
+                'field_mapping' => ['datetime'],
+                'input_type' => 'timestamp',
             ]
         );
 
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage(
-            'Value in column "datetime" should be timestamp but "object" type was detected.'
-                . ' Maybe you should consider using different "input" option value?'
+        $cellView = $this->dataGridFactory->createCellView($column, $value);
+
+        $this->assertSame(
+            ['datetime' => $dateTimeObject->format('Y-m-d H:i:s')],
+            $cellView->getValue()
         );
-        $this->column->filterValue($brokenValue);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->dataGridFactory->createCellView($column, $brokenValue);
     }
 
-    public function testMappingFieldsOptionInputStringMissingMappingFieldsFormat(): void
+    public function testStringValueWithMissingFieldsFormat(): void
     {
-        $dateTimeObject = new \DateTime('2012-05-03 12:41:11');
-        $value = [
+        $dateTimeObject = new DateTime('2012-05-03 12:41:11');
+        $value = (object) [
             'datetime' => $dateTimeObject->format('Y-m-d H:i:s')
         ];
 
-        $this->column->setOption('input_type', 'string');
+        $column = $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            DateTimeColumnType::class,
+            'datetime',
+            [
+                'field_mapping' => ['datetime'],
+                'input_type' => 'string',
+            ]
+        );
 
         $this->expectException(DataGridColumnException::class);
-        $this->expectExceptionMessage(
-            '"mapping_fields_format" option is missing. Example: "mapping_fields_format" => "Y-m-d H:i:s"'
-        );
-        $this->column->filterValue($value);
+        $this->dataGridFactory->createCellView($column, $value);
     }
 
-    public function testMappingFieldsOptionInputString(): void
+    public function testStringValue(): void
     {
-        $dateTimeObject = new \DateTime('2012-05-03 12:41:11');
-
-        $brokenValue = [
+        $dateTimeObject = new DateTime('2012-05-03 12:41:11');
+        $brokenValue = (object) [
             'datetime' => $dateTimeObject
         ];
-
-        $value = [
+        $value = (object) [
             'datetime' => $dateTimeObject->format('Y-m-d H:i:s')
         ];
 
-        $this->column->setOptions([
-            'input_type' => 'string',
-            'input_field_format' => 'Y-m-d H:i:s'
-        ]);
-
-        self::assertSame(
-            $this->column->filterValue($value),
+        $column = $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            DateTimeColumnType::class,
+            'datetime',
             [
-                'datetime' => $dateTimeObject->format('Y-m-d H:i:s')
+                'field_mapping' => ['datetime'],
+                'input_field_format' => 'Y-m-d H:i:s',
+                'input_type' => 'string',
+            ]
+        );
+        $cellView = $this->dataGridFactory->createCellView($column, $value);
+
+        $this->assertSame(
+            ['datetime' => $dateTimeObject->format('Y-m-d H:i:s')],
+            $cellView->getValue()
+        );
+
+        $this->expectException(DataGridColumnException::class);
+        $this->dataGridFactory->createCellView($column, $brokenValue);
+    }
+
+    public function testArrayValueWithMissingFieldsFormat(): void
+    {
+        $dateTimeObject = new DateTime('2012-05-03 12:41:11');
+        $dateObject = new DateTime('2012-05-03');
+        $value = (object) [
+            'datetime' => $dateTimeObject->format('Y-m-d H:i:s'),
+            'time' => $dateObject->format('Y-m-d H:i:s'),
+        ];
+
+        $column = $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            DateTimeColumnType::class,
+            'datetime',
+            [
+                'field_mapping' => ['datetime', 'time'],
+                'input_type' => 'array',
             ]
         );
 
         $this->expectException(DataGridColumnException::class);
-        $this->expectExceptionMessage('Value in field "datetime" is not a valid string.');
-        $this->column->filterValue($brokenValue);
+        $this->dataGridFactory->createCellView($column, $value);
     }
 
-    public function testMappingFieldsOptionInputArrayMissingMappingFieldsFormat(): void
+    public function testArrayValueWithMissingFieldsFormatForDateTimeImmutable(): void
     {
-        $dateTimeObject = new \DateTime('2012-05-03 12:41:11');
-        $dateObject = new \DateTime('2012-05-03');
-
-        $value = [
+        $dateTimeObject = new DateTimeImmutable('2012-05-03 12:41:11');
+        $dateObject = new DateTimeImmutable('2012-05-03');
+        $value = (object) [
             'datetime' => $dateTimeObject->format('Y-m-d H:i:s'),
-            'time' => $dateObject->format('Y-m-d H:i:s')
+            'time' => $dateObject->format('Y-m-d H:i:s'),
         ];
 
-        $this->column->setOption('input_type', 'array');
-        $this->expectException(DataGridColumnException::class);
-        $this->expectExceptionMessage(
-            '"input_field_format" option is missing. Example: '
-                . '"input_field_format" => array("mapping_field_name" => array("input" => "datetime"))'
-        );
-        $this->column->filterValue($value);
-    }
-
-    public function testMappingFieldsOptionInputArrayMissingMappingFieldsFormatForDateTimeImmutable(): void
-    {
-        if (!class_exists(\DateTimeImmutable::class)) {
-            self::markTestSkipped();
-        }
-
-        $dateTimeObject = new \DateTimeImmutable('2012-05-03 12:41:11');
-        $dateObject = new \DateTimeImmutable('2012-05-03');
-
-        $value = [
-            'datetime' => $dateTimeObject->format('Y-m-d H:i:s'),
-            'time' => $dateObject->format('Y-m-d H:i:s')
-        ];
-
-        $this->column->setOption('input_type', 'array');
-
-        $this->expectException(DataGridColumnException::class);
-        $this->expectExceptionMessage(
-            '"input_field_format" option is missing. Example: '
-                . '"input_field_format" => array("mapping_field_name" => array("input" => "datetime"))'
-        );
-        $this->column->filterValue($value);
-    }
-
-    public function testMappingFieldsOptionInputArrayWrongMappingFieldsFormat(): void
-    {
-        $dateTimeObject = new \DateTime('2012-05-03 12:41:11');
-        $dateObject = new \DateTime('2012-05-03');
-        $value = [
-            'datetime' => $dateTimeObject->format('Y-m-d H:i:s'),
-            'time' => $dateObject->format('Y-m-d H:i:s')
-        ];
-
-        $this->column->setOptions([
-            'input_type' => 'string',
-            'input_field_format' => [
-                'datetime' => 'string',
-                'time' => 'string'
+        $column = $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            DateTimeColumnType::class,
+            'datetime',
+            [
+                'field_mapping' => ['datetime', 'time'],
+                'input_type' => 'array',
             ]
-        ]);
+        );
 
         $this->expectException(DataGridColumnException::class);
-        $this->expectExceptionMessage(
-            'When using input type "string", "mapping_fields_format" option must be an string that contains '
-                . 'valid data format'
-        );
-        $this->column->filterValue($value);
+        $this->dataGridFactory->createCellView($column, $value);
     }
 
-    public function testMappingFieldsOptionInputArray(): void
+    public function testArrayValueWithWrongFieldsFormat(): void
     {
-        $dateTimeObject = new \DateTime('2012-05-03 12:41:11');
-        $dateTimeImmutableObject = null;
-        if (class_exists(\DateTimeImmutable::class)) {
-            $dateTimeImmutableObject = new \DateTimeImmutable('2012-05-03 12:41:11');
-        }
-        $dateObject = new \DateTime('2012-05-03');
-        $value = [
+        $dateTimeObject = new DateTime('2012-05-03 12:41:11');
+        $dateObject = new DateTime('2012-05-03');
+        $value = (object) [
+            'datetime' => $dateTimeObject->format('Y-m-d H:i:s'),
+            'time' => $dateObject->format('Y-m-d H:i:s'),
+        ];
+
+        $column = $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            DateTimeColumnType::class,
+            'datetime',
+            [
+                'field_mapping' => ['datetime', 'time'],
+                'input_type' => 'string',
+                'input_field_format' => [
+                    'datetime' => 'string',
+                    'time' => 'string',
+                ],
+            ]
+        );
+
+        $this->expectException(DataGridColumnException::class);
+        $this->dataGridFactory->createCellView($column, $value);
+    }
+
+    public function testArrayValue(): void
+    {
+        $dateTimeObject = new DateTime('2012-05-03 12:41:11');
+        $dateObject = new DateTime('2012-05-03');
+        $dateTimeImmutableObject = new DateTimeImmutable('2012-05-03 12:41:11');
+        $value = (object) [
             'datetime' => $dateTimeObject,
             'time' => $dateObject,
             'string' => $dateTimeObject->format('Y-m-d H:i:s'),
-            'timestamp' => $dateTimeObject->getTimestamp()
+            'timestamp' => $dateTimeObject->getTimestamp(),
+            'datetime_immutable' => $dateTimeImmutableObject,
         ];
-        if (class_exists(\DateTimeImmutable::class)) {
-            $value['datetime_immutable'] = $dateTimeImmutableObject;
-        }
 
-        $inputFieldFormat = [
-            'datetime' => ['input_type' => 'datetime'],
-            'time' => ['input_type' => 'datetime'],
-            'string' => ['input_type' => 'string', 'datetime_format' => 'Y-m-d H:i:s'],
-            'timestamp' => ['input_type' => 'timestamp']
-        ];
-        if (class_exists(\DateTimeImmutable::class)) {
-            $inputFieldFormat['datetime_immutable'] = ['input_type' => 'datetime_interface'];
-        }
-        $this->column->setOptions([
-            'input_type' => 'array',
-            'input_field_format' => $inputFieldFormat
-        ]);
+        $column = $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            DateTimeColumnType::class,
+            'datetime',
+            [
+                'field_mapping' => ['datetime', 'time', 'string', 'timestamp', 'datetime_immutable'],
+                'input_type' => 'array',
+                'input_field_format' => [
+                    'datetime' => ['input_type' => 'datetime'],
+                    'time' => ['input_type' => 'datetime'],
+                    'string' => ['input_type' => 'string', 'datetime_format' => 'Y-m-d H:i:s'],
+                    'timestamp' => ['input_type' => 'timestamp'],
+                    'datetime_immutable' => ['input_type' => 'datetime']
+                ],
+            ]
+        );
+        $cellView = $this->dataGridFactory->createCellView($column, $value);
 
         $expectedResult = [
             'datetime' => $dateTimeObject->format('Y-m-d H:i:s'),
             'time' => $dateObject->format('Y-m-d 00:00:00'),
             'string' => $dateTimeObject->format('Y-m-d H:i:s'),
             'timestamp' => date('Y-m-d H:i:s', $dateTimeObject->getTimestamp()),
+            'datetime_immutable' => $dateTimeImmutableObject->format('Y-m-d H:i:s')
         ];
-        if (class_exists(\DateTimeImmutable::class)) {
-            $expectedResult['datetime_immutable'] = $dateTimeImmutableObject->format('Y-m-d H:i:s');
-        }
-        self::assertSame($this->column->filterValue($value), $expectedResult);
+
+        $this->assertSame($expectedResult, $cellView->getValue());
     }
 
-    public function testMappingFieldsOptionInputArrayWithFormat(): void
+    public function testArrayValueWithFormat(): void
     {
-        $dateTimeObject = new \DateTime('2012-05-03 12:41:11');
-        $dateTimeImmutableObject = null;
-        if (class_exists(\DateTimeImmutable::class)) {
-            $dateTimeImmutableObject = new \DateTimeImmutable('2012-05-03 12:41:11');
-        }
-        $dateObject = new \DateTime('2012-05-03');
-        $value = [
+        $dateTimeObject = new DateTime('2012-05-03 12:41:11');
+        $dateObject = new DateTime('2012-05-03');
+        $dateTimeImmutableObject = new DateTimeImmutable('2012-05-03 12:41:11');
+        $value = (object) [
             'datetime' => $dateTimeObject,
             'time' => $dateObject,
             'string' => $dateTimeObject->format('Y-m-d H:i:s'),
-            'timestamp' => $dateTimeObject->getTimestamp()
-        ];
-        if (class_exists(\DateTimeImmutable::class)) {
-            $value['datetime_immutable'] = $dateTimeImmutableObject;
-        }
-
-        $inputFieldFormat = [
-            'datetime' => ['input_type' => 'datetime'],
-            'time' => ['input_type' => 'datetime'],
-            'string' => ['input_type' => 'string', 'datetime_format' => 'Y-m-d H:i:s'],
-            'timestamp' => ['input_type' => 'timestamp']
+            'timestamp' => $dateTimeObject->getTimestamp(),
+            'datetime_immutable' => $dateTimeImmutableObject,
         ];
 
-        if (class_exists(\DateTimeImmutable::class)) {
-            $inputFieldFormat['datetime_immutable'] = ['input_type' => 'datetime_interface'];
-        }
-        $this->column->setOptions([
-            'input_type' => 'array',
-            'datetime_format' => 'Y.d.m',
-            'input_field_format' => $inputFieldFormat
-        ]);
+        $column = $this->dataGridFactory->createColumn(
+            $this->getDataGridMock(),
+            DateTimeColumnType::class,
+            'datetime',
+            [
+                'datetime_format' => 'Y.d.m',
+                'field_mapping' => ['datetime', 'time', 'string', 'timestamp', 'datetime_immutable'],
+                'input_type' => 'array',
+                'input_field_format' => [
+                    'datetime' => ['input_type' => 'datetime'],
+                    'time' => ['input_type' => 'datetime'],
+                    'string' => ['input_type' => 'string', 'datetime_format' => 'Y-m-d H:i:s'],
+                    'timestamp' => ['input_type' => 'timestamp'],
+                    'datetime_immutable' => ['input_type' => 'datetime'],
+                ],
+            ]
+        );
+        $cellView = $this->dataGridFactory->createCellView($column, $value);
 
         $expectedResult = [
             'datetime' => $dateTimeObject->format('Y.d.m'),
             'time' => $dateObject->format('Y.d.m'),
             'string' => $dateTimeObject->format('Y.d.m'),
-            'timestamp' => $dateTimeObject->format('Y.d.m')
+            'timestamp' => $dateTimeObject->format('Y.d.m'),
+            'datetime_immutable' => $dateTimeImmutableObject->format('Y.d.m'),
         ];
-        if (class_exists(\DateTimeImmutable::class)) {
-            $expectedResult['datetime_immutable'] = $dateTimeImmutableObject->format('Y.d.m');
-        }
-        self::assertSame($this->column->filterValue($value), $expectedResult);
+
+        $this->assertSame($expectedResult, $cellView->getValue());
+    }
+
+    protected function setUp(): void
+    {
+        $this->dataGridFactory = new DataGridFactory(
+            [new SimpleDataGridExtension(new DefaultColumnOptionsExtension(), new DateTimeColumnType())],
+            $this->createMock(DataMapperInterface::class),
+            $this->createMock(EventDispatcherInterface::class)
+        );
+    }
+
+    /**
+     * @return DataGridInterface&MockObject
+     */
+    private function getDataGridMock(): DataGridInterface
+    {
+        $dataGrid = $this->createMock(DataGridInterface::class);
+        $dataGrid->method('getDataMapper')
+            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
+
+        return $dataGrid;
     }
 }

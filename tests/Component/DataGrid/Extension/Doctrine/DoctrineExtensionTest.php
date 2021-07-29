@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataGrid\Extension\Doctrine;
 
+use FSi\Component\DataGrid\Extension\Doctrine\ColumnType\Entity;
 use FSi\Component\DataGrid\Extension\Doctrine\DoctrineExtension;
 use PHPUnit\Framework\TestCase;
 
@@ -21,6 +22,7 @@ class DoctrineExtensionTest extends TestCase
         $extension = new DoctrineExtension();
 
         self::assertTrue($extension->hasColumnType('entity'));
+        self::assertTrue($extension->hasColumnType(Entity::class));
         self::assertFalse($extension->hasColumnType('foo'));
     }
 }

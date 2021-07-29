@@ -19,13 +19,6 @@ use PHPUnit\Framework\TestCase;
 
 class ChainMapperTest extends TestCase
 {
-    public function testMappersInChainWithInvalidMappers(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage(sprintf('Mapper needs to implement "%s"', DataMapperInterface::class));
-        new ChainMapper(['foo', 'bar']);
-    }
-
     public function testMappersInChainWithEmptyMappersArray(): void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -43,7 +36,7 @@ class ChainMapperTest extends TestCase
 
         $chain = new ChainMapper([$mapper, $mapper1]);
 
-        self::assertSame('foo', $chain->getData('foo', 'bar'));
+        self::assertSame('foo', $chain->getData('foo', ['bar']));
     }
 
     public function testSetDataWithTwoMappers(): void
@@ -52,10 +45,10 @@ class ChainMapperTest extends TestCase
         $mapper1 = $this->createMock(DataMapperInterface::class);
 
         $mapper->expects(self::once())->method('setData')->willThrowException(new DataMappingException());
-        $mapper1->expects(self::once())->method('setData')->with('foo', 'bar', 'test');
+        $mapper1->expects(self::once())->method('setData')->with('foo', ['bar'], 'test');
 
         $chain = new ChainMapper([$mapper, $mapper1]);
 
-        $chain->setData('foo', 'bar', 'test');
+        $chain->setData('foo', ['bar'], 'test');
     }
 }

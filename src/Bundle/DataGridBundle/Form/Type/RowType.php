@@ -13,27 +13,28 @@ namespace FSi\Bundle\DataGridBundle\Form\Type;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class RowType extends AbstractType
+final class RowType extends AbstractType
 {
     /**
-     * @var array
+     * @param FormBuilderInterface $builder
+     * @param array{fields:array{name:string,type:string,options:array}} $options
      */
-    protected $fields;
-
-    public function __construct(array $fields = [])
-    {
-        $this->fields = $fields;
-    }
-
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        foreach ($this->fields as $field) {
+        foreach ($options['fields'] as $field) {
             $builder->add($field['name'], $field['type'], $field['options']);
         }
     }
 
-    public function getName(): string
+    public function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setDefault('fields', []);
+        $resolver->setAllowedTypes('fields', 'array');
+    }
+
+    public function getBlockPrefix(): string
     {
         return 'row';
     }
