@@ -15,7 +15,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 abstract class ColumnAbstractTypeExtension implements ColumnTypeExtensionInterface
 {
-    public function bindData(ColumnInterface $column, $data, $object, $index): void
+    public function bindData(ColumnInterface $column, $index, $object, $data): void
     {
     }
 

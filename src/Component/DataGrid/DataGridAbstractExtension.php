@@ -18,14 +18,13 @@ use FSi\Component\DataGrid\Exception\DataGridException;
 abstract class DataGridAbstractExtension implements DataGridExtensionInterface
 {
     /**
-     * @var array<string|class-string<ColumnTypeInterface>,array<ColumnTypeExtensionInterface>>
-     */
-    protected array $columnTypesExtensions = [];
-
-    /**
      * @var array<string|class-string<ColumnTypeInterface>,ColumnTypeInterface>
      */
     protected array $columnTypes = [];
+    /**
+     * @var array<string|class-string<ColumnTypeInterface>,array<ColumnTypeExtensionInterface>>
+     */
+    protected array $columnTypesExtensions = [];
 
     public function getColumnType(string $type): ColumnTypeInterface
     {

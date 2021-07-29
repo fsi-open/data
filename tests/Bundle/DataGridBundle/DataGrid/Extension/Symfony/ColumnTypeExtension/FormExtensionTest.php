@@ -162,7 +162,7 @@ class FormExtensionTest extends TestCase
             'invalid_data' => 'test'
         ];
 
-        $this->extension->bindData($column, $data, $object, 1);
+        $this->extension->bindData($column, 1, $object, $data);
         $this->dataGridFactory->createCellView($column, 1, $object);
 
         self::assertSame('norbert@fsi.pl', $object->getAuthor());
@@ -198,7 +198,7 @@ class FormExtensionTest extends TestCase
             'author' => 'invalid_value',
         ];
 
-        $this->extension->bindData($column, $data, $object, 1);
+        $this->extension->bindData($column, 1, $object, $data);
         $this->dataGridFactory->createCellView($column, 1, $object);
 
         self::assertNull($object->getAuthor());
@@ -232,7 +232,7 @@ class FormExtensionTest extends TestCase
 
         self::assertNull($object->getCategory());
 
-        $this->extension->bindData($column, $data, $object, 1);
+        $this->extension->bindData($column, 1, $object, $data);
         $this->dataGridFactory->createCellView($column, 1, $object);
 
         self::assertInstanceOf($nestedEntityClass, $object->getCategory());

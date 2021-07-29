@@ -172,7 +172,7 @@ final class DataGrid implements DataGridInterface
                 $columnType = $column->getType();
 
                 foreach ($this->dataGridFactory->getColumnTypeExtensions($columnType) as $extension) {
-                    $extension->bindData($column, $values, $source, $index);
+                    $extension->bindData($column, $index, $source, $values);
                 }
             }
         }

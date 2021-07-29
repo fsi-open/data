@@ -46,7 +46,7 @@ class FormExtension extends ColumnAbstractTypeExtension
         $this->csrfProtectionEnabled = $csrfProtectionEnabled;
     }
 
-    public function bindData(ColumnInterface $column, $data, $object, $index): void
+    public function bindData(ColumnInterface $column, $index, $object, $data): void
     {
         if (false === $column->getOption('editable')) {
             return;

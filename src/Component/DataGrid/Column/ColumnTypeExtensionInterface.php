@@ -17,11 +17,11 @@ interface ColumnTypeExtensionInterface
 {
     /**
      * @param ColumnInterface $column
-     * @param mixed $data
-     * @param array<string,mixed>|object $object
      * @param int|string $index
+     * @param array<string,mixed>|object $object
+     * @param mixed $data
      */
-    public function bindData(ColumnInterface $column, $data, $object, $index): void;
+    public function bindData(ColumnInterface $column, $index, $object, $data): void;
 
     public function buildCellView(ColumnInterface $column, CellViewInterface $view): void;
 
