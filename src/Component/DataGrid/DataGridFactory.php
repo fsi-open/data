@@ -27,9 +27,16 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 use function array_key_exists;
+use function count;
 
 class DataGridFactory implements DataGridFactoryInterface
 {
+    /**
+     * @var array<DataGridExtensionInterface>
+     */
+    private array $extensions;
+    private DataMapperInterface $dataMapper;
+    private EventDispatcherInterface $eventDispatcher;
     /**
      * @var array<DataGridInterface>
      */
@@ -38,12 +45,6 @@ class DataGridFactory implements DataGridFactoryInterface
      * @var array<ColumnTypeInterface>
      */
     private array $columnTypes = [];
-    /**
-     * @var array<DataGridExtensionInterface>
-     */
-    private array $extensions;
-    private DataMapperInterface $dataMapper;
-    private EventDispatcherInterface $eventDispatcher;
 
     /**
      * @param array<DataGridExtensionInterface> $extensions
@@ -108,7 +109,7 @@ class DataGridFactory implements DataGridFactoryInterface
             }
         }
 
-        if (empty($extensions)) {
+        if (0 === count($extensions)) {
             return [];
         }
 

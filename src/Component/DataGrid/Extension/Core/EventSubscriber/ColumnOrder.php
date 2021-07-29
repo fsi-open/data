@@ -36,7 +36,9 @@ class ColumnOrder implements EventSubscriberInterface
         $indexedColumns = [];
         foreach ($columns as $column) {
             if ($column->hasOption('display_order')) {
-                if (($order = $column->getOption('display_order')) >= 0) {
+                /** @var int $order */
+                $order = $column->getOption('display_order');
+                if ($order >= 0) {
                     $positive[$column->getName()] = $order;
                 } else {
                     $negative[$column->getName()] = $order;

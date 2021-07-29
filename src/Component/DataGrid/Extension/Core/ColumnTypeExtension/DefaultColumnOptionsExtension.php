@@ -37,13 +37,9 @@ class DefaultColumnOptionsExtension extends ColumnAbstractTypeExtension
     public function initOptions(OptionsResolver $optionsResolver): void
     {
         $optionsResolver->setDefaults([
-            'label' => function (Options $options, $previousValue) {
-                return $previousValue ?? $options['name'];
-            },
+            'label' => static fn(Options $options, $previousValue) => $previousValue ?? $options['name'],
             'display_order' => null,
-            'field_mapping' => function (Options $options, $previousValue) {
-                return $previousValue ?? [$options['name']];
-            },
+            'field_mapping' => static fn(Options $options, $previousValue) => $previousValue ?? [$options['name']],
         ]);
         $optionsResolver->setAllowedTypes('label', 'string');
         $optionsResolver->setAllowedTypes('field_mapping', 'array');

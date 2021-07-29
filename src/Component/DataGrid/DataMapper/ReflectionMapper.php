@@ -148,8 +148,15 @@ final class ReflectionMapper implements DataMapperInterface
 
     private function camelize(string $string): string
     {
-        return preg_replace_callback('/(^|_|\.)+(.)/', static function ($match) {
-            return ('.' === $match[1] ? '_' : '') . strtoupper($match[2]);
-        }, $string);
+        $result = preg_replace_callback(
+            '/(^|_|\.)+(.)/',
+            static fn($match): string => ('.' === $match[1] ? '_' : '') . strtoupper($match[2]),
+            $string
+        );
+        if (false === is_string($result)) {
+            throw new DataMappingException("Unable to camelize name {$string}");
+        }
+
+        return $result;
     }
 }

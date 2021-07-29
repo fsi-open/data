@@ -35,8 +35,9 @@ abstract class DataGridAbstractExtension implements DataGridExtensionInterface
 
         if (false === array_key_exists($type, $this->columnTypes)) {
             throw new DataGridException(sprintf(
-                'The column type "%s" can not be loaded by this extension',
-                $type
+                'The column type "%s" can not be loaded by DataGrid extension "%s"',
+                $type,
+                static::class
             ));
         }
 
@@ -80,8 +81,9 @@ abstract class DataGridAbstractExtension implements DataGridExtensionInterface
         }
 
         throw new DataGridException(sprintf(
-            'Extension for column type "%s" can not be loaded by this DataGrid extension',
-            get_class($type)
+            'Extension for column type "%s" can not be loaded by DataGrid extension "%s"',
+            get_class($type),
+            static::class
         ));
     }
 

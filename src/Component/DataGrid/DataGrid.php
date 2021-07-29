@@ -71,7 +71,12 @@ final class DataGrid implements DataGridInterface
     public function addColumnInstance(ColumnInterface $column): DataGridInterface
     {
         if ($column->getDataGrid() !== $this) {
-            throw new InvalidArgumentException('Tried to add column associated with different datagrid instance');
+            throw new InvalidArgumentException(sprintf(
+                'Tried to add column "%s" associated with datagrid "%s" to datagrid "%s"',
+                $column->getName(),
+                $column->getDataGrid()->getName(),
+                $this->name
+            ));
         }
 
         $this->columns[$column->getName()] = $column;
@@ -82,7 +87,7 @@ final class DataGrid implements DataGridInterface
     public function removeColumn(string $name): DataGridInterface
     {
         if (false === $this->hasColumn($name)) {
-            throw new InvalidArgumentException(sprintf('Column "%s" does not exist in data grid.', $name));
+            throw new InvalidArgumentException("Column \"{$name}\" does not exist in datagrid \"{$this->name}\".");
         }
 
         unset($this->columns[$name]);
