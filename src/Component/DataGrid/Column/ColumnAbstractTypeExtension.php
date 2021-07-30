@@ -15,10 +15,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 abstract class ColumnAbstractTypeExtension implements ColumnTypeExtensionInterface
 {
-    public function bindData(ColumnInterface $column, $index, $object, $data): void
-    {
-    }
-
     public function buildCellView(ColumnInterface $column, CellViewInterface $view): void
     {
     }

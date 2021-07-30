@@ -20,6 +20,7 @@ use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\FormExtension;
+use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\EditableDataGridFormHandler;
 use FSi\Component\DataGrid\Column\CellView;
 use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\DataGridFactory;
@@ -53,6 +54,7 @@ class FormExtensionTest extends TestCase
     private DataGridInterface $dataGrid;
     private DataGridFactory $dataGridFactory;
     private FormExtension $extension;
+    private EditableDataGridFormHandler $formHandler;
 
     protected function setUp(): void
     {
@@ -131,7 +133,8 @@ class FormExtensionTest extends TestCase
         $this->dataGrid->method('getName')->willReturn('grid');
         $this->dataGrid->method('getDataMapper')->willReturn($this->getDataMapper());
 
-        $this->extension = new FormExtension($formFactory);
+        $this->extension = new FormExtension();
+        $this->formHandler = new EditableDataGridFormHandler($formFactory);
         $this->dataGridFactory = new DataGridFactory(
             [new SimpleDataGridExtension($this->extension, null)],
             $this->getDataMapper(),
@@ -162,7 +165,7 @@ class FormExtensionTest extends TestCase
             'invalid_data' => 'test'
         ];
 
-        $this->extension->bindData($column, 1, $object, $data);
+        $this->formHandler->bindData($column, 1, $object, $data);
         $this->dataGridFactory->createCellView($column, 1, $object);
 
         self::assertSame('norbert@fsi.pl', $object->getAuthor());
@@ -198,7 +201,7 @@ class FormExtensionTest extends TestCase
             'author' => 'invalid_value',
         ];
 
-        $this->extension->bindData($column, 1, $object, $data);
+        $this->formHandler->bindData($column, 1, $object, $data);
         $this->dataGridFactory->createCellView($column, 1, $object);
 
         self::assertNull($object->getAuthor());
@@ -232,7 +235,7 @@ class FormExtensionTest extends TestCase
 
         self::assertNull($object->getCategory());
 
-        $this->extension->bindData($column, 1, $object, $data);
+        $this->formHandler->bindData($column, 1, $object, $data);
         $this->dataGridFactory->createCellView($column, 1, $object);
 
         self::assertInstanceOf($nestedEntityClass, $object->getCategory());

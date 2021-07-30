@@ -42,6 +42,8 @@ interface DataGridFactoryInterface
 
     public function createDataGrid(string $name): DataGridInterface;
 
+    public function createEditableDataGrid(string $name): EditableDataGridInterface;
+
     /**
      * @param DataGridInterface $dataGrid
      * @param string|class-string<ColumnTypeInterface> $type

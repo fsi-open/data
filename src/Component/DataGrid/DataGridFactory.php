@@ -20,6 +20,7 @@ use FSi\Component\DataGrid\Column\ColumnTypeInterface;
 use FSi\Component\DataGrid\Column\HeaderView;
 use FSi\Component\DataGrid\Column\HeaderViewInterface;
 use FSi\Component\DataGrid\Exception\DataGridColumnException;
+use FSi\Component\DataGrid\Exception\DataGridException;
 use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use InvalidArgumentException;
@@ -28,6 +29,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 use function array_key_exists;
 use function count;
+use function sprintf;
 
 final class DataGridFactory implements DataGridFactoryInterface
 {
@@ -45,16 +47,19 @@ final class DataGridFactory implements DataGridFactoryInterface
      * @var array<ColumnTypeInterface>
      */
     private array $columnTypes = [];
+    private ?EditableDataGridFormHandlerInterface $formHandler;
 
     /**
      * @param iterable<DataGridExtensionInterface> $extensions
      * @param DataMapperInterface $dataMapper
      * @param EventDispatcherInterface $eventDispatcher
+     * @param EditableDataGridFormHandlerInterface|null $formHandler
      */
     public function __construct(
         iterable $extensions,
         DataMapperInterface $dataMapper,
-        EventDispatcherInterface $eventDispatcher
+        EventDispatcherInterface $eventDispatcher,
+        ?EditableDataGridFormHandlerInterface $formHandler = null
     ) {
         foreach ($extensions as $extension) {
             if (false === $extension instanceof DataGridExtensionInterface) {
@@ -69,6 +74,7 @@ final class DataGridFactory implements DataGridFactoryInterface
 
         $this->dataMapper = $dataMapper;
         $this->eventDispatcher = $eventDispatcher;
+        $this->formHandler = $formHandler;
     }
 
     public function hasColumnType(string $type): bool
@@ -136,6 +142,33 @@ final class DataGridFactory implements DataGridFactoryInterface
         return $this->dataGrids[$name];
     }
 
+    public function createEditableDataGrid(string $name): EditableDataGridInterface
+    {
+        if (null === $this->formHandler) {
+            throw new DataGridException(sprintf(
+                '%s implementation is required to create editable DataGrids',
+                EditableDataGridFormHandlerInterface::class
+            ));
+        }
+
+        if (true === array_key_exists($name, $this->dataGrids)) {
+            throw new DataGridColumnException(sprintf(
+                'Datagrid name "%s" is not uniqe, it was used before to create datagrid',
+                $name
+            ));
+        }
+
+        $this->dataGrids[$name] = new EditableDataGrid(
+            $name,
+            $this,
+            $this->dataMapper,
+            $this->eventDispatcher,
+            $this->formHandler
+        );
+
+        return $this->dataGrids[$name];
+    }
+
     public function createColumn(
         DataGridInterface $dataGrid,
         string $type,
@@ -169,8 +202,6 @@ final class DataGridFactory implements DataGridFactoryInterface
         }
 
         $cellView = new CellView($column, $value);
-        $cellView->setAttribute('index', $index);
-        $cellView->setAttribute('source', $source);
         $columnType->buildCellView($column, $cellView);
         foreach ($this->getColumnTypeExtensions($columnType) as $extension) {
             $extension->buildCellView($column, $cellView);

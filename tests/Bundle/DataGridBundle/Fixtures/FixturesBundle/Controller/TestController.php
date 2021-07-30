@@ -31,7 +31,7 @@ final class TestController
 
     public function __invoke(Request $request): Response
     {
-        $dataGrid = $this->dataGridFactory->createDataGrid('datagrid');
+        $dataGrid = $this->dataGridFactory->createEditableDataGrid('datagrid');
 
         $category = new EntityCategory(1, 'Category 2');
         $dataGrid->setData([

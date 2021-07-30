@@ -17,18 +17,18 @@ use FSi\Component\DataGrid\Column\HeaderViewInterface;
 use InvalidArgumentException;
 use RuntimeException;
 
-final class DataGridView implements DataGridViewInterface
+class DataGridView implements DataGridViewInterface
 {
     /**
      * @var array<string,ColumnInterface>
      */
-    private array $columns = [];
+    protected array $columns = [];
+    protected DataRowsetInterface $rowset;
     /**
      * @var array<string,HeaderViewInterface>
      */
     private array $columnsHeaders = [];
     private string $name;
-    private DataRowsetInterface $rowset;
 
     /**
      * @param string $name

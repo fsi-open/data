@@ -33,8 +33,10 @@
         <prototype namespace="FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\"
                    resource="../../DataGrid/Extension/Symfony/{ColumnType,ColumnTypeExtension,EventSubscriber}" />
 
-        <service id="FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\FormExtension">
+        <service id="FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\EditableDataGridFormHandler">
             <argument key="$csrfProtectionEnabled">%form.type_extension.csrf.enabled%</argument>
         </service>
+        <service id="FSi\Component\DataGrid\EditableDataGridFormHandlerInterface"
+                 alias="FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\EditableDataGridFormHandler" />
     </services>
 </container>

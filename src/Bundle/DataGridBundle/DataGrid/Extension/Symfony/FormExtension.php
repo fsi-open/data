@@ -26,7 +26,7 @@ class FormExtension extends DataGridAbstractExtension
     protected function loadColumnTypesExtensions(): array
     {
         return [
-            new ColumnTypeExtension\FormExtension($this->formFactory),
+            new ColumnTypeExtension\FormExtension(),
         ];
     }
 }

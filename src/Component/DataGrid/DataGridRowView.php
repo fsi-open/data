@@ -17,12 +17,12 @@ use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
 use InvalidArgumentException;
 use RuntimeException;
 
-final class DataGridRowView implements DataGridRowViewInterface
+class DataGridRowView implements DataGridRowViewInterface
 {
     /**
      * @var array<string,CellViewInterface>
      */
-    private array $cellViews = [];
+    protected array $cellViews = [];
     /**
      * @var array<string,mixed>|object
      */

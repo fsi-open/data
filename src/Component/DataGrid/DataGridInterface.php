@@ -52,10 +52,5 @@ interface DataGridInterface
      */
     public function setData(iterable $data): void;
 
-    /**
-     * @param mixed $data
-     */
-    public function bindData($data): void;
-
     public function getDataMapper(): DataMapperInterface;
 }

@@ -27,17 +27,17 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 
 use function sprintf;
 
-final class DataGrid implements DataGridInterface
+class DataGrid implements DataGridInterface
 {
-    private DataGridFactoryInterface $dataGridFactory;
+    protected DataGridFactoryInterface $dataGridFactory;
+    protected EventDispatcherInterface $eventDispatcher;
+    protected ?DataRowsetInterface $rowset = null;
     private string $name;
     private DataMapperInterface $dataMapper;
-    private EventDispatcherInterface $eventDispatcher;
     /**
      * @var array<string,ColumnInterface>
      */
     private array $columns = [];
-    private ?DataRowsetInterface $rowset = null;
 
     public function __construct(
         string $name,
@@ -155,37 +155,12 @@ final class DataGrid implements DataGridInterface
         $this->eventDispatcher->dispatch(new PostSetDataEvent($this, $this->rowset));
     }
 
-    public function bindData($data): void
-    {
-        $event = new PreBindDataEvent($this, $data);
-        $this->eventDispatcher->dispatch($event);
-        $data = $event->getData();
-
-        foreach ($data as $index => $values) {
-            if (false === isset($this->rowset[$index])) {
-                continue;
-            }
-
-            $source = $this->rowset[$index];
-
-            foreach ($this->getColumns() as $column) {
-                $columnType = $column->getType();
-
-                foreach ($this->dataGridFactory->getColumnTypeExtensions($columnType) as $extension) {
-                    $extension->bindData($column, $index, $source, $values);
-                }
-            }
-        }
-
-        $this->eventDispatcher->dispatch(new PostBindDataEvent($this, $data));
-    }
-
     public function getDataMapper(): DataMapperInterface
     {
         return $this->dataMapper;
     }
 
-    private function getRowset(): DataRowsetInterface
+    protected function getRowset(): DataRowsetInterface
     {
         if (null === $this->rowset) {
             throw new DataGridException(

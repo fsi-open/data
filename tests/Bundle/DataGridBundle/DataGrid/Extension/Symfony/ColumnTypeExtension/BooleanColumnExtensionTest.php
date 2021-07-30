@@ -16,7 +16,6 @@ use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\Boo
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -27,7 +26,7 @@ class BooleanColumnExtensionTest extends TestCase
         $optionsResolver = new OptionsResolver();
         $column = new Boolean();
         $column->initOptions($optionsResolver);
-        $formExtension = new FormExtension($this->getFormFactory());
+        $formExtension = new FormExtension();
         $formExtension->initOptions($optionsResolver);
         $extension = new BooleanColumnExtension($this->getTranslator());
         $extension->initOptions($optionsResolver);
@@ -53,16 +52,5 @@ class BooleanColumnExtensionTest extends TestCase
             )->willReturnOnConsecutiveCalls('YES', 'NO');
 
         return $translator;
-    }
-
-    /**
-     * @return FormFactoryInterface&MockObject
-     */
-    private function getFormFactory(): FormFactoryInterface
-    {
-        /** @var FormFactoryInterface&MockObject $formFactory */
-        $formFactory = $this->createMock(FormFactoryInterface::class);
-
-        return $formFactory;
     }
 }
