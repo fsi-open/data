@@ -13,6 +13,7 @@ namespace FSi\Component\DataGrid\Extension\Gedmo;
 
 use Doctrine\Persistence\ManagerRegistry;
 use FSi\Component\DataGrid\DataGridAbstractExtension;
+use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\Extension\Gedmo\ColumnType;
 
 class GedmoDoctrineExtension extends DataGridAbstractExtension
@@ -27,7 +28,7 @@ class GedmoDoctrineExtension extends DataGridAbstractExtension
     protected function loadColumnTypes(): array
     {
         return [
-            new ColumnType\Tree($this->registry),
+            new ColumnType\Tree($this->registry, [new DefaultColumnOptionsExtension()]),
         ];
     }
 }

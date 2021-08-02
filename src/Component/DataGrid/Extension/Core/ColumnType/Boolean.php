@@ -22,7 +22,15 @@ class Boolean extends ColumnAbstractType
         return 'boolean';
     }
 
-    public function filterValue(ColumnInterface $column, $value)
+    protected function initOptions(OptionsResolver $optionsResolver): void
+    {
+        $optionsResolver->setDefaults([
+            'true_value' => '',
+            'false_value' => ''
+        ]);
+    }
+
+    protected function filterValue(ColumnInterface $column, $value)
     {
         $value = (array) $value;
 
@@ -45,13 +53,5 @@ class Boolean extends ColumnAbstractType
         }
 
         return $column->getOption($boolValue ? 'true_value' : 'false_value');
-    }
-
-    public function initOptions(OptionsResolver $optionsResolver): void
-    {
-        $optionsResolver->setDefaults([
-            'true_value' => '',
-            'false_value' => ''
-        ]);
     }
 }

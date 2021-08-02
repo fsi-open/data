@@ -42,20 +42,10 @@ class CoreExtensionTest extends TestCase
         $this->assertTrue($extension->hasColumnType(Money::class));
         $this->assertTrue($extension->hasColumnType('entity'));
         $this->assertTrue($extension->hasColumnType(Entity::class));
+        $this->assertTrue($extension->hasColumnType('batch'));
+        $this->assertTrue($extension->hasColumnType(Batch::class));
 
         $this->assertFalse($extension->hasColumnType('foo'));
-    }
-
-    public function testLoadedExtensions(): void
-    {
-        $extension = new CoreExtension();
-        $this->assertTrue($extension->hasColumnTypeExtensions(new Text()));
-        $this->assertTrue($extension->hasColumnTypeExtensions(new Number()));
-        $this->assertTrue($extension->hasColumnTypeExtensions(new DateTime()));
-        $this->assertTrue($extension->hasColumnTypeExtensions(new Action()));
-        $this->assertTrue($extension->hasColumnTypeExtensions(new Money()));
-        $this->assertTrue($extension->hasColumnTypeExtensions(new Batch()));
-        $this->assertTrue($extension->hasColumnTypeExtensions(new Entity()));
     }
 
     public function testColumnOrder(): void

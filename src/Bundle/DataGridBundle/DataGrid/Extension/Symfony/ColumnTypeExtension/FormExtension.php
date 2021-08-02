@@ -22,7 +22,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class FormExtension extends ColumnAbstractTypeExtension
 {
-    public function getExtendedColumnTypes(): array
+    public static function getExtendedColumnTypes(): array
     {
         return [
             Text::class,

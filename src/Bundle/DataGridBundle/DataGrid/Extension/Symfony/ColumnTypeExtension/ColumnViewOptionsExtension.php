@@ -20,6 +20,11 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ColumnViewOptionsExtension extends ColumnAbstractTypeExtension
 {
+    public static function getExtendedColumnTypes(): array
+    {
+        return [ColumnAbstractType::class];
+    }
+
     public function buildCellView(ColumnInterface $column, CellViewInterface $view): void
     {
         $view->setAttribute('translation_domain', $column->getOption('translation_domain'));
@@ -28,11 +33,6 @@ class ColumnViewOptionsExtension extends ColumnAbstractTypeExtension
     public function buildHeaderView(ColumnInterface $column, HeaderViewInterface $view): void
     {
         $view->setAttribute('translation_domain', $column->getOption('translation_domain'));
-    }
-
-    public function getExtendedColumnTypes(): array
-    {
-        return [ColumnAbstractType::class];
     }
 
     public function initOptions(OptionsResolver $optionsResolver): void

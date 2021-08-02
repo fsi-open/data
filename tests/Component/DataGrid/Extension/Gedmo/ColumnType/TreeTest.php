@@ -17,57 +17,45 @@ use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\Mapping\ClassMetadataFactory;
 use Doctrine\Persistence\ObjectManager;
-use FSi\Component\DataGrid\DataGridFactory;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
 use InvalidArgumentException;
-use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Tests\FSi\Component\DataGrid\Fixtures\EntityTree;
 use FSi\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
-use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\DataGridInterface;
 use Gedmo\Tree\RepositoryInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Gedmo\Tree\Strategy;
 use Gedmo\Tree\TreeListener;
-use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
 class TreeTest extends TestCase
 {
     public function testWrongValue(): void
     {
         $registry = $this->createMock(ManagerRegistry::class);
-        $dataGridFactory = new DataGridFactory(
-            [new SimpleDataGridExtension(new DefaultColumnOptionsExtension(), new Tree($registry))],
-            $this->createMock(DataMapperInterface::class),
-            $this->createMock(EventDispatcherInterface::class)
-        );
+        $columnType = new Tree($registry, [new DefaultColumnOptionsExtension()]);
 
         $dataGrid = $this->getDataGridMock();
 
-        $column = $dataGridFactory->createColumn($dataGrid, Tree::class, 'tree', ['field_mapping' => ['id']]);
+        $column = $columnType->createColumn($dataGrid, 'tree', ['field_mapping' => ['id']]);
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Column "gedmo_tree" must read value from object.');
 
-        $dataGridFactory->createCellView($column, 1, ['key' => 'This is string, not object']);
+        $columnType->createCellView($column, 1, ['key' => 'This is string, not object']);
     }
 
     public function testGetValue(): void
     {
         $registry = $this->getManagerRegistry();
-        $dataGridFactory = new DataGridFactory(
-            [new SimpleDataGridExtension(new DefaultColumnOptionsExtension(), new Tree($registry))],
-            $this->createMock(DataMapperInterface::class),
-            $this->createMock(EventDispatcherInterface::class)
-        );
+        $columnType = new Tree($registry, [new DefaultColumnOptionsExtension()]);
 
         $dataGrid = $this->getDataGridMock();
 
-        $column = $dataGridFactory->createColumn($dataGrid, Tree::class, 'tree', ['field_mapping' => ['id']]);
-        $view = $dataGridFactory->createCellView($column, 1, new EntityTree("foo"));
+        $column = $columnType->createColumn($dataGrid, 'tree', ['field_mapping' => ['id']]);
+        $view = $columnType->createCellView($column, 1, new EntityTree("foo"));
 
         self::assertSame(
             [

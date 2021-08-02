@@ -27,7 +27,26 @@ class DateTime extends ColumnAbstractType
         return 'datetime';
     }
 
-    public function filterValue(ColumnInterface $column, $value)
+    protected function initOptions(OptionsResolver $optionsResolver): void
+    {
+        $optionsResolver->setDefaults([
+            'datetime_format' => 'Y-m-d H:i:s',
+            'input_type' => null,
+            'input_field_format' => null
+        ]);
+
+        $optionsResolver->setAllowedTypes('input_field_format', ['null', 'array', 'string']);
+
+        $optionsResolver->setAllowedValues('input_type', [
+            null,
+            'string',
+            'timestamp',
+            'datetime',
+            'array'
+        ]);
+    }
+
+    protected function filterValue(ColumnInterface $column, $value)
     {
         $format = $column->getOption('datetime_format');
         $inputValues = $this->getInputData($column, $value);
@@ -56,25 +75,6 @@ class DateTime extends ColumnAbstractType
         }
 
         return $return;
-    }
-
-    public function initOptions(OptionsResolver $optionsResolver): void
-    {
-        $optionsResolver->setDefaults([
-            'datetime_format' => 'Y-m-d H:i:s',
-            'input_type' => null,
-            'input_field_format' => null
-        ]);
-
-        $optionsResolver->setAllowedTypes('input_field_format', ['null', 'array', 'string']);
-
-        $optionsResolver->setAllowedValues('input_type', [
-            null,
-            'string',
-            'timestamp',
-            'datetime',
-            'array'
-        ]);
     }
 
     /**

@@ -20,23 +20,34 @@ class CoreExtension extends DataGridAbstractExtension
     protected function loadColumnTypes(): array
     {
         return [
-            new ColumnType\Text(),
-            new ColumnType\Number(),
-            new ColumnType\Collection(),
-            new ColumnType\DateTime(),
-            new ColumnType\Action(),
-            new ColumnType\Money(),
-            new ColumnType\Action(),
-            new ColumnType\Entity(),
-        ];
-    }
-
-    protected function loadColumnTypesExtensions(): array
-    {
-        return [
-            new ColumnTypeExtension\DefaultColumnOptionsExtension(),
-            new ColumnTypeExtension\ValueFormatColumnOptionsExtension(),
-            new ColumnTypeExtension\EntityValueFormatColumnOptionsExtension(),
+            new ColumnType\Text([
+                new ColumnTypeExtension\DefaultColumnOptionsExtension(),
+                new ColumnTypeExtension\ValueFormatColumnOptionsExtension(),
+            ]),
+            new ColumnType\Number([
+                new ColumnTypeExtension\DefaultColumnOptionsExtension(),
+                new ColumnTypeExtension\ValueFormatColumnOptionsExtension(),
+            ]),
+            new ColumnType\Collection([
+                new ColumnTypeExtension\DefaultColumnOptionsExtension(),
+                new ColumnTypeExtension\ValueFormatColumnOptionsExtension(),
+            ]),
+            new ColumnType\DateTime([
+                new ColumnTypeExtension\DefaultColumnOptionsExtension(),
+                new ColumnTypeExtension\ValueFormatColumnOptionsExtension(),
+            ]),
+            new ColumnType\Money([
+                new ColumnTypeExtension\DefaultColumnOptionsExtension(),
+                new ColumnTypeExtension\ValueFormatColumnOptionsExtension(),
+            ]),
+            new ColumnType\Entity([
+                new ColumnTypeExtension\DefaultColumnOptionsExtension(),
+                new ColumnTypeExtension\EntityValueFormatColumnOptionsExtension(),
+            ]),
+            new ColumnType\Action([
+                new ColumnTypeExtension\DefaultColumnOptionsExtension(),
+            ]),
+            new ColumnType\Batch(),
         ];
     }
 }

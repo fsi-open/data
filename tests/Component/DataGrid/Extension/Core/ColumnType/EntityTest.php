@@ -11,36 +11,28 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnType;
 
-use FSi\Component\DataGrid\DataGridFactory;
-use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
 use PHPUnit\Framework\MockObject\MockObject;
-use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Tests\FSi\Component\DataGrid\Fixtures\Entity as Fixture;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Entity;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\DataGridInterface;
 use PHPUnit\Framework\TestCase;
-use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
 class EntityTest extends TestCase
 {
     public function testGetValue(): void
     {
-        $dataGridFactory = new DataGridFactory(
-            [new SimpleDataGridExtension(new DefaultColumnOptionsExtension(), new Entity())],
-            $this->createMock(DataMapperInterface::class),
-            $this->createMock(EventDispatcherInterface::class)
-        );
+        $columnType = new Entity([new DefaultColumnOptionsExtension()]);
 
         $dataGrid = $this->getDataGridMock();
-        $column = $dataGridFactory->createColumn($dataGrid, Entity::class, 'foo', ['relation_field' => 'author']);
+        $column = $columnType->createColumn($dataGrid, 'foo', ['relation_field' => 'author']);
 
         $object = new Fixture('object');
         $object->setAuthor((object) ['foo' => 'bar']);
 
-        $cellView = $dataGridFactory->createCellView($column, 1, $object);
+        $cellView = $columnType->createCellView($column, 1, $object);
         $this->assertSame([['foo' => 'bar']], $cellView->getValue());
     }
 

@@ -16,6 +16,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 use FSi\Component\DataGrid\Column\ColumnAbstractType;
 use FSi\Component\DataGrid\Column\ColumnInterface;
+use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
 use FSi\Component\DataGrid\Exception\DataGridColumnException;
 use FSi\Component\DataIndexer\DoctrineDataIndexer;
 use Gedmo\Tree\RepositoryInterface as TreeRepositoryInterface;
@@ -41,8 +42,14 @@ class Tree extends ColumnAbstractType
      */
     private array $classStrategies;
 
-    public function __construct(ManagerRegistry $registry)
+    /**
+     * @param ManagerRegistry $registry
+     * @param array<ColumnTypeExtensionInterface> $columnTypeExtensions
+     */
+    public function __construct(ManagerRegistry $registry, array $columnTypeExtensions = [])
     {
+        parent::__construct($columnTypeExtensions);
+
         $this->registry = $registry;
         $this->classStrategies = [];
         $this->allowedStrategies = ['nested'];
@@ -89,7 +96,7 @@ class Tree extends ColumnAbstractType
         return $value;
     }
 
-    public function initOptions(OptionsResolver $optionsResolver): void
+    protected function initOptions(OptionsResolver $optionsResolver): void
     {
         $optionsResolver->setDefaults([
             'em' => null,

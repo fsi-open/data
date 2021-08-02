@@ -12,13 +12,9 @@ declare(strict_types=1);
 namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnType;
 
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnType\Action;
-use FSi\Component\DataGrid\Column\ColumnInterface;
-use FSi\Component\DataGrid\DataGridFactory;
 use FSi\Component\DataGrid\DataGridInterface;
-use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
 use InvalidArgumentException;
-use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\Request;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
@@ -28,7 +24,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
-use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
 class ActionTest extends TestCase
 {
@@ -40,26 +35,25 @@ class ActionTest extends TestCase
      * @var RequestStack&MockObject
      */
     private RequestStack $requestStack;
-    private DataGridFactory $dataGridFactory;
+    private Action $columnType;
 
     public function testWrongActionsOptionType(): void
     {
         $this->expectException(InvalidOptionsException::class);
 
-        $this->dataGridFactory->createColumn($this->getDataGridMock(), Action::class, 'action', ['actions' => 'boo']);
+        $this->columnType->createColumn($this->getDataGridMock(), 'action', ['actions' => 'boo']);
     }
 
     public function testInvalidActionInActionsOption(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        $column = $this->dataGridFactory->createColumn(
+        $column = $this->columnType->createColumn(
             $this->getDataGridMock(),
-            Action::class,
             'action',
             ['field_mapping' => ['id'], 'actions' => ['edit' => 'asdasd']]
         );
-        $this->dataGridFactory->createCellView($column, 1, (object) ['id' => 1]);
+        $this->columnType->createCellView($column, 1, (object) ['id' => 1]);
     }
 
     public function testRequiredActionInActionsOption(): void
@@ -68,9 +62,8 @@ class ActionTest extends TestCase
             ->with('foo', ['redirect_uri' => Request::RELATIVE_URI], UrlGeneratorInterface::ABSOLUTE_PATH)
             ->willReturn('/test/bar?redirect_uri=' . urlencode(Request::ABSOLUTE_URI));
 
-        $column = $this->dataGridFactory->createColumn(
+        $column = $this->columnType->createColumn(
             $this->getDataGridMock(),
-            Action::class,
             'action',
             [
                 'field_mapping' => ['id', 'foo'],
@@ -96,7 +89,7 @@ class ActionTest extends TestCase
                     ],
                 ],
             ],
-            $this->dataGridFactory->createCellView($column, 1, (object) ['id' => 1, 'foo' => 'bar'])->getValue()
+            $this->columnType->createCellView($column, 1, (object) ['id' => 1, 'foo' => 'bar'])->getValue()
         );
     }
 
@@ -111,9 +104,8 @@ class ActionTest extends TestCase
             )
             ->willReturn('https://fsi.pl/test/bar?redirect_uri=' . urlencode(Request::RELATIVE_URI));
 
-        $column = $this->dataGridFactory->createColumn(
+        $column = $this->columnType->createColumn(
             $this->getDataGridMock(),
-            Action::class,
             'action',
             [
                 'field_mapping' => ['id', 'foo'],
@@ -140,7 +132,7 @@ class ActionTest extends TestCase
                     ],
                 ],
             ],
-            $this->dataGridFactory->createCellView($column, 1, (object) ['id' => 1, 'foo' => 'bar'])->getValue()
+            $this->columnType->createCellView($column, 1, (object) ['id' => 1, 'foo' => 'bar'])->getValue()
         );
     }
 
@@ -151,9 +143,8 @@ class ActionTest extends TestCase
             ->with('foo', [], UrlGeneratorInterface::ABSOLUTE_PATH)
             ->willReturn('/test/bar');
 
-        $column = $this->dataGridFactory->createColumn(
+        $column = $this->columnType->createColumn(
             $this->getDataGridMock(),
-            Action::class,
             'action',
             [
                 'field_mapping' => ['id', 'foo'],
@@ -180,7 +171,7 @@ class ActionTest extends TestCase
                     ],
                 ],
             ],
-            $this->dataGridFactory->createCellView($column, 1, (object) ['id' => 1, 'foo' => 'bar'])->getValue()
+            $this->columnType->createCellView($column, 1, (object) ['id' => 1, 'foo' => 'bar'])->getValue()
         );
     }
 
@@ -189,16 +180,7 @@ class ActionTest extends TestCase
         $this->router = $this->createMock(RouterInterface::class);
         $this->requestStack = $this->createMock(RequestStack::class);
         $this->requestStack->method('getMasterRequest')->willReturn(new Request());
-        $this->dataGridFactory = new DataGridFactory(
-            [
-                new SimpleDataGridExtension(
-                    new DefaultColumnOptionsExtension(),
-                    new Action($this->router, $this->requestStack)
-                ),
-            ],
-            $this->createMock(DataMapperInterface::class),
-            $this->createMock(EventDispatcherInterface::class)
-        );
+        $this->columnType = new Action($this->router, $this->requestStack, [new DefaultColumnOptionsExtension()]);
     }
 
     /**

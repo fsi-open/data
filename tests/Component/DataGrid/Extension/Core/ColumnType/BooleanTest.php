@@ -11,32 +11,28 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnType;
 
-use FSi\Component\DataGrid\DataGridFactory;
-use FSi\Component\DataGrid\DataGridFactoryInterface;
+use DateTime;
 use FSi\Component\DataGrid\DataGridInterface;
-use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
-use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
 class BooleanTest extends TestCase
 {
-    private DataGridFactoryInterface $dataGridFactory;
+    private Boolean $columnType;
 
     public function testValues(): void
     {
-        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Boolean::class, 'available', [
+        $column = $this->columnType->createColumn($this->getDataGridMock(), 'available', [
             'true_value' => 'true',
             'false_value' => 'false',
         ]);
 
-        $trueCellView = $this->dataGridFactory->createCellView($column, 1, (object) ['available' => true]);
-        $falseCellView = $this->dataGridFactory->createCellView($column, 2, (object) ['available' => false]);
+        $trueCellView = $this->columnType->createCellView($column, 1, (object) ['available' => true]);
+        $falseCellView = $this->columnType->createCellView($column, 2, (object) ['available' => false]);
 
         $this->assertSame('true', $trueCellView->getValue());
         $this->assertSame('false', $falseCellView->getValue());
@@ -44,12 +40,12 @@ class BooleanTest extends TestCase
 
     public function testAllTrueValues(): void
     {
-        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Boolean::class, 'available', [
+        $column = $this->columnType->createColumn($this->getDataGridMock(), 'available', [
             'true_value' => 'true',
             'field_mapping' => ['available', 'active'],
         ]);
 
-        $cellView = $this->dataGridFactory->createCellView($column, 1, (object) [
+        $cellView = $this->columnType->createCellView($column, 1, (object) [
             'available' => true,
             'active' => true
         ]);
@@ -59,16 +55,16 @@ class BooleanTest extends TestCase
 
     public function testMixedValues(): void
     {
-        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Boolean::class, 'available', [
+        $column = $this->columnType->createColumn($this->getDataGridMock(), 'available', [
             'true_value' => 'true',
             'false_value' => 'false',
             'field_mapping' => ['available', 'active', 'createdAt'],
         ]);
 
-        $cellView = $this->dataGridFactory->createCellView($column, 1, (object) [
+        $cellView = $this->columnType->createCellView($column, 1, (object) [
             'available' => true,
             'active' => 1,
-            'createdAt' => new \DateTime(),
+            'createdAt' => new DateTime(),
         ]);
 
         $this->assertSame('true', $cellView->getValue());
@@ -76,13 +72,13 @@ class BooleanTest extends TestCase
 
     public function testAllFalseValues(): void
     {
-        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Boolean::class, 'available', [
+        $column = $this->columnType->createColumn($this->getDataGridMock(), 'available', [
             'true_value' => 'true',
             'false_value' => 'false',
             'field_mapping' => ['available', 'active'],
         ]);
 
-        $cellView = $this->dataGridFactory->createCellView($column, 1, (object) [
+        $cellView = $this->columnType->createCellView($column, 1, (object) [
             'available' => false,
             'active' => false,
         ]);
@@ -92,16 +88,16 @@ class BooleanTest extends TestCase
 
     public function testMixedValuesAndFalse(): void
     {
-        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Boolean::class, 'available', [
+        $column = $this->columnType->createColumn($this->getDataGridMock(), 'available', [
             'true_value' => 'true',
             'false_value' => 'false',
             'field_mapping' => ['available', 'active', 'createdAt', 'disabled'],
         ]);
 
-        $cellView = $this->dataGridFactory->createCellView($column, 1, (object) [
+        $cellView = $this->columnType->createCellView($column, 1, (object) [
             'available' => true,
             'active' => 1,
-            'createdAt' => new \DateTime(),
+            'createdAt' => new DateTime(),
             'disabled' => false,
         ]);
 
@@ -110,16 +106,16 @@ class BooleanTest extends TestCase
 
     public function testMixedValuesAndNull(): void
     {
-        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Boolean::class, 'available', [
+        $column = $this->columnType->createColumn($this->getDataGridMock(), 'available', [
             'true_value' => 'true',
             'false_value' => 'false',
             'field_mapping' => ['available', 'active', 'createdAt', 'disabled'],
         ]);
 
-        $cellView = $this->dataGridFactory->createCellView($column, 1, (object) [
+        $cellView = $this->columnType->createCellView($column, 1, (object) [
             'available' => true,
             'active' => 1,
-            'createdAt' => new \DateTime(),
+            'createdAt' => new DateTime(),
             'disabled' => null,
         ]);
 
@@ -128,13 +124,13 @@ class BooleanTest extends TestCase
 
     public function testAllNulls(): void
     {
-        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Boolean::class, 'available', [
+        $column = $this->columnType->createColumn($this->getDataGridMock(), 'available', [
             'true_value' => 'true',
             'false_value' => 'false',
             'field_mapping' => ['available', 'active'],
         ]);
 
-        $cellView = $this->dataGridFactory->createCellView($column, 1, (object) [
+        $cellView = $this->columnType->createCellView($column, 1, (object) [
             'available' => null,
             'active' => null,
         ]);
@@ -144,11 +140,7 @@ class BooleanTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dataGridFactory = new DataGridFactory(
-            [new SimpleDataGridExtension(new DefaultColumnOptionsExtension(), new Boolean())],
-            $this->createMock(DataMapperInterface::class),
-            $this->createMock(EventDispatcherInterface::class)
-        );
+        $this->columnType = new Boolean([new DefaultColumnOptionsExtension()]);
     }
 
     /**

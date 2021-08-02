@@ -11,29 +11,27 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid\Column;
 
-use Symfony\Component\OptionsResolver\OptionsResolver;
+use FSi\Component\DataGrid\DataGridInterface;
 
 interface ColumnTypeInterface
 {
     public function getId(): string;
 
-    public function initOptions(OptionsResolver $optionsResolver): void;
+    /**
+     * @param DataGridInterface $dataGrid
+     * @param string $name
+     * @param array<string,mixed> $options
+     * @return ColumnInterface
+     */
+    public function createColumn(DataGridInterface $dataGrid, string $name, array $options): ColumnInterface;
 
     /**
      * @param ColumnInterface $column
-     * @param array<string,mixed>|object $object
-     * @return mixed
+     * @param int|string $index
+     * @param array<string,mixed>|object $source
+     * @return CellViewInterface
      */
-    public function getValue(ColumnInterface $column, $object);
+    public function createCellView(ColumnInterface $column, $index, $source): CellViewInterface;
 
-    /**
-     * @param ColumnInterface $column
-     * @param mixed $value
-     * @return mixed
-     */
-    public function filterValue(ColumnInterface $column, $value);
-
-    public function buildCellView(ColumnInterface $column, CellViewInterface $view): void;
-
-    public function buildHeaderView(ColumnInterface $column, HeaderViewInterface $view): void;
+    public function createHeaderView(ColumnInterface $column): HeaderViewInterface;
 }

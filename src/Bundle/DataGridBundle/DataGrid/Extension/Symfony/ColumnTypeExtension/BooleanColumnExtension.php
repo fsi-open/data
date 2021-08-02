@@ -25,14 +25,14 @@ class BooleanColumnExtension extends ColumnAbstractTypeExtension
 {
     private TranslatorInterface $translator;
 
+    public static function getExtendedColumnTypes(): array
+    {
+        return [Boolean::class];
+    }
+
     public function __construct(TranslatorInterface $translator)
     {
         $this->translator = $translator;
-    }
-
-    public function getExtendedColumnTypes(): array
-    {
-        return [Boolean::class];
     }
 
     public function initOptions(OptionsResolver $optionsResolver): void

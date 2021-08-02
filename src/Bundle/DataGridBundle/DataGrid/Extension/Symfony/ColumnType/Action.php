@@ -13,6 +13,7 @@ namespace FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnType;
 
 use FSi\Component\DataGrid\Column\ColumnAbstractType;
 use FSi\Component\DataGrid\Column\ColumnInterface;
+use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
 use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -28,8 +29,18 @@ class Action extends ColumnAbstractType
     protected RequestStack $requestStack;
     protected OptionsResolver $actionOptionsResolver;
 
-    public function __construct(UrlGeneratorInterface $urlGenerator, RequestStack $requestStack)
-    {
+    /**
+     * @param UrlGeneratorInterface $urlGenerator
+     * @param RequestStack $requestStack
+     * @param array<ColumnTypeExtensionInterface> $columnTypeExtensions
+     */
+    public function __construct(
+        UrlGeneratorInterface $urlGenerator,
+        RequestStack $requestStack,
+        array $columnTypeExtensions = []
+    ) {
+        parent::__construct($columnTypeExtensions);
+
         $this->urlGenerator = $urlGenerator;
         $this->requestStack = $requestStack;
         $this->actionOptionsResolver = new OptionsResolver();
@@ -40,7 +51,37 @@ class Action extends ColumnAbstractType
         return 'action';
     }
 
-    public function filterValue(ColumnInterface $column, $value)
+    public function getActionOptionsResolver(): OptionsResolver
+    {
+        return $this->actionOptionsResolver;
+    }
+
+    protected function initOptions(OptionsResolver $optionsResolver): void
+    {
+        $optionsResolver->setDefaults([
+            'actions' => [],
+        ]);
+
+        $optionsResolver->setAllowedTypes('actions', 'array');
+
+        $this->actionOptionsResolver->setDefaults([
+            'redirect_uri' => true,
+            'absolute' => UrlGeneratorInterface::ABSOLUTE_PATH,
+            'url_attr' => [],
+            'content' => null,
+            'parameters_field_mapping' => [],
+            'additional_parameters' => [],
+        ]);
+
+        $this->actionOptionsResolver->setAllowedTypes('url_attr', ['array', 'Closure']);
+        $this->actionOptionsResolver->setAllowedTypes('content', ['null', 'string', 'Closure']);
+
+        $this->actionOptionsResolver->setRequired([
+            'route_name',
+        ]);
+    }
+
+    protected function filterValue(ColumnInterface $column, $value)
     {
         $return = [];
         $actions = $column->getOption('actions');
@@ -108,35 +149,5 @@ class Action extends ColumnAbstractType
         }
 
         return $return;
-    }
-
-    public function initOptions(OptionsResolver $optionsResolver): void
-    {
-        $optionsResolver->setDefaults([
-            'actions' => [],
-        ]);
-
-        $optionsResolver->setAllowedTypes('actions', 'array');
-
-        $this->actionOptionsResolver->setDefaults([
-            'redirect_uri' => true,
-            'absolute' => UrlGeneratorInterface::ABSOLUTE_PATH,
-            'url_attr' => [],
-            'content' => null,
-            'parameters_field_mapping' => [],
-            'additional_parameters' => [],
-        ]);
-
-        $this->actionOptionsResolver->setAllowedTypes('url_attr', ['array', 'Closure']);
-        $this->actionOptionsResolver->setAllowedTypes('content', ['null', 'string', 'Closure']);
-
-        $this->actionOptionsResolver->setRequired([
-            'route_name',
-        ]);
-    }
-
-    public function getActionOptionsResolver(): OptionsResolver
-    {
-        return $this->actionOptionsResolver;
     }
 }

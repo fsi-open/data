@@ -13,27 +13,21 @@ namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeE
 
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\FormExtension;
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\BooleanColumnExtension;
+use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class BooleanColumnExtensionTest extends TestCase
 {
     public function testColumnOptions(): void
     {
-        $optionsResolver = new OptionsResolver();
-        $column = new Boolean();
-        $column->initOptions($optionsResolver);
-        $formExtension = new FormExtension();
-        $formExtension->initOptions($optionsResolver);
-        $extension = new BooleanColumnExtension($this->getTranslator());
-        $extension->initOptions($optionsResolver);
-        $options = $optionsResolver->resolve();
+        $columnType = new Boolean([new FormExtension(), new BooleanColumnExtension($this->getTranslator())]);
+        $column = $columnType->createColumn($this->createMock(DataGridInterface::class), 'grid', []);
 
-        $this->assertEquals('YES', $options['true_value']);
-        $this->assertEquals('NO', $options['false_value']);
+        $this->assertEquals('YES', $column->getOption('true_value'));
+        $this->assertEquals('NO', $column->getOption('false_value'));
     }
 
     /**

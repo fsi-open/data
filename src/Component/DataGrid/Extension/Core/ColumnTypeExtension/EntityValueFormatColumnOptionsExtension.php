@@ -26,6 +26,13 @@ use function vsprintf;
 
 class EntityValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
 {
+    public static function getExtendedColumnTypes(): array
+    {
+        return [
+            Entity::class,
+        ];
+    }
+
     public function filterValue(ColumnInterface $column, $value)
     {
         $resultValue = [];
@@ -63,13 +70,6 @@ class EntityValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtensio
         }
 
         return implode($column->getOption('glue_multiple'), $resultValue);
-    }
-
-    public function getExtendedColumnTypes(): array
-    {
-        return [
-            Entity::class,
-        ];
     }
 
     public function initOptions(OptionsResolver $optionsResolver): void

@@ -26,6 +26,18 @@ use function is_callable;
 
 class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
 {
+    public static function getExtendedColumnTypes(): array
+    {
+        return [
+            Text::class,
+            Boolean::class,
+            DateTime::class,
+            Collection::class,
+            Number::class,
+            Money::class,
+        ];
+    }
+
     public function filterValue(ColumnInterface $column, $value)
     {
         $this->validateEmptyValueOption($column);
@@ -43,18 +55,6 @@ class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
         }
 
         return $value;
-    }
-
-    public function getExtendedColumnTypes(): array
-    {
-        return [
-            Text::class,
-            Boolean::class,
-            DateTime::class,
-            Collection::class,
-            Number::class,
-            Money::class,
-        ];
     }
 
     public function initOptions(OptionsResolver $optionsResolver): void

@@ -44,7 +44,7 @@ class DataGridView implements DataGridViewInterface
             }
 
             $this->columns[$column->getName()] = $column;
-            $this->columnsHeaders[$column->getName()] = $column->getDataGrid()->getFactory()->createHeaderView($column);
+            $this->columnsHeaders[$column->getName()] = $column->getType()->createHeaderView($column);
         }
 
         $this->name = $name;

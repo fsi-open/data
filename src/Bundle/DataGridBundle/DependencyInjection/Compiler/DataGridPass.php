@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace FSi\Bundle\DataGridBundle\DependencyInjection\Compiler;
 
+use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\DependencyInjectionExtension;
+use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
+use FSi\Component\DataGrid\Exception\DataGridException;
 use ReflectionNamedType;
 use RuntimeException;
 use Symfony\Component\Config\FileLocator;
@@ -18,6 +21,9 @@ use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
+
+use function is_a;
+use function sprintf;
 
 final class DataGridPass implements CompilerPassInterface
 {
@@ -28,24 +34,58 @@ final class DataGridPass implements CompilerPassInterface
             $loader->load('datagrid_gedmo.xml');
         }
 
-        if (true === $container->hasDefinition('datagrid.extension')) {
+        if (true === $container->hasDefinition(DependencyInjectionExtension::class)) {
             $columns = [];
             foreach ($container->findTaggedServiceIds('datagrid.column') as $serviceId => $tag) {
-                $alias = $tag[0]['alias'] ?? $serviceId;
-
-                $columns[$alias] = new Reference($serviceId);
+                $columns[] = new Reference($serviceId);
             }
-
-            $container->getDefinition('datagrid.extension')->replaceArgument(0, $columns);
 
             $columnExtensions = [];
             foreach ($container->findTaggedServiceIds('datagrid.column_extension') as $serviceId => $tag) {
-                $alias = $tag[0]['alias'] ?? $serviceId;
-
-                $columnExtensions[$alias] = new Reference($serviceId);
+                $columnExtensions[] = new Reference($serviceId);
             }
 
-            $container->getDefinition('datagrid.extension')->replaceArgument(1, $columnExtensions);
+            foreach ($columns as $columnReference) {
+                $columnDefinition = $container->getDefinition((string) $columnReference);
+                $columnClass = $columnDefinition->getClass();
+                if (null === $columnClass) {
+                    throw new DataGridException(
+                        sprintf(
+                            'DataGrid column type service %s has no class',
+                            (string) $columnReference
+                        )
+                    );
+                }
+                $columnTypeExtensionsReferences = [];
+                foreach ($columnExtensions as $columnExtensionReference) {
+                    $columnExtensionDefinition = $container->getDefinition((string) $columnExtensionReference);
+                    $columnExtensionClass = $columnExtensionDefinition->getClass();
+                    if (null === $columnExtensionClass) {
+                        throw new DataGridException(
+                            sprintf(
+                                'DataGrid column extension service %s has no class',
+                                (string) $columnExtensionReference
+                            )
+                        );
+                    }
+                    if (false === is_a($columnExtensionClass, ColumnTypeExtensionInterface::class, true)) {
+                        throw new DataGridException(
+                            sprintf(
+                                'DataGrid column extension class %s must implement %s',
+                                $columnExtensionClass,
+                                ColumnTypeExtensionInterface::class
+                            )
+                        );
+                    }
+                    foreach ($columnExtensionClass::getExtendedColumnTypes() as $extendedColumnType) {
+                        if (is_a($columnClass, $extendedColumnType, true)) {
+                            $columnTypeExtensionsReferences[] = $columnExtensionReference;
+                        }
+                    }
+                }
+
+                $columnDefinition->replaceArgument('$columnTypeExtensions', $columnTypeExtensionsReferences);
+            }
         }
 
         if (true === $container->hasDefinition('event_dispatcher')) {

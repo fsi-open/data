@@ -25,15 +25,32 @@ class Entity extends ColumnAbstractType
         return 'entity';
     }
 
-    public function getValue(ColumnInterface $column, $object)
+    protected function initOptions(OptionsResolver $optionsResolver): void
+    {
+        $optionsResolver->setDefaults([
+            'relation_field' => function (Options $options, $previousValue) {
+                return $previousValue ?? $options['name'];
+            },
+        ]);
+
+        $optionsResolver->setAllowedTypes('relation_field', 'string');
+    }
+
+    protected function getValue(ColumnInterface $column, $object)
     {
         /** @var string $relationField */
         $relationField = $column->getOption('relation_field');
 
-        return $column->getDataGrid()->getDataMapper()->getData($relationField, $object);
+        $values = $column->getDataGrid()->getDataMapper()->getData($relationField, $object);
+        $value = $this->filterValue($column, $values);
+        foreach ($this->columnTypeExtensions as $extension) {
+            $value = $extension->filterValue($column, $value);
+        }
+
+        return $value;
     }
 
-    public function filterValue(ColumnInterface $column, $value)
+    protected function filterValue(ColumnInterface $column, $value)
     {
         $values = [];
         $objectValues = [];
@@ -59,16 +76,5 @@ class Entity extends ColumnAbstractType
         }
 
         return $values;
-    }
-
-    public function initOptions(OptionsResolver $optionsResolver): void
-    {
-        $optionsResolver->setDefaults([
-            'relation_field' => function (Options $options, $previousValue) {
-                return $previousValue ?? $options['name'];
-            },
-        ]);
-
-        $optionsResolver->setAllowedTypes('relation_field', 'string');
     }
 }

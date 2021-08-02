@@ -21,10 +21,7 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\FormExtension;
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\EditableDataGridFormHandler;
-use FSi\Component\DataGrid\Column\CellView;
 use FSi\Component\DataGrid\Column\ColumnInterface;
-use FSi\Component\DataGrid\DataGridFactory;
-use Psr\EventDispatcher\EventDispatcherInterface;
 use ReflectionProperty;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\Entity;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\EntityCategory;
@@ -44,7 +41,6 @@ use Symfony\Component\Form\ResolvedFormTypeFactory;
 use Symfony\Component\Security\Csrf\CsrfTokenManager;
 use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\ValidatorBuilder;
-use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
 class FormExtensionTest extends TestCase
 {
@@ -52,7 +48,6 @@ class FormExtensionTest extends TestCase
      * @var DataGridInterface&MockObject
      */
     private DataGridInterface $dataGrid;
-    private DataGridFactory $dataGridFactory;
     private FormExtension $extension;
     private EditableDataGridFormHandler $formHandler;
 
@@ -135,11 +130,6 @@ class FormExtensionTest extends TestCase
 
         $this->extension = new FormExtension();
         $this->formHandler = new EditableDataGridFormHandler($formFactory);
-        $this->dataGridFactory = new DataGridFactory(
-            [new SimpleDataGridExtension($this->extension, null)],
-            $this->getDataMapper(),
-            $this->createMock(EventDispatcherInterface::class)
-        );
     }
 
     public function testSimpleBindData(): void
@@ -166,7 +156,6 @@ class FormExtensionTest extends TestCase
         ];
 
         $this->formHandler->bindData($column, 1, $object, $data);
-        $this->dataGridFactory->createCellView($column, 1, $object);
 
         self::assertSame('norbert@fsi.pl', $object->getAuthor());
         self::assertSame('object', $object->getName());
@@ -202,7 +191,6 @@ class FormExtensionTest extends TestCase
         ];
 
         $this->formHandler->bindData($column, 1, $object, $data);
-        $this->dataGridFactory->createCellView($column, 1, $object);
 
         self::assertNull($object->getAuthor());
         self::assertSame('old_name', $object->getName());
@@ -236,7 +224,6 @@ class FormExtensionTest extends TestCase
         self::assertNull($object->getCategory());
 
         $this->formHandler->bindData($column, 1, $object, $data);
-        $this->dataGridFactory->createCellView($column, 1, $object);
 
         self::assertInstanceOf($nestedEntityClass, $object->getCategory());
         self::assertSame('category name 1', $object->getCategory()->getName());

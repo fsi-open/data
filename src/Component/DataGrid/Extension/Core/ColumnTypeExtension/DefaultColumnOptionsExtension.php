@@ -20,6 +20,11 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class DefaultColumnOptionsExtension extends ColumnAbstractTypeExtension
 {
+    public static function getExtendedColumnTypes(): array
+    {
+        return [ColumnAbstractType::class];
+    }
+
     public function buildHeaderView(ColumnInterface $column, HeaderViewInterface $view): void
     {
         $view->setAttribute('label', $column->getOption('label'));
@@ -29,20 +34,13 @@ class DefaultColumnOptionsExtension extends ColumnAbstractTypeExtension
         }
     }
 
-    public function getExtendedColumnTypes(): array
-    {
-        return [ColumnAbstractType::class];
-    }
-
     public function initOptions(OptionsResolver $optionsResolver): void
     {
         $optionsResolver->setDefaults([
             'label' => static fn(Options $options, $previousValue) => $previousValue ?? $options['name'],
             'display_order' => null,
-            'field_mapping' => static fn(Options $options, $previousValue) => $previousValue ?? [$options['name']],
         ]);
         $optionsResolver->setAllowedTypes('label', 'string');
-        $optionsResolver->setAllowedTypes('field_mapping', 'array');
         $optionsResolver->setAllowedTypes('display_order', ['integer', 'null']);
     }
 }

@@ -13,6 +13,7 @@ namespace FSi\Bundle\DataGridBundle;
 
 use FSi\Bundle\DataGridBundle\DependencyInjection\Compiler\DataGridPass;
 use FSi\Bundle\DataGridBundle\DependencyInjection\FSIDataGridExtension;
+use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\HttpKernel\Bundle\Bundle;

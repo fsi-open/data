@@ -12,9 +12,7 @@ declare(strict_types=1);
 namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension;
 
 use FSi\Component\DataGrid\Column\ColumnInterface;
-use FSi\Component\DataGrid\DataGridFactory;
 use FSi\Component\DataGrid\DataGridInterface;
-use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Text;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
@@ -22,9 +20,7 @@ use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\ValueFormatColumnO
 use InvalidArgumentException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
-use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
 class ValueFormatColumnOptionsExtensionTest extends TestCase
 {
@@ -236,22 +232,15 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
 
     public function testFormatClosure(): void
     {
-        $dataGridFactory = new DataGridFactory(
-            [
-                new SimpleDataGridExtension(new DefaultColumnOptionsExtension(), new Text()),
-                new SimpleDataGridExtension($this->extension, null),
-            ],
-            $this->createMock(DataMapperInterface::class),
-            $this->createMock(EventDispatcherInterface::class)
-        );
+        $columnType = new Text([new DefaultColumnOptionsExtension(), $this->extension]);
 
-        $column = $dataGridFactory->createColumn($this->getDataGridMock(), Text::class, 'text', [
+        $column = $columnType->createColumn($this->getDataGridMock(), 'text', [
             'field_mapping' => ['text'],
             'value_format' => function ($data) {
                 return sprintf('%s %s', $data['text'], $data['text']);
             }
         ]);
-        $cellView = $dataGridFactory->createCellView($column, 1, (object) ['text' => 'bar']);
+        $cellView = $columnType->createCellView($column, 1, (object) ['text' => 'bar']);
 
         $this->assertSame('bar bar', $cellView->getValue());
     }

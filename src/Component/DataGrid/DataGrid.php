@@ -15,10 +15,8 @@ use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Data\DataRowsetInterface;
 use FSi\Component\DataGrid\Data\DataRowset;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
-use FSi\Component\DataGrid\Event\PostBindDataEvent;
 use FSi\Component\DataGrid\Event\PostBuildViewEvent;
 use FSi\Component\DataGrid\Event\PostSetDataEvent;
-use FSi\Component\DataGrid\Event\PreBindDataEvent;
 use FSi\Component\DataGrid\Event\PreBuildViewEvent;
 use FSi\Component\DataGrid\Event\PreSetDataEvent;
 use FSi\Component\DataGrid\Exception\DataGridException;
@@ -63,9 +61,9 @@ class DataGrid implements DataGridInterface
 
     public function addColumn(string $name, string $type = 'text', array $options = []): DataGridInterface
     {
-        return $this->addColumnInstance(
-            $this->dataGridFactory->createColumn($this, $type, $name, $options)
-        );
+        $columnType = $this->dataGridFactory->getColumnType($type);
+
+        return $this->addColumnInstance($columnType->createColumn($this, $name, $options));
     }
 
     public function addColumnInstance(ColumnInterface $column): DataGridInterface

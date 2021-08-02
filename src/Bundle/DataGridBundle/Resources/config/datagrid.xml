@@ -8,7 +8,6 @@
         <defaults autowire="true" autoconfigure="true" public="false" />
 
         <service id="FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\DependencyInjectionExtension">
-            <argument key="$columnTypesExtensions" type="tagged_iterator" tag="datagrid.column_extension" />
             <argument key="$columnTypes" type="tagged_iterator" tag="datagrid.column" />
         </service>
 
