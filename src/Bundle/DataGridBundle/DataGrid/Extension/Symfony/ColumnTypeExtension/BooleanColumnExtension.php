@@ -13,13 +13,9 @@ namespace FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtensi
 
 use FSi\Component\DataGrid\Column\ColumnAbstractTypeExtension;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Contracts\Translation\TranslatorInterface;
-
-use function array_merge;
-use function count;
 
 class BooleanColumnExtension extends ColumnAbstractTypeExtension
 {
@@ -37,40 +33,20 @@ class BooleanColumnExtension extends ColumnAbstractTypeExtension
 
     public function initOptions(OptionsResolver $optionsResolver): void
     {
-        $yes = $this->translator->trans('datagrid.boolean.yes', [], 'DataGridBundle');
-        $no = $this->translator->trans('datagrid.boolean.no', [], 'DataGridBundle');
         $optionsResolver->setDefaults([
-            'true_value' => $yes,
-            'false_value' => $no
+            'true_value' => 'datagrid.boolean.yes',
+            'false_value' => 'datagrid.boolean.no',
         ]);
 
         $optionsResolver->setNormalizer(
-            'form_options',
-            function (Options $options, $value) use ($yes, $no) {
-                if ($options['editable'] && 1 === count($options['field_mapping'])) {
-                    $field = $options['field_mapping'][0];
-                    $choices = [$no => 0, $yes => 1];
-
-                    return array_merge(
-                        [$field => ['choices' => $choices]],
-                        $value
-                    );
-                }
-
-                return $value;
-            }
+            'true_value',
+            fn(Options $options, string $value): string
+                => $this->translator->trans($value, [], $options['translation_domain'] ?? 'DataGridBundle')
         );
-
         $optionsResolver->setNormalizer(
-            'form_type',
-            function (Options $options, $value) {
-                if ($options['editable'] && 1 === count($options['field_mapping'])) {
-                    $field = $options['field_mapping'][0];
-                    return array_merge([$field => ChoiceType::class], $value);
-                }
-
-                return $value;
-            }
+            'false_value',
+            fn(Options $options, string $value): string
+                => $this->translator->trans($value, [], $options['translation_domain'] ?? 'DataGridBundle')
         );
     }
 }

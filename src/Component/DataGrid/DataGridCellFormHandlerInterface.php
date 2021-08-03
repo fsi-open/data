@@ -22,7 +22,7 @@ interface DataGridCellFormHandlerInterface
      * @param array<string,mixed>|object $source
      * @param mixed $data
      */
-    public function bindData(ColumnInterface $column, $index, $source, $data): void;
+    public function submit(ColumnInterface $column, $index, $source, $data): void;
 
     /**
      * @param ColumnInterface $column

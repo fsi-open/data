@@ -32,7 +32,7 @@ final class DataGridFormHandler implements DataGridFormHandlerInterface
      * @param DataGridInterface $dataGrid
      * @param mixed $data
      */
-    public function bindData(DataGridInterface $dataGrid, $data): void
+    public function submit(DataGridInterface $dataGrid, $data): void
     {
         $event = new PreBindDataEvent($dataGrid, $data);
         $this->eventDispatcher->dispatch($event);
@@ -46,7 +46,7 @@ final class DataGridFormHandler implements DataGridFormHandlerInterface
             $source = $dataGrid[$index];
 
             foreach ($dataGrid->getColumns() as $column) {
-                $this->dataGridCellFormHandler->bindData($column, $index, $source, $values);
+                $this->dataGridCellFormHandler->submit($column, $index, $source, $values);
             }
         }
 

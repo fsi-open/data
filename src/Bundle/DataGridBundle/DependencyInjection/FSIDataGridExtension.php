@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace FSi\Bundle\DataGridBundle\DependencyInjection;
 
+use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\CellFormBuilder\CellFormBuilderInterface;
 use FSi\Component\DataGrid\Event\DataGridEventSubscriberInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Config\FileLocator;
@@ -55,5 +56,7 @@ final class FSIDataGridExtension extends Extension
             ->addTag('datagrid.column_extension');
         $container->registerForAutoconfiguration(DataGridEventSubscriberInterface::class)
             ->addTag('datagrid.event_subscriber', ['default_priority_method' => 'getPriority']);
+        $container->registerForAutoconfiguration(CellFormBuilderInterface::class)
+            ->addTag('datagrid.cell_form_builder');
     }
 }

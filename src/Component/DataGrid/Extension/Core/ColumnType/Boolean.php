@@ -28,6 +28,8 @@ class Boolean extends ColumnAbstractType
             'true_value' => '',
             'false_value' => ''
         ]);
+        $optionsResolver->setAllowedTypes('true_value', ['string']);
+        $optionsResolver->setAllowedTypes('false_value', ['string']);
     }
 
     protected function filterValue(ColumnInterface $column, $value)

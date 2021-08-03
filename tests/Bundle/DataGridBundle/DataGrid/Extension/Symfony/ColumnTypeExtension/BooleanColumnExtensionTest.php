@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension;
 
+use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\CellFormBuilder\BooleanCellFormBuilder;
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\FormExtension;
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\BooleanColumnExtension;
 use FSi\Component\DataGrid\DataGridInterface;
@@ -25,7 +26,7 @@ class BooleanColumnExtensionTest extends TestCase
     public function testColumnOptions(): void
     {
         $columnType = new Boolean([
-            new FormExtension($this->createMock(FormFactoryInterface::class), true),
+            new FormExtension([new BooleanCellFormBuilder()], $this->createMock(FormFactoryInterface::class), true),
             new BooleanColumnExtension($this->getTranslator()),
         ]);
         $column = $columnType->createColumn($this->createMock(DataGridInterface::class), 'grid', []);

@@ -17,7 +17,7 @@ interface DataGridFormHandlerInterface
      * @param DataGridInterface $dataGrid
      * @param mixed $data
      */
-    public function bindData(DataGridInterface $dataGrid, $data): void;
+    public function submit(DataGridInterface $dataGrid, $data): void;
 
     public function isValid(DataGridInterface $dataGrid): bool;
 }

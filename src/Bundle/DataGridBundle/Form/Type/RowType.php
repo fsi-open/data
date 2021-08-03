@@ -19,7 +19,7 @@ final class RowType extends AbstractType
 {
     /**
      * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array{fields:array<array{name:string,type:string,options:array}>} $options
+     * @param array{fields:array<string,array{name:string,type:string,options:array<string,mixed>}>} $options
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {

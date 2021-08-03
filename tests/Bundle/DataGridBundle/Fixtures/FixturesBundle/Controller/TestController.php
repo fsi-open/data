@@ -46,7 +46,7 @@ final class TestController
         ]);
 
         if ('POST' === $request->getMethod()) {
-            $this->dataGridFormHandler->bindData($dataGrid, $request);
+            $this->dataGridFormHandler->submit($dataGrid, $request);
         }
 
         return new Response($this->twig->render('@Fixtures/test.html.twig', ['datagrid' => $dataGrid->createView()]));

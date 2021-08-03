@@ -30,12 +30,13 @@
                    resource="../../../../Component/DataGrid/Extension/Core/{ColumnType,ColumnTypeExtension,EventSubscriber}" />
 
         <prototype namespace="FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\"
-                   resource="../../DataGrid/Extension/Symfony/{ColumnType,ColumnTypeExtension,EventSubscriber}" />
+                   resource="../../DataGrid/Extension/Symfony/{CellFormBuilder,ColumnType,ColumnTypeExtension,EventSubscriber}" />
 
         <service id="FSi\Component\DataGrid\DataGridFormHandler" />
         <service id="FSi\Component\DataGrid\DataGridFormHandlerInterface"
                  alias="FSi\Component\DataGrid\DataGridFormHandler" />
         <service id="FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\FormExtension">
+            <argument key="$cellFormBuilders" type="tagged_iterator" tag="datagrid.cell_form_builder" />
             <argument key="$csrfProtectionEnabled">%form.type_extension.csrf.enabled%</argument>
         </service>
         <service id="FSi\Component\DataGrid\DataGridCellFormHandlerInterface"
