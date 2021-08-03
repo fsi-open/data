@@ -25,7 +25,7 @@ class ColumnViewOptionsExtension extends ColumnAbstractTypeExtension
         return [ColumnAbstractType::class];
     }
 
-    public function buildCellView(ColumnInterface $column, CellViewInterface $view): void
+    public function buildCellView(ColumnInterface $column, CellViewInterface $view, $index, $source): void
     {
         $view->setAttribute('translation_domain', $column->getOption('translation_domain'));
     }

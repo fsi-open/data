@@ -11,10 +11,13 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid;
 
-interface EditableDataGridInterface extends DataGridInterface
+interface DataGridFormHandlerInterface
 {
     /**
+     * @param DataGridInterface $dataGrid
      * @param mixed $data
      */
-    public function bindData($data): void;
+    public function bindData(DataGridInterface $dataGrid, $data): void;
+
+    public function isValid(DataGridInterface $dataGrid): bool;
 }

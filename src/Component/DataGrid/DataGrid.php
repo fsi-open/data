@@ -22,7 +22,12 @@ use FSi\Component\DataGrid\Event\PreSetDataEvent;
 use FSi\Component\DataGrid\Exception\DataGridException;
 use InvalidArgumentException;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use RuntimeException;
 
+use function current;
+use function key;
+use function next;
+use function reset;
 use function sprintf;
 
 class DataGrid implements DataGridInterface
@@ -59,7 +64,7 @@ class DataGrid implements DataGridInterface
         return $this->name;
     }
 
-    public function addColumn(string $name, string $type = 'text', array $options = []): DataGridInterface
+    public function addColumn(string $name, string $type, array $options = []): DataGridInterface
     {
         $columnType = $this->dataGridFactory->getColumnType($type);
 
@@ -151,6 +156,83 @@ class DataGrid implements DataGridInterface
         $this->eventDispatcher->dispatch($event);
         $this->rowset = new DataRowset($event->getData());
         $this->eventDispatcher->dispatch(new PostSetDataEvent($this, $this->rowset));
+    }
+
+    public function count(): int
+    {
+        if (null === $this->rowset) {
+            throw new InvalidArgumentException("DataGrid has not been initialized with data.");
+        }
+        return count($this->rowset);
+    }
+
+    /**
+     * @return array<string,mixed>|object|false
+     */
+    public function current()
+    {
+        if (null === $this->rowset) {
+            throw new InvalidArgumentException("DataGrid has not been initialized with data.");
+        }
+        return current($this->rowset);
+    }
+
+    /**
+     * @return int|string|null
+     */
+    public function key()
+    {
+        if (null === $this->rowset) {
+            throw new InvalidArgumentException("DataGrid has not been initialized with data.");
+        }
+        return key($this->rowset);
+    }
+
+    public function next(): void
+    {
+        if (null === $this->rowset) {
+            throw new InvalidArgumentException("DataGrid has not been initialized with data.");
+        }
+        next($this->rowset);
+    }
+
+    public function rewind(): void
+    {
+        if (null === $this->rowset) {
+            throw new InvalidArgumentException("DataGrid has not been initialized with data.");
+        }
+        reset($this->rowset);
+    }
+
+    public function valid(): bool
+    {
+        return null !== $this->key();
+    }
+
+    public function offsetExists($offset)
+    {
+        if (null === $this->rowset) {
+            throw new InvalidArgumentException("DataGrid has not been initialized with data.");
+        }
+        return $this->rowset->offsetExists($offset);
+    }
+
+    public function offsetGet($offset)
+    {
+        if (null === $this->rowset) {
+            throw new InvalidArgumentException("DataGrid has not been initialized with data.");
+        }
+        return $this->rowset->offsetGet($offset);
+    }
+
+    public function offsetSet($offset, $value)
+    {
+        throw new RuntimeException('Method not implemented');
+    }
+
+    public function offsetUnset($offset)
+    {
+        throw new RuntimeException('Method not implemented');
     }
 
     public function getDataMapper(): DataMapperInterface

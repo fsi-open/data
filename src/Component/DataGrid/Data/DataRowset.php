@@ -78,7 +78,7 @@ class DataRowset implements DataRowsetInterface
             return $this->data[$offset];
         }
 
-        throw new InvalidArgumentException(sprintf('Row "%s" does not exist in rowset.', $offset));
+        throw new InvalidArgumentException("Row \"{$offset}\" does not exist in rowset.");
     }
 
     public function offsetSet($offset, $value): void

@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Tests\FSi\Bundle\DataGridBundle\Fixtures\FixturesBundle\Controller;
 
 use FSi\Component\DataGrid\DataGridFactoryInterface;
+use FSi\Component\DataGrid\DataGridFormHandlerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\Entity;
@@ -21,17 +22,22 @@ use Twig\Environment;
 final class TestController
 {
     private DataGridFactoryInterface $dataGridFactory;
+    private DataGridFormHandlerInterface $dataGridFormHandler;
     private Environment $twig;
 
-    public function __construct(DataGridFactoryInterface $dataGridFactory, Environment $twig)
-    {
+    public function __construct(
+        DataGridFactoryInterface $dataGridFactory,
+        DataGridFormHandlerInterface $dataGridFormHandler,
+        Environment $twig
+    ) {
         $this->dataGridFactory = $dataGridFactory;
+        $this->dataGridFormHandler = $dataGridFormHandler;
         $this->twig = $twig;
     }
 
     public function __invoke(Request $request): Response
     {
-        $dataGrid = $this->dataGridFactory->createEditableDataGrid('datagrid');
+        $dataGrid = $this->dataGridFactory->createDataGrid('datagrid');
 
         $category = new EntityCategory(1, 'Category 2');
         $dataGrid->setData([
@@ -40,7 +46,7 @@ final class TestController
         ]);
 
         if ('POST' === $request->getMethod()) {
-            $dataGrid->bindData($request);
+            $this->dataGridFormHandler->bindData($dataGrid, $request);
         }
 
         return new Response($this->twig->render('@Fixtures/test.html.twig', ['datagrid' => $dataGrid->createView()]));

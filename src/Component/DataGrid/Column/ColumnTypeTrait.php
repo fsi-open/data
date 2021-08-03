@@ -36,7 +36,7 @@ trait ColumnTypeTrait
         $cellView = new CellView($column, $this->getValue($column, $source));
         $this->buildCellView($column, $cellView);
         foreach ($this->columnTypeExtensions as $extension) {
-            $extension->buildCellView($column, $cellView);
+            $extension->buildCellView($column, $cellView, $index, $source);
         }
 
         return $cellView;

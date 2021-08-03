@@ -20,7 +20,13 @@ interface ColumnTypeExtensionInterface
      */
     public static function getExtendedColumnTypes(): array;
 
-    public function buildCellView(ColumnInterface $column, CellViewInterface $view): void;
+    /**
+     * @param ColumnInterface $column
+     * @param CellViewInterface $view
+     * @param int|string $index
+     * @param array<string,mixed>|object $source
+     */
+    public function buildCellView(ColumnInterface $column, CellViewInterface $view, $index, $source): void;
 
     public function buildHeaderView(ColumnInterface $column, HeaderViewInterface $view): void;
 

@@ -17,13 +17,17 @@ use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class BooleanColumnExtensionTest extends TestCase
 {
     public function testColumnOptions(): void
     {
-        $columnType = new Boolean([new FormExtension(), new BooleanColumnExtension($this->getTranslator())]);
+        $columnType = new Boolean([
+            new FormExtension($this->createMock(FormFactoryInterface::class), true),
+            new BooleanColumnExtension($this->getTranslator()),
+        ]);
         $column = $columnType->createColumn($this->createMock(DataGridInterface::class), 'grid', []);
 
         $this->assertEquals('YES', $column->getOption('true_value'));

@@ -20,7 +20,6 @@ use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\FormExtension;
-use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\EditableDataGridFormHandler;
 use FSi\Component\DataGrid\Column\ColumnInterface;
 use ReflectionProperty;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\Entity;
@@ -49,7 +48,6 @@ class FormExtensionTest extends TestCase
      */
     private DataGridInterface $dataGrid;
     private FormExtension $extension;
-    private EditableDataGridFormHandler $formHandler;
 
     protected function setUp(): void
     {
@@ -128,8 +126,7 @@ class FormExtensionTest extends TestCase
         $this->dataGrid->method('getName')->willReturn('grid');
         $this->dataGrid->method('getDataMapper')->willReturn($this->getDataMapper());
 
-        $this->extension = new FormExtension();
-        $this->formHandler = new EditableDataGridFormHandler($formFactory);
+        $this->extension = new FormExtension($formFactory, true);
     }
 
     public function testSimpleBindData(): void
@@ -155,7 +152,7 @@ class FormExtensionTest extends TestCase
             'invalid_data' => 'test'
         ];
 
-        $this->formHandler->bindData($column, 1, $object, $data);
+        $this->extension->bindData($column, 1, $object, $data);
 
         self::assertSame('norbert@fsi.pl', $object->getAuthor());
         self::assertSame('object', $object->getName());
@@ -190,7 +187,7 @@ class FormExtensionTest extends TestCase
             'author' => 'invalid_value',
         ];
 
-        $this->formHandler->bindData($column, 1, $object, $data);
+        $this->extension->bindData($column, 1, $object, $data);
 
         self::assertNull($object->getAuthor());
         self::assertSame('old_name', $object->getName());
@@ -223,7 +220,7 @@ class FormExtensionTest extends TestCase
 
         self::assertNull($object->getCategory());
 
-        $this->formHandler->bindData($column, 1, $object, $data);
+        $this->extension->bindData($column, 1, $object, $data);
 
         self::assertInstanceOf($nestedEntityClass, $object->getCategory());
         self::assertSame('category name 1', $object->getCategory()->getName());

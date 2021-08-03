@@ -28,6 +28,4 @@ interface DataGridFactoryInterface
     public function getColumnType(string $type): ColumnTypeInterface;
 
     public function createDataGrid(string $name): DataGridInterface;
-
-    public function createEditableDataGrid(string $name): EditableDataGridInterface;
 }

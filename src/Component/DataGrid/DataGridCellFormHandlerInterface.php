@@ -14,21 +14,28 @@ namespace FSi\Component\DataGrid;
 use FSi\Component\DataGrid\Column\CellViewInterface;
 use FSi\Component\DataGrid\Column\ColumnInterface;
 
-interface EditableDataGridFormHandlerInterface
+interface DataGridCellFormHandlerInterface
 {
     /**
      * @param ColumnInterface $column
      * @param int|string $index
-     * @param array<string,mixed>|object $object
+     * @param array<string,mixed>|object $source
      * @param mixed $data
      */
-    public function bindData(ColumnInterface $column, $index, $object, $data): void;
+    public function bindData(ColumnInterface $column, $index, $source, $data): void;
 
     /**
      * @param ColumnInterface $column
      * @param CellViewInterface $view
      * @param int|string $index
-     * @param array<string,mixed>|object $object
+     * @param array<string,mixed>|object $source
      */
-    public function buildCellView(ColumnInterface $column, CellViewInterface $view, $index, $object): void;
+    public function buildCellView(ColumnInterface $column, CellViewInterface $view, $index, $source): void;
+
+    /**
+     * @param ColumnInterface $column
+     * @param int|string $index
+     * @return bool
+     */
+    public function isValid(ColumnInterface $column, $index): bool;
 }
