@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\EventSubscriber;
 
 use FSi\Component\DataGrid\Event\DataGridEventSubscriberInterface;
-use FSi\Component\DataGrid\Event\PreBindDataEvent;
+use FSi\Component\DataGrid\Event\PreSubmitEvent;
 use FSi\Component\DataGrid\Exception\DataGridException;
 use FSi\Bundle\DataGridBundle\HttpFoundation\RequestCompatibilityHelper;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,7 +24,7 @@ class BindRequest implements DataGridEventSubscriberInterface
         return 128;
     }
 
-    public function __invoke(PreBindDataEvent $event): void
+    public function __invoke(PreSubmitEvent $event): void
     {
         $dataGrid = $event->getDataGrid();
         $request = $event->getData();

@@ -161,7 +161,7 @@ class DataGrid implements DataGridInterface
     public function count(): int
     {
         if (null === $this->rowset) {
-            throw new InvalidArgumentException("DataGrid has not been initialized with data.");
+            throw $this->createUninitializedDataException();
         }
         return count($this->rowset);
     }
@@ -172,7 +172,7 @@ class DataGrid implements DataGridInterface
     public function current()
     {
         if (null === $this->rowset) {
-            throw new InvalidArgumentException("DataGrid has not been initialized with data.");
+            throw $this->createUninitializedDataException();
         }
         return current($this->rowset);
     }
@@ -183,7 +183,7 @@ class DataGrid implements DataGridInterface
     public function key()
     {
         if (null === $this->rowset) {
-            throw new InvalidArgumentException("DataGrid has not been initialized with data.");
+            throw $this->createUninitializedDataException();
         }
         return key($this->rowset);
     }
@@ -191,7 +191,7 @@ class DataGrid implements DataGridInterface
     public function next(): void
     {
         if (null === $this->rowset) {
-            throw new InvalidArgumentException("DataGrid has not been initialized with data.");
+            throw $this->createUninitializedDataException();
         }
         next($this->rowset);
     }
@@ -199,7 +199,7 @@ class DataGrid implements DataGridInterface
     public function rewind(): void
     {
         if (null === $this->rowset) {
-            throw new InvalidArgumentException("DataGrid has not been initialized with data.");
+            throw $this->createUninitializedDataException();
         }
         reset($this->rowset);
     }
@@ -212,7 +212,7 @@ class DataGrid implements DataGridInterface
     public function offsetExists($offset)
     {
         if (null === $this->rowset) {
-            throw new InvalidArgumentException("DataGrid has not been initialized with data.");
+            throw $this->createUninitializedDataException();
         }
         return $this->rowset->offsetExists($offset);
     }
@@ -220,7 +220,7 @@ class DataGrid implements DataGridInterface
     public function offsetGet($offset)
     {
         if (null === $this->rowset) {
-            throw new InvalidArgumentException("DataGrid has not been initialized with data.");
+            throw $this->createUninitializedDataException();
         }
         return $this->rowset->offsetGet($offset);
     }
@@ -243,11 +243,14 @@ class DataGrid implements DataGridInterface
     protected function getRowset(): DataRowsetInterface
     {
         if (null === $this->rowset) {
-            throw new DataGridException(
-                'Before you will be able to crete view from DataGrid you need to call method setData'
-            );
+            throw $this->createUninitializedDataException();
         }
 
         return $this->rowset;
+    }
+
+    private function createUninitializedDataException(): DataGridException
+    {
+        return new DataGridException("DataGrid {$this->name} has not been initialized with data.");
     }
 }

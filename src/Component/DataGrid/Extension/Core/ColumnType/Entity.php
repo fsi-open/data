@@ -28,9 +28,7 @@ class Entity extends ColumnAbstractType
     protected function initOptions(OptionsResolver $optionsResolver): void
     {
         $optionsResolver->setDefaults([
-            'relation_field' => function (Options $options, $previousValue) {
-                return $previousValue ?? $options['name'];
-            },
+            'relation_field' => static fn(Options $options, $previousValue) => $previousValue ?? $options['name'],
         ]);
 
         $optionsResolver->setAllowedTypes('relation_field', 'string');

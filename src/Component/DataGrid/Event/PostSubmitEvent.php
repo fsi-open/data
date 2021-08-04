@@ -13,7 +13,7 @@ namespace FSi\Component\DataGrid\Event;
 
 use FSi\Component\DataGrid\DataGridInterface;
 
-final class PostBindDataEvent
+final class PostSubmitEvent
 {
     private DataGridInterface $dataGrid;
     /**

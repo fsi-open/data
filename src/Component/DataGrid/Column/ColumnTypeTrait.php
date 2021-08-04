@@ -92,8 +92,9 @@ trait ColumnTypeTrait
             );
         }
 
+        $dataMapper = $column->getDataGrid()->getDataMapper();
         foreach ($column->getOption('field_mapping') as $field) {
-            $values[$field] = $column->getDataGrid()->getDataMapper()->getData($field, $object);
+            $values[$field] = $dataMapper->getData($field, $object);
         }
 
         $value = $this->filterValue($column, $values);

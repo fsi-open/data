@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnType;
 
+use Closure;
 use FSi\Component\DataGrid\Column\ColumnAbstractType;
 use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
@@ -73,8 +74,8 @@ class Action extends ColumnAbstractType
             'additional_parameters' => [],
         ]);
 
-        $this->actionOptionsResolver->setAllowedTypes('url_attr', ['array', 'Closure']);
-        $this->actionOptionsResolver->setAllowedTypes('content', ['null', 'string', 'Closure']);
+        $this->actionOptionsResolver->setAllowedTypes('url_attr', ['array', Closure::class]);
+        $this->actionOptionsResolver->setAllowedTypes('content', ['null', 'string', Closure::class]);
 
         $this->actionOptionsResolver->setRequired([
             'route_name',

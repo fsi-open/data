@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid\DataMapper;
 
-use FSi\Component\DataGrid\Exception\DataGridException;
 use FSi\Component\Reflection\ReflectionClass;
 use FSi\Component\DataGrid\Exception\DataMappingException;
 

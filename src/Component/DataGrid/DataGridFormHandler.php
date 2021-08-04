@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid;
 
-use FSi\Component\DataGrid\Event\PostBindDataEvent;
-use FSi\Component\DataGrid\Event\PreBindDataEvent;
+use FSi\Component\DataGrid\Event\PostSubmitEvent;
+use FSi\Component\DataGrid\Event\PreSubmitEvent;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 final class DataGridFormHandler implements DataGridFormHandlerInterface
@@ -34,7 +34,7 @@ final class DataGridFormHandler implements DataGridFormHandlerInterface
      */
     public function submit(DataGridInterface $dataGrid, $data): void
     {
-        $event = new PreBindDataEvent($dataGrid, $data);
+        $event = new PreSubmitEvent($dataGrid, $data);
         $this->eventDispatcher->dispatch($event);
         $data = $event->getData();
 
@@ -50,7 +50,7 @@ final class DataGridFormHandler implements DataGridFormHandlerInterface
             }
         }
 
-        $this->eventDispatcher->dispatch(new PostBindDataEvent($dataGrid, $data));
+        $this->eventDispatcher->dispatch(new PostSubmitEvent($dataGrid, $data));
     }
 
     public function isValid(DataGridInterface $dataGrid): bool
