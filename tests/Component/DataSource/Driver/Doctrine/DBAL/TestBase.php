@@ -20,38 +20,82 @@ use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use FSi\Component\DataSource\DataSourceFactory;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALFactory;
-use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\CoreExtension;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Event\PreGetResult;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\Boolean;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\Date;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\DateTime;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\Number;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\Text;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\Time;
 use FSi\Component\DataSource\Driver\DriverFactoryInterface;
 use FSi\Component\DataSource\Driver\DriverFactoryManager;
+use FSi\Component\DataSource\Event\DataSourceEvent\PostGetParameters;
+use FSi\Component\DataSource\Event\DataSourceEvent\PreBindParameters;
 use FSi\Component\DataSource\Extension\Core;
-use FSi\Component\DataSource\Extension\Core\Ordering\OrderingExtension;
-use Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL\Fixtures\DBALDriverExtension;
+use FSi\Component\DataSource\Extension\Core\Ordering\Field\FieldExtension;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL\Fixtures\TestConnectionRegistry;
 use PHPUnit\Framework\TestCase;
+use Tests\FSi\Component\DataSource\Fixtures\DBALQueryLogger;
 
 abstract class TestBase extends TestCase
 {
     protected const TABLE_CATEGORY_NAME = 'category';
     protected const TABLE_NEWS_NAME = 'news';
 
-    /**
-     * @var Connection
-     */
-    private $connection;
-
-    /**
-     * @var DBALDriverExtension
-     */
-    protected $testDoctrineExtension;
+    protected DBALQueryLogger $queryLogger;
+    private ?Connection $connection = null;
+    private ?EventDispatcherInterface $eventDispatcher = null;
+    private ?Core\Ordering\Storage $orderingStorage = null;
 
     protected function getDriverFactory(): DriverFactoryInterface
     {
-        $this->testDoctrineExtension = new DBALDriverExtension();
-
+        $fieldExtensions = [new FieldExtension($this->getOrderingStorage())];
         return new DBALFactory(
             new TestConnectionRegistry($this->getMemoryConnection()),
-            [new CoreExtension(), $this->testDoctrineExtension]
+            $this->getEventDispatcher(),
+            [
+                new Boolean($fieldExtensions),
+                new Date($fieldExtensions),
+                new DateTime($fieldExtensions),
+                new Number($fieldExtensions),
+                new Text($fieldExtensions),
+                new Time($fieldExtensions),
+            ]
         );
+    }
+
+    protected function getEventDispatcher(): EventDispatcherInterface
+    {
+        if (null === $this->eventDispatcher) {
+            $this->eventDispatcher = new EventDispatcher();
+            $this->eventDispatcher->addListener(
+                PreGetResult::class,
+                new Core\Ordering\EventSubscriber\DBALPreGetResult($this->getOrderingStorage())
+            );
+            $this->eventDispatcher->addListener(
+                PreBindParameters::class,
+                new Core\Ordering\EventSubscriber\OrderingPreBindParameters($this->getOrderingStorage())
+            );
+            $this->eventDispatcher->addListener(
+                PostGetParameters::class,
+                new Core\Ordering\EventSubscriber\OrderingPostGetParameters($this->getOrderingStorage())
+            );
+            $this->queryLogger = new DBALQueryLogger();
+            $this->eventDispatcher->addListener(PreGetResult::class, $this->queryLogger, -1);
+        }
+
+        return $this->eventDispatcher;
+    }
+
+    private function getOrderingStorage(): Core\Ordering\Storage
+    {
+        if (null === $this->orderingStorage) {
+            $this->orderingStorage = new Core\Ordering\Storage();
+        }
+
+        return $this->orderingStorage;
     }
 
     protected function getMemoryConnection(): Connection
@@ -72,12 +116,7 @@ abstract class TestBase extends TestCase
             $this->getDriverFactory()
         ]);
 
-        $extensions = [
-            new Core\Pagination\PaginationExtension(),
-            new OrderingExtension(),
-        ];
-
-        return new DataSourceFactory($driverFactoryManager, $extensions);
+        return new DataSourceFactory($this->getEventDispatcher(), $driverFactoryManager);
     }
 
     protected function loadTestData(Connection $connection): void

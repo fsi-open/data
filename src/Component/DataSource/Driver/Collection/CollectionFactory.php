@@ -15,9 +15,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Selectable;
 use FSi\Component\DataSource\Driver\Collection\Exception\CollectionDriverException;
-use FSi\Component\DataSource\Driver\DriverExtensionInterface;
 use FSi\Component\DataSource\Driver\DriverFactoryInterface;
 use FSi\Component\DataSource\Driver\DriverInterface;
+use FSi\Component\DataSource\Field\FieldTypeInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Traversable;
@@ -29,36 +30,42 @@ use function iterator_to_array;
 
 class CollectionFactory implements DriverFactoryInterface
 {
-    /**
-     * @var array<DriverExtensionInterface>
-     */
-    private $extensions;
+    private EventDispatcherInterface $eventDispatcher;
 
     /**
-     * @var OptionsResolver
+     * @var array<FieldTypeInterface>
      */
-    private $optionsResolver;
+    private array $fieldTypes;
 
-    /**
-     * @param array<DriverExtensionInterface> $extensions
-     */
-    public function __construct(array $extensions = [])
-    {
-        $this->extensions = $extensions;
-        $this->optionsResolver = new OptionsResolver();
-        $this->initOptions();
-    }
+    private OptionsResolver $optionsResolver;
 
-    public function getDriverType(): string
+    public static function getDriverType(): string
     {
         return 'collection';
+    }
+
+    /**
+     * @param EventDispatcherInterface $eventDispatcher
+     * @param array<FieldTypeInterface> $fieldTypes
+     */
+    public function __construct(EventDispatcherInterface $eventDispatcher, array $fieldTypes)
+    {
+        $this->eventDispatcher = $eventDispatcher;
+        $this->fieldTypes = $fieldTypes;
+        $this->optionsResolver = new OptionsResolver();
+        $this->initOptions();
     }
 
     public function createDriver(array $options = []): DriverInterface
     {
         $options = $this->optionsResolver->resolve($options);
 
-        return new CollectionDriver($this->extensions, $options['collection'], $options['criteria']);
+        return new CollectionDriver(
+            $this->eventDispatcher,
+            $this->fieldTypes,
+            $options['collection'],
+            $options['criteria']
+        );
     }
 
     private function initOptions(): void

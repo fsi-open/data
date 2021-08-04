@@ -21,6 +21,9 @@ use InvalidArgumentException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccess;
+use ValueError;
+
+use const PHP_VERSION_ID;
 
 class ValueFormatColumnOptionsExtensionTest extends TestCase
 {
@@ -107,7 +110,11 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
             'field_mapping' => [],
         ];
 
-        $this->expectError();
+        if (PHP_VERSION_ID < 80000) {
+            $this->expectError();
+        } else {
+            $this->expectException(ValueError::class);
+        }
         $this->assertFilteredValue($options, ['foo'], 'unreachable');
     }
 

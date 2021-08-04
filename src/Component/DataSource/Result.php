@@ -14,6 +14,9 @@ namespace FSi\Component\DataSource;
 use Countable;
 use IteratorAggregate;
 
+/**
+ * @template-extends IteratorAggregate<int|string,mixed>
+ */
 interface Result extends IteratorAggregate, Countable
 {
 }

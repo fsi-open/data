@@ -11,28 +11,74 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource\Driver\Doctrine\ORM;
 
-use FSi\Component\DataSource\Field\FieldAbstractType;
-use FSi\Component\DataSource\Driver\Doctrine\ORM\Exception\DoctrineDriverException;
 use Doctrine\ORM\QueryBuilder;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Exception\DoctrineDriverException;
+use FSi\Component\DataSource\Field\FieldAbstractType;
+use FSi\Component\DataSource\Field\FieldInterface;
 use Symfony\Component\OptionsResolver\Options;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 use function array_shift;
+use function in_array;
+use function is_array;
+use function sprintf;
+use function strpos;
+use function ucfirst;
 
 abstract class DoctrineAbstractField extends FieldAbstractType implements DoctrineFieldInterface
 {
-    public function buildQuery(QueryBuilder $qb, string $alias): void
+    public function initOptions(OptionsResolver $optionsResolver): void
     {
-        $data = $this->getCleanParameter();
-        $fieldName = $this->getFieldName($alias);
-        $name = $this->getName();
+        parent::initOptions($optionsResolver);
 
+        $optionsResolver
+            ->setDefaults([
+                'field' => null,
+                'auto_alias' => true,
+                'clause' => 'where'
+            ])
+            ->setAllowedValues('clause', ['where', 'having'])
+            ->setAllowedTypes('field', ['string', 'null'])
+            ->setAllowedTypes('auto_alias', 'bool')
+            ->setNormalizer('field', function (Options $options, ?string $value): ?string {
+                return $value ?? $options['name'];
+            })
+            ->setNormalizer('clause', function (Options $options, string $value): string {
+                return strtolower($value);
+            })
+        ;
+    }
+
+    public function getDBALType(): ?string
+    {
+        return null;
+    }
+
+    public function buildQuery(QueryBuilder $qb, string $alias, FieldInterface $field): void
+    {
+        if (false === $field->getType() instanceof static) {
+            throw new DoctrineDriverException(
+                sprintf(
+                    'Field\'s "%s" type "%s" is not compatible with type "%s"',
+                    $field->getName(),
+                    $field->getType()->getId(),
+                    $this->getId()
+                )
+            );
+        }
+
+        $data = $field->getParameter();
         if (true === $this->isEmpty($data)) {
             return;
         }
 
+        $fieldName = $this->getQueryFieldName($field, $alias);
+        $name = $field->getName();
+
+
         $type = $this->getDBALType();
-        $comparison = $this->getComparison();
-        $func = sprintf('and%s', ucfirst($this->getOption('clause')));
+        $comparison = $field->getOption('comparison');
+        $func = sprintf('and%s', ucfirst($field->getOption('clause')));
 
         if ('between' === $comparison) {
             if (false === is_array($data)) {
@@ -81,43 +127,18 @@ abstract class DoctrineAbstractField extends FieldAbstractType implements Doctri
         }
 
         $qb->$func($qb->expr()->$comparison($fieldName, ":$name"));
-        $qb->setParameter($this->getName(), $data, $type);
-    }
-
-    public function initOptions(): void
-    {
-        $this->getOptionsResolver()
-            ->setDefaults([
-                'field' => null,
-                'auto_alias' => true,
-                'clause' => 'where'
-            ])
-            ->setAllowedValues('clause', ['where', 'having'])
-            ->setAllowedTypes('field', ['string', 'null'])
-            ->setAllowedTypes('auto_alias', 'bool')
-            ->setNormalizer('field', function (Options $options, ?string $value): ?string {
-                return $value ?? $this->getName();
-            })
-            ->setNormalizer('clause', function (Options $options, string $value): string {
-                return strtolower($value);
-            })
-        ;
-    }
-
-    public function getDBALType(): ?string
-    {
-        return null;
+        $qb->setParameter($field->getName(), $data, $type);
     }
 
     /**
      * Constructs proper field name from field mapping or (if absent) from own name.
      * Optionally adds alias (if missing and auto_alias option is set to true).
      */
-    protected function getFieldName(string $alias): string
+    protected function getQueryFieldName(FieldInterface $field, string $alias): string
     {
-        $name = $this->getOption('field');
+        $name = $field->getOption('field');
 
-        if (true === $this->getOption('auto_alias') && false === strpos($name, ".")) {
+        if (true === $field->getOption('auto_alias') && false === strpos($name, ".")) {
             $name = "$alias.$name";
         }
 

@@ -11,17 +11,16 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource\Field;
 
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-interface FieldExtensionInterface extends EventSubscriberInterface
+interface FieldExtensionInterface
 {
     /**
-     * @return array<string>
+     * @return array<class-string<FieldTypeInterface>>
      */
-    public function getExtendedFieldTypes(): array;
+    public static function getExtendedFieldTypes(): array;
 
-    /**
-     * @param FieldTypeInterface $field
-     */
-    public function initOptions(FieldTypeInterface $field): void;
+    public function initOptions(OptionsResolver $optionsResolver, FieldTypeInterface $fieldType): void;
+
+    public function buildView(FieldInterface $field, FieldViewInterface $view): void;
 }

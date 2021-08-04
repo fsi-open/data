@@ -11,37 +11,52 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource\Extension\Core\Ordering\Field;
 
-use FSi\Component\DataSource\Event\FieldEvent;
-use FSi\Component\DataSource\Event\FieldEvents;
 use FSi\Component\DataSource\Extension\Core\Ordering\OrderingExtension;
+use FSi\Component\DataSource\Extension\Core\Ordering\Storage;
 use FSi\Component\DataSource\Extension\Core\Pagination\PaginationExtension;
 use FSi\Component\DataSource\Field\FieldAbstractExtension;
+use FSi\Component\DataSource\Field\FieldInterface;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
+use FSi\Component\DataSource\Field\FieldViewInterface;
+use FSi\Component\DataSource\Field\Type\BooleanTypeInterface;
+use FSi\Component\DataSource\Field\Type\DateTimeTypeInterface;
+use FSi\Component\DataSource\Field\Type\DateTypeInterface;
+use FSi\Component\DataSource\Field\Type\NumberTypeInterface;
+use FSi\Component\DataSource\Field\Type\TextTypeInterface;
+use FSi\Component\DataSource\Field\Type\TimeTypeInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
+use function array_combine;
 use function array_key_exists;
+use function array_keys;
+use function array_unshift;
+use function array_values;
+use function key;
 
 class FieldExtension extends FieldAbstractExtension
 {
-    /**
-     * @var array<string, array{priority: int, direction: string}|null>
-     */
-    private array $ordering = [];
+    private Storage $storage;
 
-    public function getExtendedFieldTypes(): array
+    public function __construct(Storage $storage)
     {
-        return ['text', 'number', 'date', 'time', 'datetime', 'boolean'];
+        $this->storage = $storage;
     }
 
-    public static function getSubscribedEvents(): array
+    public static function getExtendedFieldTypes(): array
     {
         return [
-            FieldEvents::POST_BUILD_VIEW => ['postBuildView']
+            BooleanTypeInterface::class,
+            DateTimeTypeInterface::class,
+            DateTypeInterface::class,
+            NumberTypeInterface::class,
+            TextTypeInterface::class,
+            TimeTypeInterface::class,
         ];
     }
 
-    public function initOptions(FieldTypeInterface $field): void
+    public function initOptions(OptionsResolver $optionsResolver, FieldTypeInterface $fieldType): void
     {
-        $field->getOptionsResolver()
+        $optionsResolver
             ->setDefined(['default_sort_priority'])
             ->setDefaults([
                 'default_sort' => null,
@@ -53,36 +68,8 @@ class FieldExtension extends FieldAbstractExtension
         ;
     }
 
-    /**
-     * @param FieldTypeInterface $field
-     * @param array{priority: int, direction: string}|null $ordering
-     */
-    public function setOrdering(FieldTypeInterface $field, ?array $ordering): void
+    public function buildView(FieldInterface $field, FieldViewInterface $view): void
     {
-        $field_oid = spl_object_hash($field);
-        $this->ordering[$field_oid] = $ordering;
-    }
-
-    /**
-     * @param FieldTypeInterface $field
-     * @return array{priority: int, direction: string}|null
-     */
-    public function getOrdering(FieldTypeInterface $field): ?array
-    {
-        $field_oid = spl_object_hash($field);
-        if (true === array_key_exists($field_oid, $this->ordering)) {
-            return $this->ordering[$field_oid];
-        }
-
-        return null;
-    }
-
-    public function postBuildView(FieldEvent\ViewEventArgs $event): void
-    {
-        $field = $event->getField();
-        $field_oid = spl_object_hash($field);
-        $view = $event->getView();
-
         $view->setAttribute('sortable', $field->getOption('sortable'));
         if (false === $field->getOption('sortable')) {
             return;
@@ -92,12 +79,11 @@ class FieldExtension extends FieldAbstractExtension
         $dataSourceName = $field->getDataSource()->getName();
 
         if (
-            true === array_key_exists($field_oid, $this->ordering)
-            && true === array_key_exists('direction', $this->ordering[$field_oid])
+            null !== $this->storage->getFieldSortingPriority($field)
             && key($parameters[$dataSourceName][OrderingExtension::PARAMETER_SORT]) === $field->getName()
         ) {
-            $view->setAttribute('sorted_ascending', 'asc' === $this->ordering[$field_oid]['direction']);
-            $view->setAttribute('sorted_descending', 'desc' === $this->ordering[$field_oid]['direction']);
+            $view->setAttribute('sorted_ascending', true === $this->storage->isFieldSortingAscending($field));
+            $view->setAttribute('sorted_descending', false === $this->storage->isFieldSortingAscending($field));
         } else {
             $view->setAttribute('sorted_ascending', false);
             $view->setAttribute('sorted_descending', false);

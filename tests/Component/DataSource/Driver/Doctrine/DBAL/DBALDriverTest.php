@@ -12,25 +12,27 @@ declare(strict_types=1);
 namespace Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
 use Doctrine\DBAL\Connection;
+use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALAbstractField;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALDriver;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALFieldInterface;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Event\PostGetResult;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Event\PreGetResult;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Exception\DBALDriverException;
-use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\CoreExtension;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field;
-use FSi\Component\DataSource\Exception\DataSourceException;
-use FSi\Component\DataSource\Exception\FieldException;
-use FSi\Component\DataSource\Field\FieldTypeInterface;
-use Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL\Fixtures\DBALDriverExtension;
-use Tests\FSi\Component\DataSource\Fixtures\FieldExtension;
-use stdClass;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\Boolean;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\Date;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\DateTime;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\Number;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\Text;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\Time;
+use FSi\Component\DataSource\Field\FieldInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 class DBALDriverTest extends TestBase
 {
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
     protected function setUp(): void
     {
@@ -44,7 +46,7 @@ class DBALDriverTest extends TestBase
     {
         $qb = $this->connection->createQueryBuilder();
 
-        new DBALDriver([], $qb, 'e');
+        new DBALDriver($this->createMock(EventDispatcherInterface::class), [], $qb, 'e');
     }
 
     /**
@@ -53,10 +55,10 @@ class DBALDriverTest extends TestBase
     public function testGetResultExceptionWhenFieldIsNotDBALField(): void
     {
         $qb = $this->connection->createQueryBuilder();
-        $driver = new DBALDriver([], $qb, 'e');
-        $this->expectException(DBALDriverException::class);
+        $driver = new DBALDriver($this->createMock(EventDispatcherInterface::class), [], $qb, 'e');
 
-        $fields = [$this->createMock(FieldTypeInterface::class)];
+        $this->expectException(DBALDriverException::class);
+        $fields = [$this->createMock(FieldInterface::class)];
         $driver->getResult($fields, 0, 20);
     }
 
@@ -68,46 +70,17 @@ class DBALDriverTest extends TestBase
         $fields = [];
 
         for ($x = 0; $x < 6; $x++) {
-            $field = $this->createMock(DBALAbstractField::class);
-            $field->expects(self::once())->method('buildQuery');
+            $fieldType = $this->createMock(DBALAbstractField::class);
+            $fieldType->expects(self::once())->method('buildQuery');
+            $field = $this->createMock(FieldInterface::class);
+            $field->method('getType')->willReturn($fieldType);
 
             $fields[] = $field;
         }
 
         $qb = $this->connection->createQueryBuilder();
-        $driver = new DBALDriver([], $qb, 'e');
+        $driver = new DBALDriver($this->createMock(EventDispatcherInterface::class), [], $qb, 'e');
         $driver->getResult($fields, 0, 20);
-    }
-
-    /**
-     * Checks exception when trying to access the query builder not during getResult method.
-     */
-    public function testGetQueryExceptionWhenNotInsideGetResult(): void
-    {
-        $qb = $this->connection->createQueryBuilder();
-        $driver = new DBALDriver([], $qb, 'e');
-        $this->expectException(DBALDriverException::class);
-        $driver->getQueryBuilder();
-    }
-
-    /**
-     * Checks CoreExtension.
-     */
-    public function testCoreExtension(): void
-    {
-        $qb = $this->connection->createQueryBuilder();
-        $driver = new DBALDriver([new CoreExtension()], $qb, 'e');
-
-        self::assertTrue($driver->hasFieldType('text'));
-        self::assertTrue($driver->hasFieldType('number'));
-        self::assertTrue($driver->hasFieldType('date'));
-        self::assertTrue($driver->hasFieldType('time'));
-        self::assertTrue($driver->hasFieldType('datetime'));
-        self::assertTrue($driver->hasFieldType('boolean'));
-        self::assertFalse($driver->hasFieldType('wrong'));
-
-        $this->expectException(DataSourceException::class);
-        $driver->getFieldType('wrong');
     }
 
     /**
@@ -116,12 +89,13 @@ class DBALDriverTest extends TestBase
     public function testExtensionsCalls(): void
     {
         $qb = $this->connection->createQueryBuilder();
-        $extension = new DBALDriverExtension();
-        $driver = new DBALDriver([], $qb, 'e');
-        $driver->addExtension($extension);
+        $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
+        $driver = new DBALDriver($eventDispatcher, [], $qb, 'e');
 
+        $eventDispatcher->expects(self::exactly(2))
+            ->method('dispatch')
+            ->withConsecutive([self::isInstanceOf(PreGetResult::class)], [self::isInstanceOf(PostGetResult::class)]);
         $driver->getResult([], 0, 20);
-        self::assertEquals(['preGetResult', 'postGetResult'], $extension->getCalls());
     }
 
     /**
@@ -149,60 +123,27 @@ class DBALDriverTest extends TestBase
     public function testCoreFields(string $type): void
     {
         $qb = $this->connection->createQueryBuilder();
-        $driver = new DBALDriver([new CoreExtension()], $qb, 'e');
+        $driver = new DBALDriver(
+            $this->createMock(EventDispatcherInterface::class),
+            [
+                new Boolean([]),
+                new Date([]),
+                new DateTime([]),
+                new Number([]),
+                new Text([]),
+                new Time([]),
+            ],
+            $qb,
+            'e'
+        );
         self::assertTrue($driver->hasFieldType($type));
-        $field = $driver->getFieldType($type);
-        self::assertInstanceOf(DBALFieldInterface::class, $field);
+        $fieldType = $driver->getFieldType($type);
+        self::assertInstanceOf(DBALFieldInterface::class, $fieldType);
 
-        self::assertTrue($field->getOptionsResolver()->isDefined('field'));
-
-        $comparisons = $field->getAvailableComparisons();
-        self::assertGreaterThan(0, count($comparisons));
-
-        foreach ($comparisons as $cmp) {
-            $field = $driver->getFieldType($type);
-            $field->setName('name');
-            $field->setComparison($cmp);
-            $field->setOptions([]);
-        }
-
+        $field = $fieldType->createField($this->createMock(DataSourceInterface::class), 'test', ['comparison' => 'eq']);
         self::assertEquals($field->getOption('field'), $field->getName());
 
-        $this->expectException(FieldException::class);
-        $field = $driver->getFieldType($type);
-        $field->setComparison('wrong');
-    }
-
-    /**
-     * Checks fields extensions calls.
-     */
-    public function testFieldsExtensionsCalls(): void
-    {
-        $extension = new FieldExtension();
-        $parameter = [];
-
-        $fields = [
-            new Field\Text(),
-            new Field\Number(),
-            new Field\Date(),
-            new Field\Time(),
-            new Field\DateTime(),
-        ];
-
-        foreach ($fields as $field) {
-            $field->addExtension($extension);
-
-            $field->bindParameter([]);
-            self::assertEquals(['preBindParameter', 'postBindParameter'], $extension->getCalls());
-            $extension->resetCalls();
-
-            $field->getParameter($parameter);
-            self::assertEquals(['postGetParameter'], $extension->getCalls());
-            $extension->resetCalls();
-
-            $field->createView();
-            self::assertEquals(['postBuildView'], $extension->getCalls());
-            $extension->resetCalls();
-        }
+        $this->expectException(InvalidOptionsException::class);
+        $fieldType->createField($this->createMock(DataSourceInterface::class), 'test', ['comparison' => 'X']);
     }
 }

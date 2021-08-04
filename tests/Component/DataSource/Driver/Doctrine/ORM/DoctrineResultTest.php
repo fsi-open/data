@@ -50,7 +50,7 @@ final class DoctrineResultTest extends TestCase
             );
 
         $result = new DoctrineResult($registry, $paginator);
-        self::assertSame($result['0'], ['foo', 'bar']);
-        self::assertSame($result['1'], ['foo1', 'bar1']);
+        self::assertSame($result[0], ['foo', 'bar']);
+        self::assertSame($result[1], ['foo1', 'bar1']);
     }
 }

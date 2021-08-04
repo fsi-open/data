@@ -11,36 +11,26 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
-use Closure;
-use Doctrine\Persistence\ConnectionRegistry;
+use ArrayIterator;
+use Doctrine\Common\Collections\ArrayCollection;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALDriver;
-use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALFactory;
-use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\CoreExtension;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALResult;
 use FSi\Component\DataSource\Driver\DriverFactoryInterface;
-use Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL\Fixtures\TestConnectionRegistry;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 class DBALFactoryTest extends TestBase
 {
-    /**
-     * @var ConnectionRegistry
-     */
-    private $connectionRegistry;
-
-    /**
-     * @var DriverFactoryInterface
-     */
-    private $factory;
+    private DriverFactoryInterface $factory;
 
     protected function setUp(): void
     {
-        $this->connectionRegistry = new TestConnectionRegistry($this->getMemoryConnection());
-        $this->factory = new DBALFactory($this->connectionRegistry, []);
+        $this->loadTestData($this->getMemoryConnection());
+        $this->factory = $this->getDriverFactory();
     }
 
     public function testDriverType(): void
     {
-        self::assertEquals('doctrine-dbal', $this->factory->getDriverType());
+        self::assertEquals('doctrine-dbal', $this->factory::getDriverType());
     }
 
     public function testExceptionWhenNoTableAndBuilder(): void
@@ -74,32 +64,26 @@ class DBALFactoryTest extends TestBase
         self::assertInstanceOf(DBALDriver::class, $driver);
     }
 
-    public function testPassExtensions(): void
-    {
-        self::assertCount(0, $this->factory->createDriver(['table' => 'table_name'])->getExtensions());
-
-        $factory = new DBALFactory($this->connectionRegistry, [
-            new CoreExtension(),
-        ]);
-        self::assertCount(1, $factory->createDriver(['table' => 'table_name'])->getExtensions());
-    }
-
     public function testPassIndexField(): void
     {
         $driver = $this->factory->createDriver([
             'table' => self::TABLE_CATEGORY_NAME,
-            'indexField' => 'test',
+            'indexField' => '[name]',
         ]);
         self::assertInstanceOf(DBALDriver::class, $driver);
-        self::assertEquals('test', $driver->getIndexField());
+
+        $result = $driver->getResult([], 0, 1);
+        $iterator = $result->getIterator();
+        self::assertInstanceOf(ArrayIterator::class, $iterator);
+        self::assertEquals('name-1', $iterator->key());
 
         $driver = $this->factory->createDriver([
             'table' => self::TABLE_CATEGORY_NAME,
-            'indexField' => static function () {
-            },
+            'indexField' => static fn(array $row): string => $row['name'],
         ]);
-        self::assertInstanceOf(DBALDriver::class, $driver);
-
-        self::assertInstanceOf(Closure::class, $driver->getIndexField());
+        $result = $driver->getResult([], 0, 1);
+        $iterator = $result->getIterator();
+        self::assertInstanceOf(ArrayIterator::class, $iterator);
+        self::assertEquals('name-1', $iterator->key());
     }
 }

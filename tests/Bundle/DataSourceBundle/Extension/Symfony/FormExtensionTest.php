@@ -10,17 +10,27 @@
 namespace Tests\FSi\Bundle\DataSourceBundle\Extension\Symfony;
 
 use DateTimeImmutable;
-use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Driver\DriverExtension;
-use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\EventSubscriber\Events;
+use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\EventSubscriber\DataSourcePostBuildView;
+use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\EventSubscriber\FieldPreBindParameter;
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Extension\DatasourceExtension;
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Field\FormFieldExtension;
+use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\FormStorage;
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Type\BetweenType;
+use FSi\Component\DataSource\Event\DataSourceEvent\PostBuildView;
+use FSi\Component\DataSource\Event\DataSourceEvent\PreBuildView;
+use FSi\Component\DataSource\Field\Field;
+use FSi\Component\DataSource\Field\FieldInterface;
+use FSi\Component\DataSource\Field\Type\BooleanTypeInterface;
+use FSi\Component\DataSource\Field\Type\DateTimeTypeInterface;
+use FSi\Component\DataSource\Field\Type\DateTypeInterface;
+use FSi\Component\DataSource\Field\Type\NumberTypeInterface;
+use FSi\Component\DataSource\Field\Type\TextTypeInterface;
+use FSi\Component\DataSource\Field\Type\TimeTypeInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 use Tests\FSi\Bundle\DataSourceBundle\Fixtures\Form as TestForm;
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\DataSourceViewInterface;
-use FSi\Component\DataSource\Event\DataSourceEvent\ViewEventArgs;
 use FSi\Component\DataSource\Event\FieldEvent;
-use FSi\Component\DataSource\Exception\DataSourceException;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
 use FSi\Component\DataSource\Field\FieldView;
 use FSi\Component\DataSource\Field\FieldViewInterface;
@@ -34,92 +44,56 @@ use Symfony\Component\Form\FormView;
 use Symfony\Component\Security\Csrf\CsrfTokenManager;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+use function array_map;
+use function date;
+use function in_array;
+use function range;
+
 class FormExtensionTest extends TestCase
 {
+    /**
+     * @return array<array{class-string<FieldTypeInterface>}>
+     */
     public static function typesProvider(): array
     {
         return [
-            ['text'],
-            ['number'],
-            ['date'],
-            ['time'],
-            ['datetime']
+            [TextTypeInterface::class],
+            [NumberTypeInterface::class],
+            [DateTypeInterface::class],
+            [TimeTypeInterface::class],
+            [DateTimeTypeInterface::class],
         ];
     }
 
     /**
      * Provides field types, comparison types and expected form input types.
      *
-     * @return array
+     * @return array<array{class-string<FieldTypeInterface>, string, string}>
      */
     public static function fieldTypesProvider(): array
     {
         return [
-            ['text', 'isNull', 'choice'],
-            ['text', 'eq', 'text'],
-            ['number', 'isNull', 'choice'],
-            ['number', 'eq', 'number'],
-            ['datetime', 'isNull', 'choice'],
-            ['datetime', 'eq', 'datetime'],
-            ['datetime', 'between', 'datasource_between'],
-            ['time', 'isNull', 'choice'],
-            ['time', 'eq', 'time'],
-            ['date', 'isNull', 'choice'],
-            ['date', 'eq', 'date']
+            [TextTypeInterface::class, 'isNull', 'choice'],
+            [TextTypeInterface::class, 'eq', 'text'],
+            [NumberTypeInterface::class, 'isNull', 'choice'],
+            [NumberTypeInterface::class, 'eq', 'number'],
+            [DateTimeTypeInterface::class, 'isNull', 'choice'],
+            [DateTimeTypeInterface::class, 'eq', 'datetime'],
+            [DateTimeTypeInterface::class, 'between', 'datasource_between'],
+            [TimeTypeInterface::class, 'isNull', 'choice'],
+            [TimeTypeInterface::class, 'eq', 'time'],
+            [DateTypeInterface::class, 'isNull', 'choice'],
+            [DateTypeInterface::class, 'eq', 'date']
         ];
-    }
-
-    /**
-     * Checks creation of DriverExtension.
-     */
-    public function testCreateDriverExtension(): void
-    {
-        $formFactory = $this->getFormFactory();
-        $translator = $this->createMock(TranslatorInterface::class);
-
-        $driver = new DriverExtension($formFactory, $translator);
-        // Without an assertion the test would be marked as risky
-        self::assertNotNull($driver);
-    }
-
-    /**
-     * Tests if driver extension has all needed fields.
-     */
-    public function testDriverExtension(): void
-    {
-        $this->expectException(DataSourceException::class);
-
-        $formFactory = $this->getFormFactory();
-        $translator = $this->createMock(TranslatorInterface::class);
-        $extension = new DriverExtension($formFactory, $translator);
-
-        self::assertTrue($extension->hasFieldTypeExtensions('text'));
-        self::assertTrue($extension->hasFieldTypeExtensions('number'));
-        self::assertTrue($extension->hasFieldTypeExtensions('entity'));
-        self::assertTrue($extension->hasFieldTypeExtensions('date'));
-        self::assertTrue($extension->hasFieldTypeExtensions('time'));
-        self::assertTrue($extension->hasFieldTypeExtensions('datetime'));
-        self::assertFalse($extension->hasFieldTypeExtensions('wrong'));
-
-        $extension->getFieldTypeExtensions('text');
-        $extension->getFieldTypeExtensions('number');
-        $extension->getFieldTypeExtensions('entity');
-        $extension->getFieldTypeExtensions('date');
-        $extension->getFieldTypeExtensions('time');
-        $extension->getFieldTypeExtensions('datetime');
-        $extension->getFieldTypeExtensions('wrong');
     }
 
     public function testFormOrder(): void
     {
-        $datasource = $this->createMock(DataSourceInterface::class);
-        $view = $this->createMock(DataSourceViewInterface::class);
+        $dataSource = $this->createMock(DataSourceInterface::class);
 
         $fields = [];
-        $fieldViews = [];
         for ($i = 0; $i < 15; $i++) {
-            $field = $this->createMock(FieldTypeInterface::class);
-            $fieldView = $this->createMock(FieldViewInterface::class);
+            $field = $this->createMock(FieldInterface::class);
 
             unset($order);
             if ($i < 5) {
@@ -135,17 +109,10 @@ class FormExtensionTest extends TestCase
                 $field->method('getOption')->willReturn($order);
             }
 
-            $fieldView->method('getName')->willReturn('field' . $i);
             $fields['field' . $i] = $field;
-            $fieldViews['field' . $i] = $fieldView;
-            if (isset($order)) {
-                $names['field' . $i] = $order;
-            } else {
-                $names['field' . $i] = null;
-            }
         }
 
-        $datasource
+        $dataSource
             ->method('getField')
             ->willReturnCallback(
                 static function ($field) use ($fields) {
@@ -154,129 +121,89 @@ class FormExtensionTest extends TestCase
             )
         ;
 
-        $view->method('getFields')->willReturn($fieldViews);
-        $view
-            ->expects(self::once())
-            ->method('setFields')
-            ->willReturnCallback(
-                function (array $fields) {
-                    $names = [];
-                    foreach ($fields as $field) {
-                        $names[] = $field->getName();
-                    }
+        $event = new PreBuildView($fields);
+        $subscriber = new DataSourcePostBuildView();
+        $subscriber($event);
 
-                    $this->assertSame(
-                        [
-                            'field0',
-                            'field1',
-                            'field2',
-                            'field3',
-                            'field5',
-                            'field6',
-                            'field7',
-                            'field8',
-                            'field9',
-                            'field10',
-                            'field4',
-                            'field11',
-                            'field12',
-                            'field13',
-                            'field14'
-                        ],
-                        $names
-                    );
-                }
-            )
-        ;
-
-        $event = new ViewEventArgs($datasource, $view);
-        $subscriber = new Events();
-        $subscriber->postBuildView($event);
+        $sortedFields = array_map(static fn(FieldInterface $field): string => $field->getName(), $event->getFields());
+        self::assertSame(
+            [
+                'field0',
+                'field1',
+                'field2',
+                'field3',
+                'field5',
+                'field6',
+                'field7',
+                'field8',
+                'field9',
+                'field10',
+                'field4',
+                'field11',
+                'field12',
+                'field13',
+                'field14'
+            ],
+            $sortedFields
+        );
     }
 
     /**
      * @dataProvider typesProvider()
+     * @param class-string<FieldTypeInterface> $type
      */
     public function testFields(string $type): void
     {
         $formFactory = $this->getFormFactory();
         $translator = $this->createMock(TranslatorInterface::class);
-        $extension = new DriverExtension($formFactory, $translator);
-        $datasource = $this->createMock(DataSourceInterface::class);
-        $datasource->method('getName')->willReturn('datasource');
+        $formStorage = new FormStorage($formFactory);
+        $fieldExtension = new FormFieldExtension($formStorage, $translator);
+        $preBindParametersSubscriber = new FieldPreBindParameter($formStorage);
+        $dataSource = $this->createMock(DataSourceInterface::class);
+        $dataSource->method('getName')->willReturn('datasource');
 
-        if ($type === 'datetime') {
+        if ($type === DateTimeTypeInterface::class) {
             $parameters = [
-                'datasource' => [
-                    DataSourceInterface::PARAMETER_FIELDS => [
-                        'name' => [
-                            'date' => ['year' => 2012, 'month' => 12, 'day' => 12],
-                            'time' => ['hour' => 12, 'minute' => 12],
-                        ]
-                    ]
-                ]
+                'date' => ['year' => 2012, 'month' => 12, 'day' => 12],
+                'time' => ['hour' => 12, 'minute' => 12],
             ];
-            $parameters2 = [
-                'datasource' => [
-                    DataSourceInterface::PARAMETER_FIELDS => [
-                        'name' => new DateTimeImmutable('2012-12-12 12:12:00')
-                    ]
-                ]
-            ];
-        } elseif ($type === 'time') {
-            $parameters = [
-                'datasource' => [
-                    DataSourceInterface::PARAMETER_FIELDS => [
-                        'name' => ['hour' => 12, 'minute' => 12]
-                    ]
-                ]
-            ];
-            $parameters2 = [
-                'datasource' => [
-                    DataSourceInterface::PARAMETER_FIELDS => [
-                        'name' => new DateTimeImmutable(date('Y-m-d', 0) . ' 12:12:00')
-                    ]
-                ]
-            ];
-        } elseif ($type === 'date') {
-            $parameters = [
-                'datasource' => [
-                    DataSourceInterface::PARAMETER_FIELDS => [
-                        'name' => ['year' => 2012, 'month' => 12, 'day' => 12]
-                    ]
-                ]
-            ];
-            $parameters2 = [
-                'datasource' => [
-                    DataSourceInterface::PARAMETER_FIELDS => [
-                        'name' => new DateTimeImmutable('2012-12-12')
-                    ]
-                ]
-            ];
-        } elseif ($type === 'number') {
-            $parameters = ['datasource' => [DataSourceInterface::PARAMETER_FIELDS => ['name' => 123]]];
-            $parameters2 = $parameters;
+            $parameters2 = new DateTimeImmutable('2012-12-12 12:12:00');
+        } elseif ($type === TimeTypeInterface::class) {
+            $parameters = ['hour' => 12, 'minute' => 12];
+            $parameters2 = new DateTimeImmutable(date('Y-m-d', 0) . ' 12:12:00');
+        } elseif ($type === DateTypeInterface::class) {
+            $parameters = ['year' => 2012, 'month' => 12, 'day' => 12];
+            $parameters2 = new DateTimeImmutable('2012-12-12');
+        } elseif ($type === NumberTypeInterface::class) {
+            $parameters = 123;
+            $parameters2 = 123;
         } else {
-            $parameters = ['datasource' => [DataSourceInterface::PARAMETER_FIELDS => ['name' => 'value']]];
-            $parameters2 = $parameters;
+            $parameters = 'value';
+            $parameters2 = 'value';
         }
 
-        $field = new TestForm\Extension\TestCore\TestFieldType($datasource, $type, 'eq');
-        $args = new FieldEvent\ParameterEventArgs($field, $parameters);
+        $fieldType = $this->createMock($type);
+        $optionsResolver = new OptionsResolver();
+        $optionsResolver->setRequired('name');
+        $optionsResolver->setAllowedTypes('name', 'string');
+        $optionsResolver->setDefault('name', 'name');
+        $optionsResolver->setRequired('comparison');
+        $optionsResolver->setAllowedTypes('comparison', 'string');
+        $fieldExtension->initOptions($optionsResolver, $fieldType);
 
-        $extensions = $extension->getFieldTypeExtensions($type);
-        foreach ($extensions as $ext) {
-            self::assertInstanceOf(FormFieldExtension::class, $ext);
-            $field->addExtension($ext);
-            $field->setOptions([
-                'form_options' => true === in_array($type, ['date', 'datetime'], true)
-                    ? ['years' => range(2012, (int) date('Y'))]
-                    : [],
-            ]);
-            $ext->preBindParameter($args);
-        }
+        $options = $optionsResolver->resolve([
+            'comparison' => 'eq',
+            'form_options' => true === in_array($type, [DateTypeInterface::class, DateTimeTypeInterface::class], true)
+                ? ['years' => range(2012, (int) date('Y'))]
+                : []
+        ]);
 
-        self::assertEquals($parameters2, $args->getParameter());
+        $field = new Field($dataSource, $fieldType, 'name', $options);
+
+        $event = new FieldEvent\PreBindParameter($field, $parameters);
+        ($preBindParametersSubscriber)($event);
+
+        self::assertEquals($parameters2, $event->getParameter());
         $fieldView = $this->getMockBuilder(FieldViewInterface::class)
             ->setConstructorArgs([$field])
             ->getMock()
@@ -294,43 +221,49 @@ class FormExtensionTest extends TestCase
             )
         ;
 
-        $args = new FieldEvent\ViewEventArgs($field, $fieldView);
-        foreach ($extensions as $ext) {
-            self::assertInstanceOf(FormFieldExtension::class, $ext);
-            $ext->postBuildView($args);
-        }
+        $fieldExtension->buildView($field, $fieldView);
     }
 
     /**
      * @dataProvider fieldTypesProvider
+     * @param class-string<FieldTypeInterface> $type
+     * @param string $comparison
+     * @param string $expected
      */
     public function testFormFields(string $type, string $comparison, string $expected): void
     {
         $formFactory = $this->getFormFactory();
         $translator = $this->getTranslator();
-        $extension = new DriverExtension($formFactory, $translator);
-        $datasource = $this->createMock(DataSourceInterface::class);
-        $datasource->method('getName')->willReturn('datasource');
+        $formStorage = new FormStorage($formFactory);
+        $fieldExtension = new FormFieldExtension($formStorage, $translator);
+        $preBindParametersSubscriber = new FieldPreBindParameter($formStorage);
+        $dataSource = $this->createMock(DataSourceInterface::class);
+        $dataSource->method('getName')->willReturn('datasource');
 
-        $field = new TestForm\Extension\TestCore\TestFieldType($datasource, $type, $comparison);
+        $fieldType = $this->createMock($type);
+        $optionsResolver = new OptionsResolver();
+        $optionsResolver->setRequired('name');
+        $optionsResolver->setAllowedTypes('name', 'string');
+        $optionsResolver->setDefault('name', 'name');
+        $optionsResolver->setRequired('comparison');
+        $optionsResolver->setAllowedTypes('comparison', 'string');
+        $fieldExtension->initOptions($optionsResolver, $fieldType);
 
-        $extensions = $extension->getFieldTypeExtensions($type);
+        $isDate = true === in_array($type, [DateTypeInterface::class, DateTimeTypeInterface::class], true)
+            && false === in_array($comparison, ['isNull', 'between'], true);
+        $options = $optionsResolver->resolve([
+            'comparison' => $comparison,
+            'form_options' => $isDate ? ['years' => range(2012, (int) date('Y'))] : [],
+        ]);
+        $field = new Field($dataSource, $fieldType, 'name', $options);
 
-        $parameters = ['datasource' => [DataSourceInterface::PARAMETER_FIELDS => ['name' => 'null']]];
-        $args = new FieldEvent\ParameterEventArgs($field, $parameters);
+        $event = new FieldEvent\PreBindParameter($field, 'null');
+        ($preBindParametersSubscriber)($event);
 
         $view = new FieldView($field);
-        $viewEventArgs = new FieldEvent\ViewEventArgs($field, $view);
+        $fieldExtension->buildView($field, $view);
 
-        foreach ($extensions as $ext) {
-            self::assertInstanceOf(FormFieldExtension::class, $ext);
-            $field->addExtension($ext);
-            $ext->preBindParameter($args);
-            $ext->postBuildView($viewEventArgs);
-        }
-
-        $form = $viewEventArgs->getView()->getAttribute('form');
-
+        $form = $view->getAttribute('form');
         self::assertEquals($expected, $form['fields']['name']->vars['block_prefixes'][1]);
 
         if ('isNull' === $comparison) {
@@ -349,26 +282,34 @@ class FormExtensionTest extends TestCase
     {
         $formFactory = $this->getFormFactory();
         $translator = $this->getTranslator();
-        $formFieldExtension = new FormFieldExtension($formFactory, $translator);
-        $datasource = $this->createMock(DataSourceInterface::class);
-        $datasource->method('getName')->willReturn('datasource');
+        $formStorage = new FormStorage($formFactory);
+        $fieldExtension = new FormFieldExtension($formStorage, $translator);
+        $preBindParametersSubscriber = new FieldPreBindParameter($formStorage);
+        $dataSource = $this->createMock(DataSourceInterface::class);
+        $dataSource->method('getName')->willReturn('datasource');
 
-        $field = new TestForm\Extension\TestCore\TestFieldType($datasource, 'boolean', 'eq');
-        $field->addExtension($formFieldExtension);
-        $field->setOptions([
+        $fieldType = $this->createMock(BooleanTypeInterface::class);
+        $optionsResolver = new OptionsResolver();
+        $optionsResolver->setRequired('name');
+        $optionsResolver->setAllowedTypes('name', 'string');
+        $optionsResolver->setDefault('name', 'name');
+        $optionsResolver->setRequired('comparison');
+        $optionsResolver->setAllowedTypes('comparison', 'string');
+        $fieldExtension->initOptions($optionsResolver, $fieldType);
+        $options = [
+            'comparison' => 'eq',
             'form_options' => ['choices' => ['tak' => '1', 'nie' => '0']]
-        ]);
+        ];
 
+        $field = new Field($dataSource, $fieldType, 'name', $optionsResolver->resolve($options));
         $parameters = ['datasource' => [DataSourceInterface::PARAMETER_FIELDS => ['name' => 'null']]];
-        $args = new FieldEvent\ParameterEventArgs($field, $parameters);
+        $event = new FieldEvent\PreBindParameter($field, $parameters);
+        ($preBindParametersSubscriber)($event);
 
         $view = new FieldView($field);
-        $viewEventArgs = new FieldEvent\ViewEventArgs($field, $view);
+        $fieldExtension->buildView($field, $view);
 
-        $formFieldExtension->preBindParameter($args);
-        $formFieldExtension->postBuildView($viewEventArgs);
-
-        $form = $viewEventArgs->getView()->getAttribute('form');
+        $form = $view->getAttribute('form');
         $choices = $form['fields']['name']->vars['choices'];
         self::assertEquals('1', $choices[0]->value);
         self::assertEquals('tak', $choices[0]->label);
@@ -379,26 +320,31 @@ class FormExtensionTest extends TestCase
     public function testBuildBooleanFormWhenOptionsNotProvided(): void
     {
         $formFactory = $this->getFormFactory();
+        $formStorage = new FormStorage($formFactory);
         $translator = $this->getTranslator();
-        $formFieldExtension = new FormFieldExtension($formFactory, $translator);
-        $datasource = $this->createMock(DataSourceInterface::class);
-        $datasource->method('getName')->willReturn('datasource');
+        $fieldExtension = new FormFieldExtension($formStorage, $translator);
+        $preBindParametersSubscriber = new FieldPreBindParameter($formStorage);
+        $dataSource = $this->createMock(DataSourceInterface::class);
+        $dataSource->method('getName')->willReturn('datasource');
 
-        $field = new TestForm\Extension\TestCore\TestFieldType($datasource, 'boolean', 'eq');
-        $field->addExtension($formFieldExtension);
+        $fieldType = $this->createMock(BooleanTypeInterface::class);
+        $optionsResolver = new OptionsResolver();
+        $optionsResolver->setRequired('name');
+        $optionsResolver->setAllowedTypes('name', 'string');
+        $optionsResolver->setDefault('name', 'name');
+        $optionsResolver->setRequired('comparison');
+        $optionsResolver->setAllowedTypes('comparison', 'string');
+        $fieldExtension->initOptions($optionsResolver, $fieldType);
 
-        $args = new FieldEvent\ParameterEventArgs(
-            $field,
-            ['datasource' => [DataSourceInterface::PARAMETER_FIELDS => ['name' => 'null']]]
-        );
+        $field = new Field($dataSource, $fieldType, 'name', $optionsResolver->resolve(['comparison' => 'eq']));
+        $parameters = ['datasource' => [DataSourceInterface::PARAMETER_FIELDS => ['name' => 'null']]];
+        $event = new FieldEvent\PreBindParameter($field, $parameters);
+        ($preBindParametersSubscriber)($event);
 
         $view = new FieldView($field);
-        $viewEventArgs = new FieldEvent\ViewEventArgs($field, $view);
+        $fieldExtension->buildView($field, $view);
 
-        $formFieldExtension->preBindParameter($args);
-        $formFieldExtension->postBuildView($viewEventArgs);
-
-        $form = $viewEventArgs->getView()->getAttribute('form');
+        $form = $view->getAttribute('form');
         $choices = $form['fields']['name']->vars['choices'];
         self::assertEquals('1', $choices[0]->value);
         self::assertEquals('yes_translated', $choices[0]->label);
@@ -411,45 +357,54 @@ class FormExtensionTest extends TestCase
      */
     public function testCreateDataSourceFieldWithCustomFormType(
         string $dataSourceFieldType,
-        string $comparison = 'eq'
+        ?string $comparison
     ): void {
         $formFactory = $this->getFormFactory();
+        $formStorage = new FormStorage($formFactory);
         $translator = $this->getTranslator();
-        $formFieldExtension = new FormFieldExtension($formFactory, $translator);
-        $datasource = $this->createMock(DataSourceInterface::class);
-        $datasource->method('getName')->willReturn('datasource');
+        $fieldExtension = new FormFieldExtension($formStorage, $translator);
+        $preBindParametersSubscriber = new FieldPreBindParameter($formStorage);
+        $dataSource = $this->createMock(DataSourceInterface::class);
+        $dataSource->method('getName')->willReturn('datasource');
 
-        $field = new TestForm\Extension\TestCore\TestFieldType($datasource, $dataSourceFieldType, $comparison);
-        $field->addExtension($formFieldExtension);
-        $field->setOptions([
-            'form_type' => HiddenType::class
-        ]);
+        $fieldType = $this->createMock(BooleanTypeInterface::class);
+        $optionsResolver = new OptionsResolver();
+        $optionsResolver->setRequired('name');
+        $optionsResolver->setAllowedTypes('name', 'string');
+        $optionsResolver->setDefault('name', 'name');
+        $optionsResolver->setRequired('comparison');
+        $optionsResolver->setAllowedTypes('comparison', 'string');
+        $fieldExtension->initOptions($optionsResolver, $fieldType);
 
-        $args = new FieldEvent\ParameterEventArgs(
+        $options = ['comparison' => $comparison ?? 'eq', 'form_type' => HiddenType::class];
+        $field = new Field($dataSource, $fieldType, 'name', $optionsResolver->resolve($options));
+
+        $event = new FieldEvent\PreBindParameter(
             $field,
             ['datasource' => [DataSourceInterface::PARAMETER_FIELDS => ['name' => 'null']]]
         );
+        ($preBindParametersSubscriber)($event);
 
         $view = new FieldView($field);
-        $viewEventArgs = new FieldEvent\ViewEventArgs($field, $view);
+        $fieldExtension->buildView($field, $view);
 
-        $formFieldExtension->preBindParameter($args);
-        $formFieldExtension->postBuildView($viewEventArgs);
-
-        $form = $viewEventArgs->getView()->getAttribute('form');
+        $form = $view->getAttribute('form');
         self::assertEquals('hidden', $form['fields']['name']->vars['block_prefixes'][1]);
     }
 
+    /**
+     * @return array<array{class-string<FieldTypeInterface>,?string}>
+     */
     public function getDatasourceFieldTypes(): array
     {
         return [
-            ['text', 'isNull'],
-            ['text'],
-            ['number'],
-            ['date'],
-            ['time'],
-            ['datetime'],
-            ['boolean']
+            [TextTypeInterface::class, 'isNull'],
+            [TextTypeInterface::class, null],
+            [NumberTypeInterface::class, null],
+            [DateTypeInterface::class, null],
+            [TimeTypeInterface::class, null],
+            [DateTimeTypeInterface::class, null],
+            [BooleanTypeInterface::class, null],
         ];
     }
 

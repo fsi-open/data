@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataSource\Field;
 
+use FSi\Component\DataSource\DataSourceInterface;
+use FSi\Component\DataSource\Field\FieldInterface;
 use FSi\Component\DataSource\Field\FieldView;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -26,20 +28,21 @@ class FieldViewTest extends TestCase
      */
     public function testCreate(): void
     {
-        /** @var FieldTypeInterface|MockObject $field */
-        $field = $this->createMock(FieldTypeInterface::class);
+        /** @var FieldTypeInterface&MockObject $fieldType */
+        $fieldType = $this->createMock(FieldTypeInterface::class);
+        $fieldType->expects(self::atLeastOnce())->method('getId')->willReturn('sometype');
 
+        /** @var FieldInterface&MockObject $field */
+        $field = $this->createMock(FieldInterface::class);
         $field->expects(self::atLeastOnce())->method('getName')->willReturn('somename');
-        $field->expects(self::atLeastOnce())->method('getType')->willReturn('sometype');
-        $field->expects(self::atLeastOnce())->method('getComparison')->willReturn('somecomp');
-        $field->expects(self::atLeastOnce())->method('getCleanParameter')->willReturn('someparam');
+        $field->expects(self::atLeastOnce())->method('getType')->willReturn($fieldType);
+        $field->expects(self::atLeastOnce())->method('getParameter')->willReturn('someparam');
 
         $fieldView = new FieldView($field);
 
         self::assertEquals($field->getName(), $fieldView->getName());
-        self::assertEquals($field->getType(), $fieldView->getType());
-        self::assertEquals($field->getComparison(), $fieldView->getComparison());
-        self::assertEquals($field->getCleanParameter(), $fieldView->getParameter());
+        self::assertEquals($field->getType()->getId(), $fieldView->getType());
+        self::assertEquals($field->getParameter(), $fieldView->getParameter());
     }
 
     /**
@@ -47,22 +50,21 @@ class FieldViewTest extends TestCase
      */
     public function testSetDataSourceView(): void
     {
-        $driver = $this->createMock(DriverInterface::class);
-        $datasource = $this->getMockBuilder(DataSource::class)->setConstructorArgs([$driver])->getMock();
-        $view = $this->getMockBuilder(DataSourceView::class)->setConstructorArgs([$datasource])->getMock();
-        $field = $this->createMock(FieldTypeInterface::class);
+        $dataSource = $this->createMock(DataSourceInterface::class);
+        $dataSource->method('getName')->willReturn('datasource');
+        $field = $this->createMock(FieldInterface::class);
+        $field->method('getDataSource')->willReturn($dataSource);
         $fieldView = new FieldView($field);
 
-        $fieldView->setDataSourceView($view);
-        self::assertEquals($fieldView->getDataSourceView(), $view);
+        self::assertEquals($fieldView->getDataSourceName(), 'datasource');
     }
 
     /**
-     * Checks the correctness of options related methods.
+     * Checks the correctness of attribute related methods.
      */
     public function testOptionsManipulation(): void
     {
-        $field = $this->createMock(FieldTypeInterface::class);
+        $field = $this->createMock(FieldInterface::class);
         $view = new FieldView($field);
 
         self::assertFalse($view->hasAttribute('option1'));

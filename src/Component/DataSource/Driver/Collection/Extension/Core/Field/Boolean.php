@@ -12,15 +12,20 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Driver\Collection\Extension\Core\Field;
 
 use FSi\Component\DataSource\Driver\Collection\CollectionAbstractField;
-use Doctrine\Common\Collections\Criteria;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class Boolean extends CollectionAbstractField
 {
-    protected $comparisons = ['eq'];
-
-    public function getType(): string
+    public function getId(): string
     {
         return 'boolean';
+    }
+
+    public function initOptions(OptionsResolver $optionsResolver): void
+    {
+        parent::initOptions($optionsResolver);
+
+        $optionsResolver->setAllowedValues('comparison', ['eq']);
     }
 
     public function getPHPType(): ?string

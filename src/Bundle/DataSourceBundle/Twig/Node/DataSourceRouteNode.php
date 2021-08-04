@@ -16,12 +16,19 @@ use Twig\Node\Node;
 
 class DataSourceRouteNode extends Node
 {
+    /**
+     * @param Node<Node> $dataGrid
+     * @param Node<Node> $route
+     * @param AbstractExpression<AbstractExpression> $additionalParameters
+     * @param int $lineno
+     * @param string|null $tag
+     */
     public function __construct(
         Node $dataGrid,
         Node $route,
         AbstractExpression $additionalParameters,
-        $lineno,
-        $tag = null
+        int $lineno,
+        ?string $tag = null
     ) {
         parent::__construct(
             [

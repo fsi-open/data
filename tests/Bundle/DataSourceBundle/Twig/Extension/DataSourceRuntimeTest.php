@@ -10,6 +10,10 @@
 namespace Tests\FSi\Bundle\DataSourceBundle\Twig\Extension;
 
 use FSi\Bundle\DataSourceBundle\Twig\Extension\DataSourceRuntime;
+use FSi\Component\DataSource\DataSourceInterface;
+use FSi\Component\DataSource\DataSourceView;
+use FSi\Component\DataSource\Field\FieldInterface;
+use FSi\Component\DataSource\Field\FieldTypeInterface;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\TwigRuntimeLoader;
 use Tests\FSi\Bundle\DataSourceBundle\Fixtures\StubTranslator;
 use FSi\Bundle\DataSourceBundle\Twig\Extension\DataSourceExtension;
@@ -68,20 +72,39 @@ class DataSourceRuntimeTest extends TestCase
     {
         $this->twig->addExtension($this->extension);
 
-        $datasourceView = $this->getDataSourceView('datasource');
         $fieldView1 = $this->createMock(FieldViewInterface::class);
         $fieldView1->expects(self::atLeastOnce())->method('hasAttribute')->with('form')->willReturn(true);
+        $fieldView1->method('getName')->willReturn('field1');
+        $field1 = $this->createMock(FieldInterface::class);
 
         $fieldView2 = $this->createMock(FieldViewInterface::class);
         $fieldView2->expects(self::atLeastOnce())->method('hasAttribute')->with('form')->willReturn(false);
+        $fieldView2->method('getName')->willReturn('field2');
+        $field2 = $this->createMock(FieldInterface::class);
 
         $fieldView3 = $this->createMock(FieldViewInterface::class);
         $fieldView3->expects(self::atLeastOnce())->method('hasAttribute')->with('form')->willReturn(true);
+        $fieldView3->method('getName')->willReturn('field3');
+        $field3 = $this->createMock(FieldInterface::class);
 
-        $datasourceView->expects(self::atLeastOnce())
-            ->method('getFields')
-            ->willReturn([$fieldView1, $fieldView2, $fieldView3])
+        $fieldType = $this->createMock(FieldTypeInterface::class);
+        $fieldType->method('createField')
+            ->withConsecutive(
+                [self::isInstanceOf(DataSourceInterface::class), 'field1', []],
+                [self::isInstanceOf(DataSourceInterface::class), 'field2', []],
+                [self::isInstanceOf(DataSourceInterface::class), 'field3', []]
+            )
+            ->willReturnOnConsecutiveCalls($field1, $field2, $field3)
         ;
+        $fieldType->method('createView')
+            ->withConsecutive([$field1], [$field2], [$field3])
+            ->willReturnOnConsecutiveCalls($fieldView1, $fieldView2, $fieldView3)
+        ;
+        $field1->method('getType')->willReturn($fieldType);
+        $field2->method('getType')->willReturn($fieldType);
+        $field3->method('getType')->willReturn($fieldType);
+
+        $datasourceView = new DataSourceView('datasource', [$field1, $field2, $field3], [], []);
 
         self::assertEquals(2, $this->runtime->dataSourceFilterCount($datasourceView));
     }
@@ -150,7 +173,7 @@ class DataSourceRuntimeTest extends TestCase
 
     /**
      * @param string $name
-     * @return DataSourceViewInterface&MockObject
+     * @return DataSourceViewInterface<FieldViewInterface>&MockObject
      */
     private function getDataSourceView(string $name): DataSourceViewInterface
     {

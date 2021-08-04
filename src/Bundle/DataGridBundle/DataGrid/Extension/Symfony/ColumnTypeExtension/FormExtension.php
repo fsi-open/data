@@ -38,7 +38,7 @@ class FormExtension extends ColumnAbstractTypeExtension implements DataGridCellF
     private FormFactoryInterface $formFactory;
     private bool $csrfProtectionEnabled;
     /**
-     * @var array<string,FormInterface>
+     * @var array<string,FormInterface<FormInterface>>
      */
     private array $forms = [];
 

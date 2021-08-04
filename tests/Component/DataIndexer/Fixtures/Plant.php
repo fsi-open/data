@@ -21,14 +21,14 @@ abstract class Plant
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    protected $id;
+    protected int $id;
 
-    public function __construct($id)
+    public function __construct(int $id)
     {
         $this->id = $id;
     }
 
-    public function getId()
+    public function getId(): int
     {
         return $this->id;
     }

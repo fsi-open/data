@@ -16,12 +16,12 @@ use Doctrine\Persistence\ManagerRegistry;
 use FSi\Component\DataIndexer\DoctrineDataIndexer;
 use FSi\Component\DataSource\Result;
 
+/**
+ * @template-extends ArrayCollection<int|string,mixed>
+ */
 class DoctrineResult extends ArrayCollection implements Result
 {
-    /**
-     * @var int
-     */
-    private $count;
+    private int $count;
 
     public function __construct(ManagerRegistry $registry, Paginator $paginator)
     {

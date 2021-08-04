@@ -15,6 +15,11 @@ use Symfony\Component\Form\FormView;
 
 class FormType extends BaseFormType
 {
+    /**
+     * @param FormView $view
+     * @param FormInterface<FormInterface> $form
+     * @param array<string,mixed> $options
+     */
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);

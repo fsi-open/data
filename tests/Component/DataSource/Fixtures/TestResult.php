@@ -21,6 +21,9 @@ class TestResult implements Result
         return 0;
     }
 
+    /**
+     * @return ArrayIterator<int,mixed>
+     */
     public function getIterator(): ArrayIterator
     {
         return new ArrayIterator([]);

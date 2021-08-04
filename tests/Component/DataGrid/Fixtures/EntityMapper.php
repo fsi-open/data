@@ -41,6 +41,11 @@ class EntityMapper
         $this->name = $name;
     }
 
+    public function getHiddenPrivateId(): ?string
+    {
+        return $this->private_id;
+    }
+
     public function setPrivateId(string $id): void
     {
         $this->private_id = $id;
@@ -76,7 +81,7 @@ class EntityMapper
         $this->private_collection = $collection;
     }
 
-    private function hasPrivateCollection(): bool
+    protected function hasPrivateCollection(): bool
     {
         return null !== $this->private_collection;
     }

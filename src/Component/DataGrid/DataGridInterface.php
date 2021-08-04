@@ -55,7 +55,7 @@ interface DataGridInterface extends ArrayAccess, Countable, Iterator
     public function createView(): DataGridViewInterface;
 
     /**
-     * @param iterable<int|string,array|object> $data
+     * @param iterable<int|string,array<string,mixed>|object> $data
      */
     public function setData(iterable $data): void;
 

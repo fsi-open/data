@@ -17,7 +17,14 @@ use Twig\Node\Node;
 
 class DataSourceThemeNode extends Node
 {
-    public function __construct(Node $dataGrid, Node $theme, AbstractExpression $vars, $lineno, $tag = null)
+    /**
+     * @param Node<Node> $dataGrid
+     * @param Node<Node> $theme
+     * @param AbstractExpression<AbstractExpression> $vars
+     * @param int $lineno
+     * @param string|null $tag
+     */
+    public function __construct(Node $dataGrid, Node $theme, AbstractExpression $vars, int $lineno, ?string $tag = null)
     {
         parent::__construct(['datasource' => $dataGrid, 'theme' => $theme, 'vars' => $vars], [], $lineno, $tag);
     }

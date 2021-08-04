@@ -11,20 +11,19 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataSource\Extension\Core;
 
-use FSi\Component\DataSource\DataSource;
 use FSi\Component\DataSource\DataSourceInterface;
-use FSi\Component\DataSource\Driver\DriverInterface;
 use FSi\Component\DataSource\Event\DataSourceEvent;
-use FSi\Component\DataSource\Event\FieldEvent;
-use FSi\Component\DataSource\Extension\Core\Ordering\Driver\DriverExtension;
 use FSi\Component\DataSource\Extension\Core\Ordering\EventSubscriber\Events;
+use FSi\Component\DataSource\Extension\Core\Ordering\EventSubscriber\OrderingPostGetParameters;
+use FSi\Component\DataSource\Extension\Core\Ordering\EventSubscriber\OrderingPreBindParameters;
 use FSi\Component\DataSource\Extension\Core\Ordering\Field\FieldExtension;
 use FSi\Component\DataSource\Extension\Core\Ordering\OrderingExtension;
-use FSi\Component\DataSource\Field\FieldAbstractType;
-use FSi\Component\DataSource\Field\FieldTypeInterface;
+use FSi\Component\DataSource\Extension\Core\Ordering\Storage;
+use FSi\Component\DataSource\Field\FieldInterface;
 use FSi\Component\DataSource\Field\FieldViewInterface;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+
+use function array_merge;
 
 final class OrderingExtensionTest extends TestCase
 {
@@ -33,34 +32,26 @@ final class OrderingExtensionTest extends TestCase
      */
     public function testStoringParameters(): void
     {
-        $extension = new OrderingExtension();
-        /** @var MockObject&DataSourceInterface $datasource */
-        $datasource = $this->getMockBuilder(DataSourceInterface::class)->getMock();
-        /** @var MockObject&FieldTypeInterface $field */
-        $field = $this->createMock(FieldTypeInterface::class);
-        $fieldExtension = new FieldExtension();
-
-        $field->expects(self::atLeastOnce())->method('getExtensions')->willReturn([$fieldExtension]);
+        $datasource = $this->createMock(DataSourceInterface::class);
+        $orderingStorage = new Storage();
+        $field = $this->createMock(FieldInterface::class);
 
         $datasource->method('getFields')->willReturn(['test' => $field]);
         $datasource->method('getField')->with('test')->willReturn($field);
         $datasource->method('getName')->willReturn('ds');
 
-        $subscribers = $extension->loadSubscribers();
-        $subscriber = array_shift($subscribers);
-        self::assertInstanceOf(Events::class, $subscriber);
+        $preBindParametersSubscriber = new OrderingPreBindParameters($orderingStorage);
+        $postGetParametersSubscriber = new OrderingPostGetParameters($orderingStorage);
 
         $parameters = ['ds' => [OrderingExtension::PARAMETER_SORT => ['test' => 'asc']]];
-        $subscriber->preBindParameters(new DataSourceEvent\ParametersEventArgs($datasource, $parameters));
+        ($preBindParametersSubscriber)(new DataSourceEvent\PreBindParameters($datasource, $parameters));
 
         // Assert that request parameters are properly stored in FieldExtension.
-        self::assertEquals(
-            ['priority' => 0, 'direction' => 'asc'],
-            $fieldExtension->getOrdering($field)
-        );
+        self::assertEquals(0, $orderingStorage->getFieldSortingPriority($field));
+        self::assertEquals(true, $orderingStorage->isFieldSortingAscending($field));
 
-        $event = new DataSourceEvent\ParametersEventArgs($datasource, []);
-        $subscriber->postGetParameters($event);
+        $event = new DataSourceEvent\PostGetParameters($datasource, []);
+        ($postGetParametersSubscriber)($event);
 
         self::assertEquals($parameters, $event->getParameters());
     }
@@ -69,6 +60,13 @@ final class OrderingExtensionTest extends TestCase
      * Each test case consists of fields options definition, ordering parameters passed to datasource
      * and expected fields array which should be sorted in terms of priority of sorting results.
      * Expected array contain sorting passed in parameters first and then default sorting passed in options.
+     *
+     * @return array<int,array{
+     *     fields:array<int,array<string,mixed>>,
+     *     parameters:array<string,string>,
+     *     expected_ordering:array<string,string>,
+     *     expected_parameters:array<string,mixed>
+     * }>
      */
     public function orderingDataProvider(): array
     {
@@ -83,7 +81,7 @@ final class OrderingExtensionTest extends TestCase
                     'field1' => 'asc'
                 ],
                 'expected_ordering' => [
-                    'field1' => 'asc'
+                    'field1' => 'asc',
                 ],
                 'expected_parameters' => [
                     'field1' => [
@@ -120,7 +118,7 @@ final class OrderingExtensionTest extends TestCase
                 ],
                 'parameters' => [
                     'field2' => 'asc',
-                    'field1' => 'desc'
+                    'field1' => 'desc',
                 ],
                 'expected_ordering' => [
                     'field2' => 'asc',
@@ -274,6 +272,10 @@ final class OrderingExtensionTest extends TestCase
     /**
      * Checks if sort order is properly calculated from default sorting options and parameters passed from user request.
      * @dataProvider orderingDataProvider
+     * @param array<int,array<string,mixed>> $fields
+     * @param array<string,string> $parameters
+     * @param array<string,string> $expectedOrdering
+     * @param array<string,mixed> $expectedParameters
      */
     public function testOrdering(
         array $fields,
@@ -281,28 +283,28 @@ final class OrderingExtensionTest extends TestCase
         array $expectedOrdering,
         array $expectedParameters
     ): void {
-        $datasource = $this->createMock(DataSourceInterface::class);
+        $dataSource = $this->createMock(DataSourceInterface::class);
 
-        $fieldExtension = new FieldExtension();
+        $storage = new Storage();
+        $fieldExtension = new FieldExtension($storage);
 
         $dataSourceFields = [];
         foreach ($fields as $fieldData) {
             // Using fake class object instead of mock object is helpful
             // because we need functionality from AbstractFieldType.
-            $field = new FakeFieldType();
-            $field->setName($fieldData['name']);
-            $field->setDataSource($datasource);
-            $field->addExtension($fieldExtension);
-            if (isset($fieldData['options'])) {
-                $field->setOptions($fieldData['options']);
-            }
+            $fieldType = new FakeFieldType([$fieldExtension]);
+            $field = $fieldType->createField(
+                $dataSource,
+                $fieldData['name'],
+                array_merge($fieldData['options'] ?? [], ['comparison' => 'eq'])
+            );
             $dataSourceFields[$fieldData['name']] = $field;
         }
 
-        $datasource->expects(self::atLeastOnce())->method('getName')->willReturn('ds');
-        $datasource->method('getFields')->willReturn($fields);
+        $dataSource->expects(self::atLeastOnce())->method('getName')->willReturn('ds');
+        $dataSource->method('getFields')->willReturn($fields);
 
-        $datasource
+        $dataSource
             ->method('getField')
             ->willReturnCallback(
                 static function () use ($dataSourceFields) {
@@ -311,25 +313,19 @@ final class OrderingExtensionTest extends TestCase
             )
         ;
 
-        $datasource
+        $dataSource
             ->method('getParameters')
             ->willReturn(['ds' => [OrderingExtension::PARAMETER_SORT => $parameters]])
         ;
 
-        $extension = new OrderingExtension();
-        $subscribers = $extension->loadSubscribers();
-        $subscriber = array_shift($subscribers);
-        self::assertInstanceOf(Events::class, $subscriber);
+        $preBindParametersSubscriber = new OrderingPreBindParameters($storage);
 
-        $subscriber->preBindParameters(new DataSourceEvent\ParametersEventArgs(
-            $datasource,
+        ($preBindParametersSubscriber)(new DataSourceEvent\PreBindParameters(
+            $dataSource,
             ['ds' => [OrderingExtension::PARAMETER_SORT => $parameters]]
         ));
 
-        // We use fake driver extension instead of specific driver extension because we want to test common
-        // DriverExtension functionality.
-        $driverExtension = new FakeDriverExtension();
-        $result = $driverExtension->sort($dataSourceFields);
+        $result = $storage->sortFields($dataSourceFields);
         self::assertSame($expectedOrdering, $result);
 
         foreach ($dataSourceFields as $field) {
@@ -383,7 +379,7 @@ final class OrderingExtensionTest extends TestCase
                 )
             ;
 
-            $fieldExtension->postBuildView(new FieldEvent\ViewEventArgs($field, $view));
+            $fieldExtension->buildView($field, $view);
         }
     }
 }

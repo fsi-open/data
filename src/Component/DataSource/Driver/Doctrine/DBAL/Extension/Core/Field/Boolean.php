@@ -13,14 +13,21 @@ namespace FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field;
 
 use Doctrine\DBAL\Types\Types;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALAbstractField;
+use FSi\Component\DataSource\Field\Type\BooleanTypeInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class Boolean extends DBALAbstractField
+class Boolean extends DBALAbstractField implements BooleanTypeInterface
 {
-    protected $comparisons = ['eq'];
-
-    public function getType(): string
+    public function getId(): string
     {
         return 'boolean';
+    }
+
+    public function initOptions(OptionsResolver $optionsResolver): void
+    {
+        parent::initOptions($optionsResolver);
+
+        $optionsResolver->setAllowedValues('comparison', ['eq']);
     }
 
     public function getDBALType(): ?string

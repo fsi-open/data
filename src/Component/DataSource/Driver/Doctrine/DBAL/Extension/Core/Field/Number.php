@@ -13,14 +13,24 @@ namespace FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field;
 
 use Doctrine\DBAL\Types\Types;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALAbstractField;
+use FSi\Component\DataSource\Field\Type\NumberTypeInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class Number extends DBALAbstractField
+class Number extends DBALAbstractField implements NumberTypeInterface
 {
-    protected $comparisons = ['eq', 'neq', 'lt', 'lte', 'gt', 'gte', 'in', 'notIn', 'between', 'isNull'];
-
-    public function getType(): string
+    public function getId(): string
     {
         return 'number';
+    }
+
+    public function initOptions(OptionsResolver $optionsResolver): void
+    {
+        parent::initOptions($optionsResolver);
+
+        $optionsResolver->setAllowedValues(
+            'comparison',
+            ['eq', 'neq', 'lt', 'lte', 'gt', 'gte', 'in', 'notIn', 'between', 'isNull']
+        );
     }
 
     public function getDBALType(): ?string

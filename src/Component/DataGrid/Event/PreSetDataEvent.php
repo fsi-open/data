@@ -17,13 +17,13 @@ final class PreSetDataEvent
 {
     private DataGridInterface $dataGrid;
     /**
-     * @var iterable<int|string,array|object>
+     * @var iterable<int|string,array<string,mixed>|object>
      */
     private iterable $data;
 
     /**
      * @param DataGridInterface $dataGrid
-     * @param iterable<int|string,array|object> $data
+     * @param iterable<int|string,array<string,mixed>|object> $data
      */
     public function __construct(DataGridInterface $dataGrid, iterable $data)
     {
@@ -37,7 +37,7 @@ final class PreSetDataEvent
     }
 
     /**
-     * @return iterable<int|string,array|object>
+     * @return iterable<int|string,array<string,mixed>|object>
      */
     public function getData(): iterable
     {
@@ -45,7 +45,7 @@ final class PreSetDataEvent
     }
 
     /**
-     * @param iterable<int|string,array|object> $data
+     * @param iterable<int|string,array<string,mixed>|object> $data
      */
     public function setData(iterable $data): void
     {

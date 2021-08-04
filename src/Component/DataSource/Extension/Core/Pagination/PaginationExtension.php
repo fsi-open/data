@@ -11,12 +11,10 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource\Extension\Core\Pagination;
 
-use FSi\Component\DataSource\DataSourceAbstractExtension;
-
 /**
- * Pagination extension adds to view some options helpfull during view rendering.
+ * Pagination extension adds to view some options helpful during view rendering.
  */
-class PaginationExtension extends DataSourceAbstractExtension
+class PaginationExtension
 {
     /**
      * Key for page info.
@@ -27,11 +25,4 @@ class PaginationExtension extends DataSourceAbstractExtension
      * Key for results per page.
      */
     public const PARAMETER_MAX_RESULTS = 'max_results';
-
-    public function loadSubscribers(): array
-    {
-        return [
-            new EventSubscriber\Events(),
-        ];
-    }
 }

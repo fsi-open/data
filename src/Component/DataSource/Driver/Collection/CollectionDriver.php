@@ -13,88 +13,79 @@ namespace FSi\Component\DataSource\Driver\Collection;
 
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Selectable;
+use FSi\Component\DataSource\Driver\Collection\Event\PostGetResult;
+use FSi\Component\DataSource\Driver\Collection\Event\PreGetResult;
 use FSi\Component\DataSource\Driver\DriverAbstract;
 use FSi\Component\DataSource\Driver\Collection\Exception\CollectionDriverException;
-use FSi\Component\DataSource\Exception\DataSourceException;
+use FSi\Component\DataSource\Field\FieldInterface;
+use FSi\Component\DataSource\Field\FieldTypeInterface;
 use FSi\Component\DataSource\Result;
-use IteratorAggregate;
-use Traversable;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 class CollectionDriver extends DriverAbstract
 {
     /**
-     * @var Selectable
+     * @var Selectable<int|string,mixed>
      */
-    private $collection;
+    private Selectable $collection;
+
+    private Criteria $baseCriteria;
 
     /**
-     * @var Criteria
+     * @param EventDispatcherInterface $eventDispatcher
+     * @param array<FieldTypeInterface> $fieldTypes
+     * @param Selectable<int|string,mixed> $collection
+     * @param Criteria|null $criteria
      */
-    private $baseCriteria;
-
-    /**
-     * Criteria available during preGetResult event.
-     *
-     * @var Criteria
-     */
-    private $currentCriteria;
-
-    public function __construct(array $extensions, Selectable $collection, ?Criteria $criteria = null)
-    {
-        parent::__construct($extensions);
+    public function __construct(
+        EventDispatcherInterface $eventDispatcher,
+        array $fieldTypes,
+        Selectable $collection,
+        ?Criteria $criteria
+    ) {
+        parent::__construct($eventDispatcher, $fieldTypes);
 
         $this->collection = $collection;
         $this->baseCriteria = $criteria ?? Criteria::create();
     }
 
-    public function getType(): string
-    {
-        return 'collection';
-    }
-
     /**
-     * Returns criteria.
-     *
-     * If criteria is set to null (so when getResult method is NOT executed at the moment) exception is thrown.
-     */
-    public function getCriteria(): Criteria
-    {
-        if (null === $this->currentCriteria) {
-            throw new CollectionDriverException('Criteria is accessible only during preGetResult event.');
-        }
-
-        return $this->currentCriteria;
-    }
-
-    /**
-     * @param array<CollectionFieldInterface> $fields
+     * @param array<FieldInterface> $fields
      * @param int|null $first
      * @param int|null $max
-     * @return CollectionResult
+     * @return Result
      * @throws CollectionDriverException
      */
-    protected function buildResult(array $fields, ?int $first, ?int $max): Result
+    public function getResult(array $fields, ?int $first, ?int $max): Result
     {
+        $criteria = clone $this->baseCriteria;
+
+        $this->getEventDispatcher()->dispatch(new PreGetResult($this, $fields, $criteria));
+
         foreach ($fields as $field) {
-            if (false === $field instanceof CollectionFieldInterface) {
+            $fieldType = $field->getType();
+            if (false === $fieldType instanceof CollectionFieldInterface) {
                 throw new CollectionDriverException(
-                    sprintf('All fields must be instances of %s', CollectionFieldInterface::class)
+                    sprintf(
+                        'Field\'s "%s" type "%s" is not compatible with type "%s"',
+                        $field->getName(),
+                        $fieldType->getId(),
+                        self::class
+                    )
                 );
             }
 
-            $field->buildCriteria($this->currentCriteria);
+            $fieldType->buildCriteria($criteria, $field);
         }
 
         if (null !== $max || null !== $first) {
-            $this->currentCriteria->setMaxResults($max);
-            $this->currentCriteria->setFirstResult($first);
+            $criteria->setMaxResults($max);
+            $criteria->setFirstResult($first);
         }
 
-        return new CollectionResult($this->collection, $this->currentCriteria);
-    }
+        $event = new PostGetResult($this, $fields, new CollectionResult($this->collection, $criteria));
+        $this->getEventDispatcher()->dispatch($event);
 
-    protected function initResult(): void
-    {
-        $this->currentCriteria = clone $this->baseCriteria;
+        return $event->getResult();
     }
 }

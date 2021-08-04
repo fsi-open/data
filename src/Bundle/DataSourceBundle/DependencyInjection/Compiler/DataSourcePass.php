@@ -11,80 +11,134 @@ declare(strict_types=1);
 
 namespace FSi\Bundle\DataSourceBundle\DependencyInjection\Compiler;
 
+use FSi\Component\DataSource\Driver\DriverFactoryInterface;
+use FSi\Component\DataSource\Driver\DriverFactoryManager;
+use FSi\Component\DataSource\Exception\DataSourceException;
+use FSi\Component\DataSource\Field\FieldExtensionInterface;
+use ReflectionNamedType;
+use RuntimeException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\Reference;
 
 use function array_map;
+use function is_a;
+use function sprintf;
 
 final class DataSourcePass implements CompilerPassInterface
 {
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
-        if (false === $container->hasDefinition('datasource.extension')) {
+        if (false === $container->hasDefinition(DriverFactoryManager::class)) {
             return;
         }
 
         $driverFactories = [];
         foreach ($container->findTaggedServiceIds('datasource.driver.factory') as $serviceId => $tag) {
-            $driverFactories[] = $container->getDefinition($serviceId);
+            $driverFactoryDefinition = $container->getDefinition($serviceId);
+            $driverFactoryClass = $driverFactoryDefinition->getClass();
+            if (null === $driverFactoryClass) {
+                throw new DataSourceException(
+                    sprintf('DataSource driver factory service %s has no class', $serviceId)
+                );
+            }
+            if (false === is_a($driverFactoryClass, DriverFactoryInterface::class, true)) {
+                throw new DataSourceException(
+                    sprintf(
+                        'DataSource driver factory class %s must implement %s',
+                        $driverFactoryClass,
+                        DriverFactoryInterface::class
+                    )
+                );
+            }
+            $driverType = $driverFactoryClass::getDriverType();
+            $driverFieldTypes = array_map(
+                static fn ($id) => new Reference($id),
+                array_keys($container->findTaggedServiceIds("datasource.driver.{$driverType}.field"))
+            );
+            $driverFactoryDefinition->replaceArgument('$fieldTypes', $driverFieldTypes);
+
+            $driverFactories[] = $driverFactoryDefinition;
+        }
+        $container->getDefinition(DriverFactoryManager::class)->replaceArgument(0, $driverFactories);
+
+        $allFieldTypeExtensions = [];
+        foreach ($container->findTaggedServiceIds('datasource.field_extension') as $serviceId => $tag) {
+            $allFieldTypeExtensions[] = $serviceId;
         }
 
-        $container->getDefinition('datasource.driver.factory.manager')->replaceArgument(0, $driverFactories);
-
-        $extensions = [];
-        foreach ($container->findTaggedServiceIds('datasource.driver.extension') as $serviceId => $tag) {
-            $alias = $tag[0]['alias'] ?? $serviceId;
-
-            $extensions[$alias] = $serviceId;
+        $fieldTypes = [];
+        foreach ($container->findTaggedServiceIds('datasource.field') as $serviceId => $tag) {
+            $fieldTypes[] = new Reference($serviceId);
         }
 
-        $extensionsReferences = array_map(static function (string $extensionId): Reference {
-            return new Reference($extensionId);
-        }, $extensions);
-        $container->getDefinition('datasource.extension')->replaceArgument(0, $extensionsReferences);
+        foreach ($fieldTypes as $fieldTypeReference) {
+            $fieldTypeDefinition = $container->getDefinition((string) $fieldTypeReference);
+            $columnClass = $fieldTypeDefinition->getClass();
+            if (null === $columnClass) {
+                throw new DataSourceException(
+                    sprintf('DataSource field type service %s has no class', (string) $fieldTypeReference)
+                );
+            }
+            $fieldTypeExtensionsReferences = [];
+            foreach ($allFieldTypeExtensions as $fieldTypeExtensionReference) {
+                $fieldTypeExtensionDefinition = $container->getDefinition((string) $fieldTypeExtensionReference);
+                $fieldTypeExtensionClass = $fieldTypeExtensionDefinition->getClass();
+                if (null === $fieldTypeExtensionClass) {
+                    throw new DataSourceException(
+                        sprintf(
+                            'DataSource field extension service %s has no class',
+                            (string) $fieldTypeExtensionReference
+                        )
+                    );
+                }
+                if (false === is_a($fieldTypeExtensionClass, FieldExtensionInterface::class, true)) {
+                    throw new DataSourceException(
+                        sprintf(
+                            'DataSource field extension class %s must implement %s',
+                            $fieldTypeExtensionClass,
+                            FieldExtensionInterface::class
+                        )
+                    );
+                }
+                foreach ($fieldTypeExtensionClass::getExtendedFieldTypes() as $extendedFieldType) {
+                    if (is_a($columnClass, $extendedFieldType, true)) {
+                        $fieldTypeExtensionsReferences[] = $fieldTypeExtensionReference;
+                    }
+                }
+            }
 
-        $subscribers = [];
-        foreach ($container->findTaggedServiceIds('datasource.subscriber') as $serviceId => $tag) {
-            $alias = $tag[0]['alias'] ?? $serviceId;
-
-            $subscribers[$alias] = new Reference($serviceId);
+            $fieldTypeDefinition->replaceArgument('$extensions', $fieldTypeExtensionsReferences);
         }
 
-        $container->getDefinition('datasource.extension')->replaceArgument(1, $subscribers);
+        if (true === $container->hasDefinition('event_dispatcher')) {
+            $eventDispatcher = $container->getDefinition('event_dispatcher');
 
-        foreach ($extensions as $driverExtension) {
-            $driverType = $container->getDefinition($driverExtension)->getArgument(0);
+            foreach ($container->findTaggedServiceIds('datasource.event_subscriber') as $serviceId => $tag) {
+                $defaultPriorityMethod = $tag[0]['default_priority_method'] ?? null;
+                $subscriberDefinition = $container->getDefinition($serviceId);
+                $subscriberReflection = $container->getReflectionClass($subscriberDefinition->getClass());
+                if (null === $subscriberReflection) {
+                    throw new RuntimeException("Unable to reflect DataGrid event subscriber {$serviceId}");
+                }
+                $priority = 0;
+                if (null !== $defaultPriorityMethod) {
+                    $priorityMethodReflection = $subscriberReflection->getMethod($defaultPriorityMethod);
+                    $priority = $priorityMethodReflection->invoke(null);
+                }
 
-            $fields = [];
-            $fieldTag = 'datasource.driver.' . $driverType . '.field';
-            foreach ($container->findTaggedServiceIds($fieldTag) as $serviceId => $tag) {
-                $alias = $tag[0]['alias'] ?? $serviceId;
+                $subscriberInvokeMethodReflection = $subscriberReflection->getMethod('__invoke');
+                $subscriberInvokeMethodEventArgumentReflection = $subscriberInvokeMethodReflection->getParameters()[0];
+                $eventTypeReflection = $subscriberInvokeMethodEventArgumentReflection->getType();
+                if (false === $eventTypeReflection instanceof ReflectionNamedType) {
+                    throw new RuntimeException(
+                        "Unable to reflect class name of the first argument of {$serviceId}::__invoke()"
+                    );
+                }
+                $eventClass = $eventTypeReflection->getName();
 
-                $fields[$alias] = new Reference($serviceId);
+                $eventDispatcher->addMethodCall('addListener', [$eventClass, new Reference($serviceId), $priority]);
             }
-
-            $container->getDefinition($driverExtension)->replaceArgument(1, $fields);
-
-            $fieldSubscribers = [];
-            $fieldSubscriberTag = 'datasource.driver.' . $driverType . '.field.subscriber';
-            foreach ($container->findTaggedServiceIds($fieldSubscriberTag) as $serviceId => $tag) {
-                $alias = $tag[0]['alias'] ?? $serviceId;
-
-                $fieldSubscribers[$alias] = new Reference($serviceId);
-            }
-
-            $container->getDefinition($driverExtension)->replaceArgument(2, $fieldSubscribers);
-
-            $subscribers = [];
-            $driverSubscriberTag = 'datasource.driver.' . $driverType . '.subscriber';
-            foreach ($container->findTaggedServiceIds($driverSubscriberTag) as $serviceId => $tag) {
-                $alias = $tag[0]['alias'] ?? $serviceId;
-
-                $subscribers[$alias] = new Reference($serviceId);
-            }
-
-            $container->getDefinition($driverExtension)->replaceArgument(3, $subscribers);
         }
     }
 }

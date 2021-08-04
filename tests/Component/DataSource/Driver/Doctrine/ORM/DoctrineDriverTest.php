@@ -19,14 +19,26 @@ use Doctrine\Persistence\ManagerRegistry;
 use FSi\Component\DataSource\DataSourceFactory;
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineFactory;
-use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\CoreExtension;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Event\PreGetResult;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field\Boolean;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field\Date;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field\DateTime;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field\Entity;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field\Number;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field\Text;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field\Time;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\Paginator;
 use FSi\Component\DataSource\Driver\DriverFactoryManager;
+use FSi\Component\DataSource\Event\DataSourceEvent\PostGetParameters;
+use FSi\Component\DataSource\Event\DataSourceEvent\PreBindParameters;
 use FSi\Component\DataSource\Extension\Core;
+use FSi\Component\DataSource\Extension\Core\Ordering\Field\FieldExtension;
 use FSi\Component\DataSource\Extension\Core\Ordering\OrderingExtension;
 use FSi\Component\DataSource\Extension\Core\Pagination\PaginationExtension;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Tests\FSi\Component\DataSource\Fixtures\Category;
-use Tests\FSi\Component\DataSource\Fixtures\DoctrineDriverExtension;
+use Tests\FSi\Component\DataSource\Fixtures\DoctrineQueryLogger;
 use Tests\FSi\Component\DataSource\Fixtures\Group;
 use Tests\FSi\Component\DataSource\Fixtures\News;
 use Iterator;
@@ -35,15 +47,10 @@ use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 class DoctrineDriverTest extends TestCase
 {
-    /**
-     * @var DoctrineDriverExtension
-     */
-    protected $testDoctrineExtension;
-
-    /**
-     * @var EntityManager
-     */
-    private $em;
+    private ?EventDispatcherInterface $eventDispatcher = null;
+    private ?Core\Ordering\Storage $orderingStorage = null;
+    private DoctrineQueryLogger $queryLogger;
+    private EntityManager $em;
 
     protected function setUp(): void
     {
@@ -84,7 +91,7 @@ class DoctrineDriverTest extends TestCase
 
         $datasource = $datasourceFactory
             ->createDataSource('doctrine-orm', $driverOptions, 'datasource')
-            ->addField('id', 'number', 'eq');
+            ->addField('id', 'number', ['comparison' => 'eq']);
 
         $parameters = [
             $datasource->getName() => [
@@ -122,26 +129,19 @@ class DoctrineDriverTest extends TestCase
 
         foreach ($datasources as $datasource) {
             $datasource
-                ->addField('title', 'text', 'in')
-                ->addField('author', 'text', 'like')
-                ->addField('created', 'datetime', 'between', [
+                ->addField('title', 'text', ['comparison' => 'in'])
+                ->addField('author', 'text', ['comparison' => 'like'])
+                ->addField('created', 'datetime', [
+                    'comparison' => 'between',
                     'field' => 'create_date',
                 ])
-                ->addField('category', 'entity', 'eq')
-                ->addField('category2', 'entity', 'isNull')
-                ->addField('not_category2', 'entity', 'neq', [
-                    'field' => 'category2'
-                ])
-                ->addField('group', 'entity', 'memberof', [
-                    'field' => 'groups',
-                ])
-                ->addField('not_group', 'entity', 'notmemberof', [
-                    'field' => 'groups',
-                ])
-                ->addField('tags', 'text', 'isNull', [
-                    'field' => 'tags'
-                ])
-                ->addField('active', 'boolean', 'eq')
+                ->addField('category', 'entity', ['comparison' => 'eq'])
+                ->addField('category2', 'entity', ['comparison' => 'isNull'])
+                ->addField('not_category2', 'entity', ['comparison' => 'neq', 'field' => 'category2'])
+                ->addField('group', 'entity', ['comparison' => 'memberOf', 'field' => 'groups'])
+                ->addField('not_group', 'entity', ['comparison' => 'notMemberOf', 'field' => 'groups'])
+                ->addField('tags', 'text', ['comparison' => 'isNull', 'field' => 'tags'])
+                ->addField('active', 'boolean', ['comparison' => 'eq'])
             ;
 
             $result1 = $datasource->getResult();
@@ -272,7 +272,7 @@ class DoctrineDriverTest extends TestCase
             $datasource->bindParameters($parameters);
             $result = $datasource->getResult();
             self::assertInstanceOf(Paginator::class, $result);
-            /** @var Iterator $iterator */
+            /** @var Iterator<int,News> $iterator */
             $iterator = $result->getIterator();
             self::assertEquals('title0', $iterator->current()->getTitle());
 
@@ -289,7 +289,7 @@ class DoctrineDriverTest extends TestCase
             $datasource->bindParameters($parameters);
             $result = $datasource->getResult();
             self::assertInstanceOf(Paginator::class, $result);
-            /** @var Iterator $iterator */
+            /** @var Iterator<int,News> $iterator */
             $iterator = $result->getIterator();
             self::assertEquals('title99', $iterator->current()->getTitle());
 
@@ -456,7 +456,7 @@ class DoctrineDriverTest extends TestCase
             $datasource->bindParameters($parameters);
             $result = $datasource->getResult();
             self::assertInstanceOf(Paginator::class, $result);
-            /** @var Iterator $iterator */
+            /** @var Iterator<int,News> $iterator */
             $iterator = $result->getIterator();
             self::assertTrue($iterator->current()->isActive());
 
@@ -471,7 +471,7 @@ class DoctrineDriverTest extends TestCase
             $datasource->bindParameters($parameters);
             $result = $datasource->getResult();
             self::assertInstanceOf(Paginator::class, $result);
-            /** @var Iterator $iterator */
+            /** @var Iterator<int,News> $iterator */
             $iterator = $result->getIterator();
             self::assertFalse($iterator->current()->isActive());
 
@@ -493,7 +493,7 @@ class DoctrineDriverTest extends TestCase
     }
 
     /**
-     * Checks DataSource wtih DoctrineDriver using more sophisticated QueryBuilder.
+     * Checks DataSource with DoctrineDriver using more sophisticated QueryBuilder.
      */
     public function testQueryWithJoins(): void
     {
@@ -512,11 +512,13 @@ class DoctrineDriverTest extends TestCase
         ];
 
         $datasource = $dataSourceFactory->createDataSource('doctrine-orm', $driverOptions, 'datasource');
-        $datasource->addField('author', 'text', 'like')
-            ->addField('category', 'text', 'like', [
+        $datasource->addField('author', 'text', ['comparison' => 'like'])
+            ->addField('category', 'text', [
+                'comparison' => 'like',
                 'field' => 'c.name',
             ])
-            ->addField('group', 'text', 'like', [
+            ->addField('group', 'text', [
+                'comparison' => 'like',
                 'field' => 'g.name',
             ]);
 
@@ -576,10 +578,12 @@ class DoctrineDriverTest extends TestCase
 
         $datasource = $dataSourceFactory->createDataSource('doctrine-orm', $driverOptions, 'datasource');
         $datasource
-            ->addField('category', 'text', 'like', [
+            ->addField('category', 'text', [
+                'comparison' => 'like',
                 'field' => 'c.name',
             ])
-            ->addField('newscount', 'number', 'gt', [
+            ->addField('newscount', 'number', [
+                'comparison' => 'gt',
                 'field' => 'newscount',
                 'auto_alias' => false,
                 'clause' => 'having'
@@ -597,7 +601,7 @@ class DoctrineDriverTest extends TestCase
         $datasource->getResult();
 
         self::assertEquals(
-            $this->testDoctrineExtension->getQueryBuilder()->getQuery()->getDQL(),
+            $this->queryLogger->getQueryBuilder()->getQuery()->getDQL(),
             sprintf(
                 'SELECT c, COUNT(n) AS newscount FROM %s c INNER JOIN c.news n'
                     . ' GROUP BY c HAVING newscount > :newscount',
@@ -617,7 +621,7 @@ class DoctrineDriverTest extends TestCase
         $datasource->getResult();
 
         self::assertEquals(
-            $this->testDoctrineExtension->getQueryBuilder()->getQuery()->getDQL(),
+            $this->queryLogger->getQueryBuilder()->getQuery()->getDQL(),
             sprintf(
                 'SELECT c, COUNT(n) AS newscount FROM %s c INNER JOIN c.news n'
                     . ' GROUP BY c HAVING newscount > :newscount',
@@ -627,10 +631,12 @@ class DoctrineDriverTest extends TestCase
 
         $datasource = $dataSourceFactory->createDataSource('doctrine-orm', $driverOptions, 'datasource2');
         $datasource
-            ->addField('category', 'text', 'like', [
+            ->addField('category', 'text', [
+                'comparison' => 'like',
                 'field' => 'c.name',
             ])
-            ->addField('newscount', 'number', 'between', [
+            ->addField('newscount', 'number', [
+                'comparison' => 'between',
                 'field' => 'newscount',
                 'auto_alias' => false,
                 'clause' => 'having'
@@ -648,7 +654,7 @@ class DoctrineDriverTest extends TestCase
         $datasource->getResult();
 
         self::assertEquals(
-            $this->testDoctrineExtension->getQueryBuilder()->getQuery()->getDQL(),
+            $this->queryLogger->getQueryBuilder()->getQuery()->getDQL(),
             sprintf(
                 'SELECT c, COUNT(n) AS newscount FROM %s c INNER JOIN c.news n'
                     . ' GROUP BY c HAVING newscount BETWEEN :newscount_from AND :newscount_to',
@@ -668,6 +674,7 @@ class DoctrineDriverTest extends TestCase
             ->select('n')
             ->from(News::class, 'n')
             ->join('n.category', 'c')
+            ->groupBy('n')
         ;
 
         $driverOptions = [
@@ -677,8 +684,9 @@ class DoctrineDriverTest extends TestCase
 
         $datasource = $dataSourceFactory->createDataSource('doctrine-orm', $driverOptions, 'datasource');
         $datasource
-            ->addField('category', 'entity', 'in', [
-                'clause' => 'having'
+            ->addField('category', 'entity', [
+                'comparison' => 'in',
+                'clause' => 'having',
             ]);
 
         $parameters = [
@@ -693,8 +701,11 @@ class DoctrineDriverTest extends TestCase
         $datasource->getResult();
 
         self::assertEquals(
-            $this->testDoctrineExtension->getQueryBuilder()->getQuery()->getDQL(),
-            sprintf('SELECT n FROM %s n INNER JOIN n.category c HAVING n.category IN (:category)', News::class)
+            $this->queryLogger->getQueryBuilder()->getQuery()->getDQL(),
+            sprintf(
+                'SELECT n FROM %s n INNER JOIN n.category c GROUP BY n HAVING n.category IN (:category)',
+                News::class
+            )
         );
     }
 
@@ -707,23 +718,30 @@ class DoctrineDriverTest extends TestCase
 
     protected function tearDown(): void
     {
-        unset($this->em);
+        $this->eventDispatcher = null;
+        $this->orderingStorage = null;
     }
 
     private function getDoctrineFactory(): DoctrineFactory
     {
-        $this->testDoctrineExtension = new DoctrineDriverExtension();
-
-        $extensions = [
-            new CoreExtension(),
-            $this->testDoctrineExtension
-        ];
-
         $managerRegistry = $this->createMock(ManagerRegistry::class);
         $managerRegistry->method('getManager')->willReturn($this->em);
         $managerRegistry->method('getManagerForClass')->willReturn($this->em);
 
-        return new DoctrineFactory($managerRegistry, $extensions);
+        $fieldExtensions = [new FieldExtension($this->getOrderingStorage())];
+        return new DoctrineFactory(
+            $managerRegistry,
+            $this->getEventDispatcher(),
+            [
+                new Boolean($fieldExtensions),
+                new Date($fieldExtensions),
+                new DateTime($fieldExtensions),
+                new Entity([]),
+                new Number($fieldExtensions),
+                new Text($fieldExtensions),
+                new Time($fieldExtensions),
+            ]
+        );
     }
 
     private function getDataSourceFactory(): DataSourceFactory
@@ -732,12 +750,39 @@ class DoctrineDriverTest extends TestCase
             $this->getDoctrineFactory()
         ]);
 
-        $extensions = [
-            new Core\Pagination\PaginationExtension(),
-            new OrderingExtension()
-        ];
+        return new DataSourceFactory($this->getEventDispatcher(), $driverFactoryManager);
+    }
 
-        return new DataSourceFactory($driverFactoryManager, $extensions);
+    private function getEventDispatcher(): EventDispatcherInterface
+    {
+        if (null === $this->eventDispatcher) {
+            $this->eventDispatcher = new EventDispatcher();
+            $this->eventDispatcher->addListener(
+                PreGetResult::class,
+                new Core\Ordering\EventSubscriber\ORMPreGetResult($this->getOrderingStorage())
+            );
+            $this->eventDispatcher->addListener(
+                PreBindParameters::class,
+                new Core\Ordering\EventSubscriber\OrderingPreBindParameters($this->getOrderingStorage())
+            );
+            $this->eventDispatcher->addListener(
+                PostGetParameters::class,
+                new Core\Ordering\EventSubscriber\OrderingPostGetParameters($this->getOrderingStorage())
+            );
+            $this->queryLogger = new DoctrineQueryLogger();
+            $this->eventDispatcher->addListener(PreGetResult::class, $this->queryLogger, -1);
+        }
+
+        return $this->eventDispatcher;
+    }
+
+    private function getOrderingStorage(): Core\Ordering\Storage
+    {
+        if (null === $this->orderingStorage) {
+            $this->orderingStorage = new Core\Ordering\Storage();
+        }
+
+        return $this->orderingStorage;
     }
 
     private function load(EntityManager $em): void
@@ -745,7 +790,7 @@ class DoctrineDriverTest extends TestCase
         // Injects 5 categories.
         $categories = [];
         for ($i = 0; $i < 5; $i++) {
-            $category = new Category();
+            $category = new Category($i);
             $category->setName('category' . $i);
             $em->persist($category);
             $categories[] = $category;
@@ -754,7 +799,7 @@ class DoctrineDriverTest extends TestCase
         // Injects 4 groups.
         $groups = [];
         for ($i = 0; $i < 4; $i++) {
-            $group = new Group();
+            $group = new Group($i);
             $group->setName('group' . $i);
             $em->persist($group);
             $groups[] = $group;
@@ -762,7 +807,7 @@ class DoctrineDriverTest extends TestCase
 
         // Injects 100 newses.
         for ($i = 0; $i < 100; $i++) {
-            $news = new News();
+            $news = new News($i);
             $news->setTitle('title' . $i);
 
             // Half of entities will have different author and content.

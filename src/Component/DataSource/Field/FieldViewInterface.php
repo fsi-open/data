@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource\Field;
 
-use FSi\Component\DataSource\DataSourceViewInterface;
 use FSi\Component\DataSource\Util\AttributesContainerInterface;
 
 /**
@@ -19,17 +18,13 @@ use FSi\Component\DataSource\Util\AttributesContainerInterface;
  */
 interface FieldViewInterface extends AttributesContainerInterface
 {
-    public function __construct(FieldTypeInterface $field);
+    public function __construct(FieldInterface $field);
 
     public function getName(): string;
 
     public function getType(): string;
 
-    public function getComparison(): string;
-
     public function getParameter(): string;
 
-    public function setDataSourceView(DataSourceViewInterface $dataSourceView): void;
-
-    public function getDataSourceView(): DataSourceViewInterface;
+    public function getDataSourceName(): string;
 }

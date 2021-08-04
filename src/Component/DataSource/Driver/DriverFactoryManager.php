@@ -19,15 +19,15 @@ use function array_key_exists;
 class DriverFactoryManager implements DriverFactoryManagerInterface
 {
     /**
-     * @var array
+     * @var array<DriverFactoryInterface>
      */
-    private $factories;
+    private array $factories;
 
     /**
      * @param array<DriverFactoryInterface> $factories
      * @throws InvalidArgumentException
      */
-    public function __construct($factories = [])
+    public function __construct(array $factories)
     {
         $this->factories = [];
 
@@ -38,7 +38,7 @@ class DriverFactoryManager implements DriverFactoryManagerInterface
                 );
             }
 
-            $this->factories[$factory->getDriverType()] = $factory;
+            $this->factories[$factory::getDriverType()] = $factory;
         }
     }
 

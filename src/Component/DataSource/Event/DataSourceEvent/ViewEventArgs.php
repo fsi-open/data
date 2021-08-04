@@ -13,20 +13,29 @@ namespace FSi\Component\DataSource\Event\DataSourceEvent;
 
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\DataSourceViewInterface;
+use FSi\Component\DataSource\Field\FieldViewInterface;
 
-class ViewEventArgs extends DataSourceEventArgs
+abstract class ViewEventArgs extends DataSourceEventArgs
 {
     /**
-     * @var DataSourceViewInterface
+     * @var DataSourceViewInterface<FieldViewInterface>
      */
-    private $view;
+    private DataSourceViewInterface $view;
 
+    /**
+     * @param DataSourceInterface $datasource
+     * @param DataSourceViewInterface<FieldViewInterface> $view
+     */
     public function __construct(DataSourceInterface $datasource, DataSourceViewInterface $view)
     {
         parent::__construct($datasource);
+
         $this->view = $view;
     }
 
+    /**
+     * @return DataSourceViewInterface<FieldViewInterface>
+     */
     public function getView(): DataSourceViewInterface
     {
         return $this->view;

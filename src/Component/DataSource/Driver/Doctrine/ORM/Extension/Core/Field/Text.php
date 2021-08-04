@@ -12,13 +12,20 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field;
 
 use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineAbstractField;
+use FSi\Component\DataSource\Field\Type\TextTypeInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class Text extends DoctrineAbstractField
+class Text extends DoctrineAbstractField implements TextTypeInterface
 {
-    protected $comparisons = ['eq', 'neq', 'in', 'notIn', 'like', 'contains', 'isNull'];
-
-    public function getType(): string
+    public function getId(): string
     {
         return 'text';
+    }
+
+    public function initOptions(OptionsResolver $optionsResolver): void
+    {
+        parent::initOptions($optionsResolver);
+
+        $optionsResolver->setAllowedValues('comparison', ['eq', 'neq', 'in', 'notIn', 'like', 'contains', 'isNull']);
     }
 }

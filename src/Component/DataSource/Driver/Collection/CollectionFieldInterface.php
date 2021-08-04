@@ -12,11 +12,12 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Driver\Collection;
 
 use Doctrine\Common\Collections\Criteria;
+use FSi\Component\DataSource\Field\FieldInterface;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
 
 interface CollectionFieldInterface extends FieldTypeInterface
 {
-    public function buildCriteria(Criteria $c): void;
+    public function buildCriteria(Criteria $c, FieldInterface $field): void;
 
     public function getPHPType(): ?string;
 }

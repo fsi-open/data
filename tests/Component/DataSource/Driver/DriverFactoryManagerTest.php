@@ -12,12 +12,15 @@ declare(strict_types=1);
 namespace Tests\FSi\Component\DataSource\Driver;
 
 use DateTimeImmutable;
+use Doctrine\Persistence\ConnectionRegistry;
+use Doctrine\Persistence\ManagerRegistry;
 use FSi\Component\DataSource\Driver\Collection\CollectionFactory;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALFactory;
 use FSi\Component\DataSource\Driver\Doctrine\ORM;
 use FSi\Component\DataSource\Driver\DriverFactoryManager;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Basic tests for Doctrine driver.
@@ -26,14 +29,10 @@ class DriverFactoryManagerTest extends TestCase
 {
     public function testBasicManagerOperations(): void
     {
-        $doctrineDbalFactory = $this->createMock(DBALFactory::class);
-        $doctrineDbalFactory->method('getDriverType')->willReturn('doctrine-dbal');
-
-        $doctrineOrmFactory = $this->createMock(ORM\DoctrineFactory::class);
-        $doctrineOrmFactory->method('getDriverType')->willReturn('doctrine-orm');
-
-        $collectionFactory = $this->createMock(CollectionFactory::class);
-        $collectionFactory->method('getDriverType')->willReturn('collection');
+        $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
+        $doctrineDbalFactory = new DBALFactory($this->createMock(ConnectionRegistry::class), $eventDispatcher, []);
+        $doctrineOrmFactory = new ORM\DoctrineFactory($this->createMock(ManagerRegistry::class), $eventDispatcher, []);
+        $collectionFactory = new CollectionFactory($eventDispatcher, []);
 
         $manager = new DriverFactoryManager([$doctrineDbalFactory, $doctrineOrmFactory, $collectionFactory]);
 

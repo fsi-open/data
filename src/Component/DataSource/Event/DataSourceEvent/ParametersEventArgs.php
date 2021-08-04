@@ -13,7 +13,7 @@ namespace FSi\Component\DataSource\Event\DataSourceEvent;
 
 use FSi\Component\DataSource\DataSourceInterface;
 
-class ParametersEventArgs extends DataSourceEventArgs
+abstract class ParametersEventArgs extends DataSourceEventArgs
 {
     /**
      * @var mixed

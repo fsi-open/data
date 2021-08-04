@@ -11,11 +11,16 @@ namespace FSi\Bundle\DataSourceBundle\Twig\TokenParser;
 
 use FSi\Bundle\DataSourceBundle\Twig\Node\DataSourceRouteNode;
 use Twig\Node\Expression\ArrayExpression;
+use Twig\Node\Node;
 use Twig\Token;
 use Twig\TokenParser\AbstractTokenParser;
 
 class DataSourceRouteTokenParser extends AbstractTokenParser
 {
+    /**
+     * @param Token $token
+     * @return DataSourceRouteNode<Node>
+     */
     public function parse(Token $token): DataSourceRouteNode
     {
         $stream = $this->parser->getStream();

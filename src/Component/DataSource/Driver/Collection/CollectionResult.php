@@ -18,18 +18,22 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Selectable;
 use FSi\Component\DataSource\Result;
 
+/**
+ * @template-implements ArrayAccess<int|string,mixed>
+ */
 class CollectionResult implements Result, ArrayAccess
 {
-    /**
-     * @var int
-     */
-    private $count;
+    private int $count;
 
     /**
-     * @var Collection
+     * @var Collection<int|string,mixed>
      */
-    private $collection;
+    private Collection $collection;
 
+    /**
+     * @param Selectable<int|string,mixed> $collection
+     * @param Criteria $criteria
+     */
     public function __construct(Selectable $collection, Criteria $criteria)
     {
         $this->collection = $collection->matching($criteria);
@@ -45,6 +49,9 @@ class CollectionResult implements Result, ArrayAccess
         return $this->count;
     }
 
+    /**
+     * @return ArrayIterator<int|string,mixed>
+     */
     public function getIterator(): ArrayIterator
     {
         return new ArrayIterator($this->collection->toArray());
@@ -73,10 +80,5 @@ class CollectionResult implements Result, ArrayAccess
     public function offsetUnset($offset): void
     {
         $this->collection->remove($offset);
-    }
-
-    public function first()
-    {
-        return $this->collection->first();
     }
 }

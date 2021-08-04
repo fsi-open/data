@@ -18,15 +18,9 @@ use RuntimeException;
 
 class DBALResultTest extends TestBase
 {
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
-    /**
-     * @var Paginator
-     */
-    private $paginator;
+    private Paginator $paginator;
 
     protected function setUp(): void
     {
@@ -89,7 +83,7 @@ class DBALResultTest extends TestBase
         });
     }
 
-    public function testClosureresult(): void
+    public function testClosureResult(): void
     {
         $result = new DBALResult($this->paginator, function ($row) {
             return sprintf('A_%s', $row['id']);

@@ -14,12 +14,12 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class BetweenType extends AbstractType
 {
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults(['label' => false]);
     }
 
-    public function getBlockPrefix()
+    public function getBlockPrefix(): string
     {
         return 'datasource_between';
     }

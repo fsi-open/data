@@ -24,11 +24,15 @@ class DoctrineDataIndexer implements DataIndexerInterface
     private const SEPARATOR = "|";
 
     private ObjectManager $manager;
+
+    /**
+     * @var class-string
+     */
     private string $class;
 
     /**
      * @param ManagerRegistry $registry
-     * @param string $class
+     * @param class-string $class
      * @throws Exception\InvalidArgumentException
      * @throws Exception\RuntimeException
      */
@@ -40,22 +44,34 @@ class DoctrineDataIndexer implements DataIndexerInterface
 
     public function getIndex($data): string
     {
-        $this->validateData($data);
+        $data = $this->validateData($data);
 
         return $this->joinIndexParts($this->getIndexParts($data));
     }
 
-    public function getData(string $index)
+    /**
+     * @param string $index
+     * @return object
+     */
+    public function getData(string $index): object
     {
         return $this->tryToFindEntity($this->buildSearchCriteria($index));
     }
 
+    /**
+     * @param array<int,int|string> $indexes
+     * @return array<int|string,object>
+     */
     public function getDataSlice(array $indexes): array
     {
         return $this->getRepository()->findBy($this->buildMultipleSearchCriteria($indexes));
     }
 
-    public function validateData($data): void
+    /**
+     * @param array<string,mixed>|object $data
+     * @return object
+     */
+    public function validateData($data): object
     {
         if (false === is_object($data)) {
             throw new InvalidArgumentException("DoctrineDataIndexer can index only objects.");
@@ -68,6 +84,8 @@ class DoctrineDataIndexer implements DataIndexerInterface
                 get_class($data)
             ));
         }
+
+        return $data;
     }
 
     public function getClass(): string
@@ -78,7 +96,7 @@ class DoctrineDataIndexer implements DataIndexerInterface
     /**
      * Returns an array of identifier field names for self::$class.
      *
-     * @return array
+     * @return array<int,string>
      */
     private function getIdentifierFieldNames(): array
     {
@@ -89,7 +107,7 @@ class DoctrineDataIndexer implements DataIndexerInterface
 
     /**
      * @param ManagerRegistry $registry
-     * @param string $class
+     * @param class-string<object> $class
      * @return ObjectManager
      * @throws Exception\InvalidArgumentException
      */
@@ -107,6 +125,10 @@ class DoctrineDataIndexer implements DataIndexerInterface
         return $manager;
     }
 
+    /**
+     * @param class-string $class
+     * @return class-string
+     */
     private function tryToGetRootClass(string $class): string
     {
         $classMetadata = $this->manager->getClassMetadata($class);
@@ -122,6 +144,10 @@ class DoctrineDataIndexer implements DataIndexerInterface
         return $classMetadata->rootEntityName;
     }
 
+    /**
+     * @param object $object
+     * @return array<int,string>
+     */
     private function getIndexParts(object $object): array
     {
         $identifiers = $this->getIdentifierFieldNames();
@@ -135,11 +161,20 @@ class DoctrineDataIndexer implements DataIndexerInterface
         );
     }
 
+    /**
+     * @param array<int,string> $indexes
+     * @return string
+     */
     private function joinIndexParts(array $indexes): string
     {
         return implode(self::SEPARATOR, $indexes);
     }
 
+    /**
+     * @param string $index
+     * @param int $identifiersCount
+     * @return array<int,string>
+     */
     private function splitIndex(string $index, int $identifiersCount): array
     {
         $indexParts = explode(self::SEPARATOR, $index);
@@ -152,11 +187,15 @@ class DoctrineDataIndexer implements DataIndexerInterface
         return $indexParts;
     }
 
+    /**
+     * @param array<int,int|string> $indexes
+     * @return array<string,array<int,string>>
+     */
     private function buildMultipleSearchCriteria(array $indexes): array
     {
         $multipleSearchCriteria = array();
         foreach ($indexes as $index) {
-            foreach ($this->buildSearchCriteria($index) as $identifier => $indexPart) {
+            foreach ($this->buildSearchCriteria((string) $index) as $identifier => $indexPart) {
                 if (false === array_key_exists($identifier, $multipleSearchCriteria)) {
                     $multipleSearchCriteria[$identifier] = array();
                 }
@@ -167,14 +206,29 @@ class DoctrineDataIndexer implements DataIndexerInterface
         return $multipleSearchCriteria;
     }
 
+    /**
+     * @param string $index
+     * @return array<string,string>
+     */
     private function buildSearchCriteria(string $index): array
     {
         $identifiers = $this->getIdentifierFieldNames();
         $indexParts = $this->splitIndex($index, count($identifiers));
 
-        return array_combine($identifiers, $indexParts);
+        $result = array_combine($identifiers, $indexParts);
+        if (false === $result) {
+            throw new RuntimeException(
+                "Number of index parts in \"$index\" does not match identifier fields for \"$this->class\" entity"
+            );
+        }
+
+        return $result;
     }
 
+    /**
+     * @param array<string,string> $searchCriteria
+     * @return object
+     */
     private function tryToFindEntity(array $searchCriteria): object
     {
         $entity = $this->getRepository()->findOneBy($searchCriteria);
@@ -188,6 +242,9 @@ class DoctrineDataIndexer implements DataIndexerInterface
         return $entity;
     }
 
+    /**
+     * @return ObjectRepository<object>
+     */
     private function getRepository(): ObjectRepository
     {
         return $this->manager->getRepository($this->class);

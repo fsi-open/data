@@ -12,42 +12,77 @@ declare(strict_types=1);
 namespace Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL\Fixtures;
 
 use Doctrine\Persistence\ConnectionRegistry;
-use Doctrine\DBAL\Driver\Connection;
 use InvalidArgumentException;
 
-class TestConnectionRegistry implements ConnectionRegistry
-{
-    /**
-     * @var Connection
-     */
-    private $connection;
+use function class_exists;
 
-    public function __construct(Connection $connection)
+// phpcs:disable PSR1.Classes.ClassDeclaration.MultipleClasses
+if (class_exists(\Doctrine\DBAL\Connection::class)) {
+    class TestConnectionRegistry implements ConnectionRegistry
     {
-        $this->connection = $connection;
-    }
+        private \Doctrine\DBAL\Connection $connection;
 
-    public function getDefaultConnectionName(): string
-    {
-        return 'test';
-    }
-
-    public function getConnection($name = null): ?Connection
-    {
-        if (null !== $name && $this->getDefaultConnectionName() !== $name) {
-            throw new InvalidArgumentException('invalid connection');
+        public function __construct(\Doctrine\DBAL\Connection $connection)
+        {
+            $this->connection = $connection;
         }
 
-        return $this->connection;
-    }
+        public function getDefaultConnectionName(): string
+        {
+            return 'test';
+        }
 
-    public function getConnections(): array
-    {
-        return [$this->connection];
-    }
+        public function getConnection($name = null): ?\Doctrine\DBAL\Connection
+        {
+            if (null !== $name && $this->getDefaultConnectionName() !== $name) {
+                throw new InvalidArgumentException('invalid connection');
+            }
 
-    public function getConnectionNames(): array
+            return $this->connection;
+        }
+
+        public function getConnections(): array
+        {
+            return [$this->connection];
+        }
+
+        public function getConnectionNames(): array
+        {
+            return [$this->getDefaultConnectionName()];
+        }
+    }
+} else {
+    class TestConnectionRegistry implements ConnectionRegistry
     {
-        return [$this->getDefaultConnectionName()];
+        private \Doctrine\DBAL\Driver\Connection $connection;
+
+        public function __construct(\Doctrine\DBAL\Driver\Connection $connection)
+        {
+            $this->connection = $connection;
+        }
+
+        public function getDefaultConnectionName(): string
+        {
+            return 'test';
+        }
+
+        public function getConnection($name = null): ?\Doctrine\DBAL\Driver\Connection
+        {
+            if (null !== $name && $this->getDefaultConnectionName() !== $name) {
+                throw new InvalidArgumentException('invalid connection');
+            }
+
+            return $this->connection;
+        }
+
+        public function getConnections(): array
+        {
+            return [$this->connection];
+        }
+
+        public function getConnectionNames(): array
+        {
+            return [$this->getDefaultConnectionName()];
+        }
     }
 }

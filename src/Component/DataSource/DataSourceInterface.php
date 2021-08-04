@@ -11,10 +11,9 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource;
 
-use Countable;
 use FSi\Component\DataSource\Exception\DataSourceException;
-use FSi\Component\DataSource\Field\FieldTypeInterface;
-use IteratorAggregate;
+use FSi\Component\DataSource\Field\FieldInterface;
+use FSi\Component\DataSource\Field\FieldViewInterface;
 
 /**
  * DataSource abstracts fetching data from various sources. For more information
@@ -36,32 +35,24 @@ interface DataSourceInterface
     public function hasField(string $name): bool;
 
     /**
-     * Adds field to data source.
-     *
-     * Keep in mind, that this method should be able to add field object, if such given as first argument. If so,
-     * $type and $comparison are mandatory and it's up to implementation to check whether are given.
-     *
-     * @param object|string $name
-     * @param string|null $type
-     * @param string|null $comparison
-     * @param array $options
+     * @param string $name
+     * @param string $type
+     * @param array<string,mixed> $options
      * @return DataSourceInterface
      * @throws DataSourceException
      */
     public function addField(
-        $name,
-        ?string $type = null,
-        ?string $comparison = null,
+        string $name,
+        string $type,
         array $options = []
     ): DataSourceInterface;
 
     public function removeField(string $name): void;
 
-    public function getField(string $name): FieldTypeInterface;
+    public function getField(string $name): FieldInterface;
 
     /**
-     * @return array<FieldTypeInterface>
-     * @throws DataSourceException
+     * @return array<FieldInterface>
      */
     public function getFields(): array;
 
@@ -83,17 +74,19 @@ interface DataSourceInterface
      */
     public function bindParameters($parameters = []): void;
 
+    /**
+     * @return Result<int|string,mixed>
+     */
     public function getResult(): Result;
 
-    public function addExtension(DataSourceExtensionInterface $extension): void;
-
     /**
-     * @return array<DataSourceExtensionInterface>
+     * @return DataSourceViewInterface<FieldViewInterface>
      */
-    public function getExtensions(): array;
-
     public function createView(): DataSourceViewInterface;
 
+    /**
+     * @return array<string, array<string, array<string, mixed>>>
+     */
     public function getParameters(): array;
 
     /**
@@ -104,7 +97,7 @@ interface DataSourceInterface
      * no factory assigned, or if it's the only one datasource that far) it will
      * return the same result as getParameters method.
      *
-     * @return array
+     * @return array<string, array<string, array<string, mixed>>>
      */
     public function getAllParameters(): array;
 
@@ -114,11 +107,9 @@ interface DataSourceInterface
      * Constraints similars to these of getAllParameters method - if no factory
      * assigned, method will return empty array.
      *
-     * @return array
+     * @return array<string, array<string, array<string, mixed>>>
      */
     public function getOtherParameters(): array;
-
-    public function setFactory(DataSourceFactoryInterface $factory): void;
 
     public function getFactory(): ?DataSourceFactoryInterface;
 }

@@ -12,120 +12,110 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Driver\Doctrine\ORM;
 
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\Persistence\ManagerRegistry;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Event\PostGetResult;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Event\PreGetResult;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\Exception\DoctrineDriverException;
 use FSi\Component\DataSource\Driver\DriverAbstract;
-use FSi\Component\DataSource\Driver\DriverExtensionInterface;
-use FSi\Component\DataSource\Exception\DataSourceException;
+use FSi\Component\DataSource\Field\FieldInterface;
+use FSi\Component\DataSource\Field\FieldTypeInterface;
 use FSi\Component\DataSource\Result;
-use IteratorAggregate;
+use Psr\EventDispatcher\EventDispatcherInterface;
+
+use function sprintf;
+use function strpos;
 
 class DoctrineDriver extends DriverAbstract
 {
-    /**
-     * Alias, that can be used with preconfigured query when fetching one entity and field mappings
-     * don't have mappings prefixed with aliases.
-     *
-     * @var string
-     */
-    private $alias;
+    private ManagerRegistry $managerRegistry;
+
+    private string $alias;
+
+    private QueryBuilder $query;
+
+    private ?bool $useOutputWalkers;
 
     /**
-     * Template query builder.
-     *
-     * @var QueryBuilder
-     */
-    private $query;
-
-    /**
-     * Query builder available during preGetResult event.
-     *
-     * @var QueryBuilder|null
-     */
-    private $currentQuery;
-
-    /**
-     * @var bool
-     */
-    private $useOutputWalkers;
-
-    /**
-     * @param array<DriverExtensionInterface> $extensions
+     * @param EventDispatcherInterface $eventDispatcher
+     * @param array<FieldTypeInterface> $fieldTypes
      * @param QueryBuilder $queryBuilder
      * @param bool|null $useOutputWalkers
-     * @throws DataSourceException
      */
     public function __construct(
-        array $extensions,
+        ManagerRegistry $managerRegistry,
+        EventDispatcherInterface $eventDispatcher,
+        array $fieldTypes,
         QueryBuilder $queryBuilder,
         ?bool $useOutputWalkers = null
     ) {
-        parent::__construct($extensions);
+        parent::__construct($eventDispatcher, $fieldTypes);
 
+        $this->managerRegistry = $managerRegistry;
         $rootAliases = $queryBuilder->getRootAliases();
-        $this->alias = reset($rootAliases);
+        $alias = reset($rootAliases);
+        if (false === $alias) {
+            throw new DoctrineDriverException("Doctrine ORM initial query does not have any root aliases");
+        }
+
+        $this->alias = $alias;
         $this->query = $queryBuilder;
 
         $this->useOutputWalkers = $useOutputWalkers;
     }
 
-    public function getType(): string
-    {
-        return 'doctrine-orm';
-    }
-
-    public function getAlias(): string
-    {
-        return $this->alias;
-    }
-
     /**
-     * Returns query builder.
-     *
-     * If current query is set to null (so when getResult method is NOT executed at the moment) exception is thrown.
+     * Constructs proper field name from field mapping or (if absent) from own name.
+     * Optionally adds alias (if missing and auto_alias option is set to true).
      */
-    public function getQueryBuilder(): QueryBuilder
+    public function getQueryFieldName(FieldInterface $field): string
     {
-        if (null === $this->currentQuery) {
-            throw new DoctrineDriverException('Query is accessible only during preGetResult event.');
+        $name = $field->getOption('field');
+
+        if (true === $field->getOption('auto_alias') && false === strpos($name, ".")) {
+            $name = "{$this->alias}.{$name}";
         }
 
-        return $this->currentQuery;
-    }
-
-    protected function initResult(): void
-    {
-        $this->currentQuery = clone $this->query;
+        return $name;
     }
 
     /**
-     * @param array<DoctrineFieldInterface> $fields
+     * @param array<FieldInterface> $fields
      * @param int|null $first
      * @param int|null $max
      * @return Result
-     * @throws DoctrineDriverException
      */
-    protected function buildResult(array $fields, ?int $first, ?int $max): Result
+    public function getResult(array $fields, ?int $first, ?int $max): Result
     {
+        $query = clone $this->query;
+
+        $this->getEventDispatcher()->dispatch(new PreGetResult($this, $fields, $query));
+
         foreach ($fields as $field) {
-            if (false === $field instanceof DoctrineFieldInterface) {
-                throw new DoctrineDriverException(sprintf(
-                    'All fields must be instances of %s.',
-                    DoctrineFieldInterface::class
-                ));
+            $fieldType = $field->getType();
+            if (false === $fieldType instanceof DoctrineFieldInterface) {
+                throw new DoctrineDriverException(
+                    sprintf(
+                        'Field\'s "%s" type "%s" is not compatible with type "%s"',
+                        $field->getName(),
+                        $fieldType->getId(),
+                        self::class
+                    )
+                );
             }
 
-            $field->buildQuery($this->currentQuery, $this->alias);
+            $fieldType->buildQuery($query, $this->alias, $field);
         }
 
         if (null !== $max || null !== $first) {
-            $this->currentQuery->setMaxResults($max);
-            $this->currentQuery->setFirstResult($first);
+            $query->setMaxResults($max);
+            $query->setFirstResult($first);
         }
 
-        $result = new Paginator($this->currentQuery);
+        $result = new Paginator($query);
         $result->setUseOutputWalkers($this->useOutputWalkers);
 
-        $this->currentQuery = null;
+        $event = new PostGetResult($this, $fields, new DoctrineResult($this->managerRegistry, $result));
+        $this->getEventDispatcher()->dispatch($event);
 
         return $result;
     }

@@ -21,10 +21,7 @@ use function preg_replace;
 
 class DBALDriverResultTest extends TestBase
 {
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
     public function testTableResultCount(): void
     {
@@ -40,7 +37,7 @@ class DBALDriverResultTest extends TestBase
 
     public function testParametersFiltering(): void
     {
-        $datasource = $this->getNewsDataSource()->addField('title', 'text', 'like');
+        $datasource = $this->getNewsDataSource()->addField('title', 'text', ['comparison' => 'like']);
 
         $parameters = [
             $datasource->getName() => [
@@ -58,7 +55,7 @@ class DBALDriverResultTest extends TestBase
     public function testPaginatedResult(): void
     {
         $datasource = $this->getNewsDataSource();
-        $datasource->addField('title', 'text', 'like');
+        $datasource->addField('title', 'text', ['comparison' => 'like']);
         $datasource->setMaxResults(10);
 
         $parameters = [
@@ -75,15 +72,13 @@ class DBALDriverResultTest extends TestBase
 
         // all result count
         self::assertCount(12, $result);
-        // current page count
-        self::assertCount(2, iterator_to_array($result));
     }
 
     public function testSortingField(): void
     {
         $datasource = $this->getNewsDataSource();
-        $datasource->addField('title', 'text', 'like');
-        $datasource->addField('content', 'text', 'like');
+        $datasource->addField('title', 'text', ['comparison' => 'like']);
+        $datasource->addField('content', 'text', ['comparison' => 'like']);
         $datasource->setMaxResults(10);
 
         $parameters = [
@@ -100,6 +95,10 @@ class DBALDriverResultTest extends TestBase
         $datasource->bindParameters($parameters);
 
         $result = $datasource->getResult();
+        self::assertEquals(
+            'SELECT e.* FROM news e WHERE e.title LIKE :title ORDER BY e.content asc, e.title desc LIMIT 10',
+            $this->queryLogger->getQueryBuilder()->getSQL()
+        );
         self::assertInstanceOf(Paginator::class, $result);
         self::assertCount(12, $result);
         self::assertCount(10, iterator_to_array($result));
@@ -127,7 +126,7 @@ class DBALDriverResultTest extends TestBase
 
         $datasource = $dataSourceFactory
             ->createDataSource('doctrine-dbal', $driverOptions, 'name')
-            ->addField('category', 'text', 'eq', ['field' => 'c.name'])
+            ->addField('category', 'text', ['comparison' => 'eq', 'field' => 'c.name'])
             ->setMaxResults(8);
 
         $parameters = [
@@ -146,7 +145,7 @@ class DBALDriverResultTest extends TestBase
     }
 
     /**
-     * Checks DataSource wtih DoctrineDriver using more sophisticated QueryBuilder.
+     * Checks DataSource with DBALDriver using more sophisticated QueryBuilder.
      */
     public function testQueryWithAggregates(): void
     {
@@ -168,10 +167,12 @@ class DBALDriverResultTest extends TestBase
         $datasource = $dataSourceFactory->createDataSource('doctrine-dbal', $driverOptions, 'name');
 
         $datasource
-            ->addField('category', 'text', 'like', [
+            ->addField('category', 'text', [
+                'comparison' => 'like',
                 'field' => 'c.name',
             ])
-            ->addField('newscount', 'number', 'gt', [
+            ->addField('newscount', 'number', [
+                'comparison' => 'gt',
                 'field' => 'newscount',
                 'auto_alias' => false,
                 'clause' => 'having',
@@ -194,8 +195,9 @@ class DBALDriverResultTest extends TestBase
         self::assertMatchesRegularExpression(
             '/^SELECT c\.\*, COUNT\(n\.id\) newscount FROM category c '
                 . 'LEFT JOIN news n ON n\.category_id = c\.id '
-                . 'GROUP BY c\.id HAVING newscount > :newscount LIMIT 3( OFFSET 0)?$/',
-            $this->testDoctrineExtension->getQueryBuilder()->getSQL()
+                . 'GROUP BY c\.id HAVING newscount > :newscount '
+                . 'LIMIT 3( OFFSET 0)?$/',
+            $this->queryLogger->getQueryBuilder()->getSQL()
         );
 
         $datasource->bindParameters([
@@ -211,16 +213,19 @@ class DBALDriverResultTest extends TestBase
         self::assertMatchesRegularExpression(
             '/^SELECT c\.\*, COUNT\(n\.id\) newscount FROM category c '
                 . 'LEFT JOIN news n ON n\.category_id = c\.id '
-                . 'GROUP BY c\.id HAVING newscount > :newscount LIMIT 3( OFFSET 0)?$/',
-            $this->testDoctrineExtension->getQueryBuilder()->getSQL()
+                . 'GROUP BY c\.id HAVING newscount > :newscount '
+                . 'LIMIT 3( OFFSET 0)?$/',
+            $this->queryLogger->getQueryBuilder()->getSQL()
         );
 
         $datasource = $dataSourceFactory->createDataSource('doctrine-dbal', $driverOptions, 'name2');
         $datasource
-            ->addField('category', 'text', 'like', [
+            ->addField('category', 'text', [
+                'comparison' => 'like',
                 'field' => 'c.name',
             ])
-            ->addField('newscount', 'number', 'between', [
+            ->addField('newscount', 'number', [
+                'comparison' => 'between',
                 'field' => 'newscount',
                 'auto_alias' => false,
                 'clause' => 'having'
@@ -244,8 +249,9 @@ class DBALDriverResultTest extends TestBase
         self::assertMatchesRegularExpression(
             '/^SELECT c\.\*, COUNT\(n\.id\) newscount FROM category c '
                 . 'LEFT JOIN news n ON n\.category_id = c\.id '
-                . 'GROUP BY c\.id HAVING newscount BETWEEN :newscount_from AND :newscount_to LIMIT 2( OFFSET 0)?$/',
-            $this->testDoctrineExtension->getQueryBuilder()->getSQL()
+                . 'GROUP BY c\.id HAVING newscount BETWEEN :newscount_from AND :newscount_to '
+                . 'LIMIT 2( OFFSET 0)?$/',
+            $this->queryLogger->getQueryBuilder()->getSQL()
         );
     }
 
@@ -269,8 +275,9 @@ class DBALDriverResultTest extends TestBase
 
         $datasource = $dataSourceFactory->createDataSource('doctrine-dbal', $driverOptions, 'name');
         $datasource
-            ->addField('category', 'number', 'in', [
-                'clause' => 'having'
+            ->addField('category', 'number', [
+                'comparison' => 'in',
+                'clause' => 'having',
             ]);
 
         $parameters = [
@@ -289,7 +296,7 @@ class DBALDriverResultTest extends TestBase
             FROM news n
                 INNER JOIN category c ON n.category_id = c.id
             HAVING n.category IN (:dcValue1, :dcValue2)'),
-            $this->testDoctrineExtension->getQueryBuilder()->getSQL()
+            $this->queryLogger->getQueryBuilder()->getSQL()
         );
     }
 

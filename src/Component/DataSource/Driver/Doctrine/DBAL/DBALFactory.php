@@ -16,9 +16,10 @@ use Doctrine\DBAL\Connection;
 use Doctrine\Persistence\ConnectionRegistry;
 use Doctrine\DBAL\Query\QueryBuilder;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Exception\DBALDriverException;
-use FSi\Component\DataSource\Driver\DriverExtensionInterface;
 use FSi\Component\DataSource\Driver\DriverFactoryInterface;
 use FSi\Component\DataSource\Driver\DriverInterface;
+use FSi\Component\DataSource\Field\FieldTypeInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -30,43 +31,50 @@ use function sprintf;
 
 class DBALFactory implements DriverFactoryInterface
 {
-    /**
-     * @var ConnectionRegistry
-     */
-    private $registry;
+    private ConnectionRegistry $registry;
+
+    private EventDispatcherInterface $eventDispatcher;
 
     /**
-     * @var array<DriverExtensionInterface>
+     * @var array<FieldTypeInterface>
      */
-    private $extensions;
+    private array $fieldTypes;
 
-    /**
-     * @var OptionsResolver
-     */
-    private $optionsResolver;
+    private OptionsResolver $optionsResolver;
+
+    public static function getDriverType(): string
+    {
+        return 'doctrine-dbal';
+    }
 
     /**
      * @param ConnectionRegistry $registry
-     * @param array<DriverExtensionInterface> $extensions
+     * @param EventDispatcherInterface $eventDispatcher
+     * @param array<FieldTypeInterface> $fieldTypes
      */
-    public function __construct(ConnectionRegistry $registry, array $extensions = [])
-    {
+    public function __construct(
+        ConnectionRegistry $registry,
+        EventDispatcherInterface $eventDispatcher,
+        array $fieldTypes
+    ) {
         $this->registry = $registry;
-        $this->extensions = $extensions;
+        $this->eventDispatcher = $eventDispatcher;
+        $this->fieldTypes = $fieldTypes;
         $this->optionsResolver = new OptionsResolver();
         $this->initOptions();
-    }
-
-    public function getDriverType(): string
-    {
-        return 'doctrine-dbal';
     }
 
     public function createDriver(array $options = []): DriverInterface
     {
         $options = $this->optionsResolver->resolve($options);
 
-        return new DBALDriver($this->extensions, $options['qb'], $options['alias'], $options['indexField']);
+        return new DBALDriver(
+            $this->eventDispatcher,
+            $this->fieldTypes,
+            $options['qb'],
+            $options['alias'],
+            $options['indexField']
+        );
     }
 
     private function initOptions(): void
