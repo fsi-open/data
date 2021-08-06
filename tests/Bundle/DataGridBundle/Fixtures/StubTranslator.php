@@ -17,6 +17,13 @@ class StubTranslator implements TranslatorInterface
 {
     private string $locale = 'en';
 
+    /**
+     * @param string $id
+     * @param array<string,string> $parameters
+     * @param string|null $domain
+     * @param string|null $locale
+     * @return string
+     */
     public function trans($id, array $parameters = array(), $domain = null, $locale = null): string
     {
         return '[trans]' . $id . '[/trans]';

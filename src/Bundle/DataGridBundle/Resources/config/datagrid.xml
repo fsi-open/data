@@ -4,110 +4,42 @@
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
-    <parameters>
-        <parameter key="datagrid.factory.class">FSi\Component\DataGrid\DataGridFactory</parameter>
-        <parameter key="datagrid.data_mapper.chain.class">FSi\Component\DataGrid\DataMapper\ChainMapper</parameter>
-        <parameter key="datagrid.data_mapper.reflection.class">FSi\Component\DataGrid\DataMapper\ReflectionMapper</parameter>
-        <parameter key="datagrid.data_mapper.property_accessor.class">FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper</parameter>
-        <parameter key="datagrid.extension.class">FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\DependencyInjectionExtension</parameter>
-    </parameters>
-
     <services>
-        <service id="datagrid.extension" class="%datagrid.extension.class%">
-            <!-- All services with tag "datagrid.column" are inserted here by DataGridPass -->
-            <argument type="collection" />
-            <!-- All services with tag "datagrid.column_extension" are inserted here by DataGridPass -->
-            <argument type="collection" />
-            <!-- All services with tag "datagrid.subscriber" are inserted here by DataGridPass -->
-            <argument type="collection" />
-            <tag name="datagrid.extension" alias="dependency_injection" />
+        <defaults autowire="true" autoconfigure="true" public="false" />
+
+        <service id="FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\DependencyInjectionExtension">
+            <argument key="$columnTypes" type="tagged_iterator" tag="datagrid.column" />
         </service>
 
-        <!-- DataMapper\Reflection -->
-        <service id="datagrid.data_mapper.reflection" class="%datagrid.data_mapper.reflection.class%" />
-        <!-- DataMapper\PropertyAccessorMapper -->
-        <service id="datagrid.data_mapper.property_accessor" class="%datagrid.data_mapper.property_accessor.class%" />
-
-        <!-- DataMapper\Chain -->
-        <service id="datagrid.data_mapper.chain" class="%datagrid.data_mapper.chain.class%">
-            <argument type="collection">
-                <argument type="service" id="datagrid.data_mapper.property_accessor" />
-                <argument type="service" id="datagrid.data_mapper.reflection" />
+        <service id="FSi\Component\DataGrid\DataMapper\ReflectionMapper" />
+        <service id="FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper" />
+        <service id="FSi\Component\DataGrid\DataMapper\ChainMapper">
+            <argument key="$mappers" type="collection">
+                <argument type="service" id="FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper" />
+                <argument type="service" id="FSi\Component\DataGrid\DataMapper\ReflectionMapper" />
             </argument>
         </service>
 
-        <!-- DataGridFactory -->
-        <service id="datagrid.factory" class="%datagrid.factory.class%" lazy="true" public="true">
-            <argument type="collection">
-                <argument type="service" id="datagrid.extension" />
-                <!--
-                We don't need to be able to add more extensions.
-                 * more columns can be registered with the datagrid.column tag
-                 * more column extensions can be registered with the datagrid.column_extension tag
-                 * more listeners can be registered with the datagrid.listener tag
-                -->
-            </argument>
-            <argument type="service" id="datagrid.data_mapper.chain" />
+        <service id="FSi\Component\DataGrid\DataGridFactory">
+            <argument key="$extensions" type="tagged_iterator" tag="datagrid.extension" />
+            <argument key="$dataMapper" type="service" id="FSi\Component\DataGrid\DataMapper\ChainMapper" />
         </service>
+        <service id="FSi\Component\DataGrid\DataGridFactoryInterface" alias="FSi\Component\DataGrid\DataGridFactory" />
 
-        <service id="FSi\Component\DataGrid\DataGridFactoryInterface"
-                 alias="datagrid.factory" public="true" />
+        <prototype namespace="FSi\Component\DataGrid\Extension\Core\"
+                   resource="../../../../Component/DataGrid/Extension/Core/{ColumnType,ColumnTypeExtension,EventSubscriber}" />
 
-        <!-- CoreExtension -->
-        <service id="datagrid.column.batch" class="FSi\Component\DataGrid\Extension\Core\ColumnType\Batch">
-            <tag name="datagrid.column" alias="batch" />
-        </service>
-        <service id="datagrid.column.boolean" class="FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean">
-            <tag name="datagrid.column" alias="boolean" />
-        </service>
-        <service id="datagrid.column.collection" class="FSi\Component\DataGrid\Extension\Core\ColumnType\Collection">
-            <tag name="datagrid.column" alias="collection" />
-        </service>
-        <service id="datagrid.column.number" class="FSi\Component\DataGrid\Extension\Core\ColumnType\Number">
-            <tag name="datagrid.column" alias="number" />
-        </service>
-        <service id="datagrid.column.text" class="FSi\Component\DataGrid\Extension\Core\ColumnType\Text">
-            <tag name="datagrid.column" alias="text" />
-        </service>
-        <service id="datagrid.column.datetime" class="FSi\Component\DataGrid\Extension\Core\ColumnType\DateTime">
-            <tag name="datagrid.column" alias="datetime" />
-        </service>
-        <service id="datagrid.column.money" class="FSi\Component\DataGrid\Extension\Core\ColumnType\Money">
-            <tag name="datagrid.column" alias="money" />
-        </service>
-        <service id="datagrid.column_extension.default" class="FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension">
-            <tag name="datagrid.column_extension" alias="core.default"/>
-        </service>
-        <service id="datagrid.column_extension.value_format" class="FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\ValueFormatColumnOptionsExtension">
-            <tag name="datagrid.column_extension" alias="core.value_format"/>
-        </service>
-        <service id="datagrid.subscriber.core.column_order" class="FSi\Component\DataGrid\Extension\Core\EventSubscriber\ColumnOrder">
-            <tag name="datagrid.subscriber" alias="core.column_order"/>
-        </service>
-        <!-- CoreExtension -->
+        <prototype namespace="FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\"
+                   resource="../../DataGrid/Extension/Symfony/{CellFormBuilder,ColumnType,ColumnTypeExtension,EventSubscriber}" />
 
-        <!-- RouterExtension -->
-        <service id="datagrid.column.symfony.action" class="FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnType\Action">
-            <tag name="datagrid.column" alias="action" />
-            <argument type="service" id="router"/>
-            <argument type="service" id="request_stack"/>
+        <service id="FSi\Component\DataGrid\DataGridFormHandler" />
+        <service id="FSi\Component\DataGrid\DataGridFormHandlerInterface"
+                 alias="FSi\Component\DataGrid\DataGridFormHandler" />
+        <service id="FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\FormExtension">
+            <argument key="$cellFormBuilders" type="tagged_iterator" tag="datagrid.cell_form_builder" />
+            <argument key="$csrfProtectionEnabled">%form.type_extension.csrf.enabled%</argument>
         </service>
-        <service id="datagrid.column_extension.symfony.form" class="FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\FormExtension">
-            <tag name="datagrid.column_extension" alias="symfony.form"/>
-            <argument type="service" id="form.factory" />
-            <argument>%form.type_extension.csrf.enabled%</argument>
-        </service>
-        <service id="datagrid.subscriber.symfony.bindrequest" class="FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\EventSubscriber\BindRequest">
-            <tag name="datagrid.subscriber" alias="symfony.form.bindrequest"/>
-        </service>
-        <service id="datagrid.column_extension.symfony.column.boolean" class="FSi\Bundle\DataGridBundle\DataGrid\Extension\View\ColumnTypeExtension\BooleanColumnExtension">
-            <tag name="datagrid.column_extension" alias="symfony.column.boolean"/>
-            <argument type="service" id="translator" />
-        </service>
-        <!-- RouterExtension -->
-
-        <service id="datagrid.column_extension.view" class="FSi\Bundle\DataGridBundle\DataGrid\Extension\View\ColumnTypeExtension\ColumnViewOptionsExtension">
-            <tag name="datagrid.column_extension" alias="datagrid.bundle.view"/>
-        </service>
+        <service id="FSi\Component\DataGrid\DataGridCellFormHandlerInterface"
+                 alias="FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension\FormExtension" />
     </services>
 </container>

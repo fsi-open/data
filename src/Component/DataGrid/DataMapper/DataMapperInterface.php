@@ -17,7 +17,7 @@ interface DataMapperInterface
 {
     /**
      * @param string $field
-     * @param array|object $object
+     * @param array<string,mixed>|object $object
      * @return mixed
      * @throws DataMappingException
      */
@@ -25,7 +25,7 @@ interface DataMapperInterface
 
     /**
      * @param string $field
-     * @param array|object $object
+     * @param array<string,mixed>|object $object
      * @param mixed $value
      * @throws DataMappingException
      */

@@ -25,6 +25,12 @@ final class Column implements ColumnInterface
     private array $options;
     private string $name;
 
+    /**
+     * @param DataGridInterface $dataGrid
+     * @param ColumnTypeInterface $type
+     * @param string $name
+     * @param array<string,mixed> $options
+     */
     public function __construct(DataGridInterface $dataGrid, ColumnTypeInterface $type, string $name, array $options)
     {
         $this->dataGrid = $dataGrid;

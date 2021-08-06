@@ -305,7 +305,7 @@ final class OrderingExtensionTest extends TestCase
         $datasource
             ->method('getField')
             ->willReturnCallback(
-                function () use ($dataSourceFields) {
+                static function () use ($dataSourceFields) {
                     return $dataSourceFields[func_get_arg(0)];
                 }
             )
@@ -339,7 +339,7 @@ final class OrderingExtensionTest extends TestCase
                 ->expects(self::exactly(5))
                 ->method('setAttribute')
                 ->willReturnCallback(
-                    function ($attribute, $value) use ($field, $parameters, $expectedParameters) {
+                    static function ($attribute, $value) use ($field, $parameters, $expectedParameters) {
                         switch ($attribute) {
                             case 'sorted_ascending':
                                 self::assertEquals(

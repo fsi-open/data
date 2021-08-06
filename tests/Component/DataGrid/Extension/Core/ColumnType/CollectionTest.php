@@ -11,34 +11,26 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnType;
 
-use FSi\Component\DataGrid\DataGridFactory;
 use FSi\Component\DataGrid\DataGridInterface;
-use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Collection;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
-use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
 class CollectionTest extends TestCase
 {
     public function testFilterValue(): void
     {
-        $dataGridFactory = new DataGridFactory(
-            [new SimpleDataGridExtension(new DefaultColumnOptionsExtension(), new Collection())],
-            $this->createMock(DataMapperInterface::class),
-            $this->createMock(EventDispatcherInterface::class)
-        );
+        $columnType = new Collection([new DefaultColumnOptionsExtension()]);
 
-        $column = $dataGridFactory->createColumn($this->getDataGridMock(), Collection::class, 'col', [
+        $column = $columnType->createColumn($this->getDataGridMock(), 'col', [
             'collection_glue' => ', ',
             'field_mapping' => ['collection1', 'collection2'],
         ]);
 
-        $cellView = $dataGridFactory->createCellView($column, (object) [
+        $cellView = $columnType->createCellView($column, 1, (object) [
             'collection1' => ['foo', 'bar'],
             'collection2' => 'test',
         ]);

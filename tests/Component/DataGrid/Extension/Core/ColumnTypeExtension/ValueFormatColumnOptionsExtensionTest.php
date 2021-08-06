@@ -11,26 +11,16 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension;
 
-use FSi\Component\DataGrid\Column\CellViewInterface;
 use FSi\Component\DataGrid\Column\ColumnInterface;
-use FSi\Component\DataGrid\Column\ColumnTypeInterface;
-use FSi\Component\DataGrid\DataGridFactory;
 use FSi\Component\DataGrid\DataGridInterface;
-use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Text;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\ValueFormatColumnOptionsExtension;
 use InvalidArgumentException;
-use PHPUnit\Framework\Error\Error;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
-use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
-use ValueError;
-
-use const PHP_VERSION_ID;
 
 class ValueFormatColumnOptionsExtensionTest extends TestCase
 {
@@ -242,22 +232,15 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
 
     public function testFormatClosure(): void
     {
-        $dataGridFactory = new DataGridFactory(
-            [
-                new SimpleDataGridExtension(new DefaultColumnOptionsExtension(), new Text()),
-                new SimpleDataGridExtension($this->extension, null),
-            ],
-            $this->createMock(DataMapperInterface::class),
-            $this->createMock(EventDispatcherInterface::class)
-        );
+        $columnType = new Text([new DefaultColumnOptionsExtension(), $this->extension]);
 
-        $column = $dataGridFactory->createColumn($this->getDataGridMock(), Text::class, 'text', [
+        $column = $columnType->createColumn($this->getDataGridMock(), 'text', [
             'field_mapping' => ['text'],
             'value_format' => function ($data) {
                 return sprintf('%s %s', $data['text'], $data['text']);
             }
         ]);
-        $cellView = $dataGridFactory->createCellView($column, (object) ['text' => 'bar']);
+        $cellView = $columnType->createCellView($column, 1, (object) ['text' => 'bar']);
 
         $this->assertSame('bar bar', $cellView->getValue());
     }
@@ -279,19 +262,23 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
         return $dataGrid;
     }
 
-    private function assertFilteredValue(array $options, $value, $filteredValue): void
+    /**
+     * @param array<string,mixed> $options
+     * @param array<int|string,mixed> $value
+     * @param string $filteredValue
+     */
+    private function assertFilteredValue(array $options, array $value, string $filteredValue): void
     {
         $column = $this->createMock(ColumnInterface::class);
 
-        $column->expects($this->any())
-            ->method('getOption')
-            ->will($this->returnCallback(function (string $option) use ($options) {
+        $column->method('getOption')
+            ->willReturnCallback(static function (string $option) use ($options) {
                 if (true === array_key_exists($option, $options)) {
                     return $options[$option];
                 }
 
                 return null;
-            }));
+            });
 
         $this->assertSame($filteredValue, $this->extension->filterValue($column, $value));
     }

@@ -9,13 +9,14 @@
 
 declare(strict_types=1);
 
-namespace FSi\Component\DataGrid\Extension\Doctrine\ColumnType;
+namespace FSi\Component\DataGrid\Extension\Core\ColumnType;
 
-use Doctrine\Common\Collections\Collection;
 use FSi\Component\DataGrid\Column\ColumnAbstractType;
 use FSi\Component\DataGrid\Column\ColumnInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+
+use function is_iterable;
 
 class Entity extends ColumnAbstractType
 {
@@ -24,26 +25,37 @@ class Entity extends ColumnAbstractType
         return 'entity';
     }
 
-    public function getValue(ColumnInterface $column, $object)
+    protected function initOptions(OptionsResolver $optionsResolver): void
+    {
+        $optionsResolver->setDefaults([
+            'relation_field' => static fn(Options $options, $previousValue) => $previousValue ?? $options['name'],
+        ]);
+
+        $optionsResolver->setAllowedTypes('relation_field', 'string');
+    }
+
+    protected function getValue(ColumnInterface $column, $object)
     {
         /** @var string $relationField */
         $relationField = $column->getOption('relation_field');
 
-        return $column->getDataGrid()->getDataMapper()->getData($relationField, $object);
-    }
-
-    public function filterValue(ColumnInterface $column, $value)
-    {
-        if (true === $value instanceof Collection) {
-            $value = $value->toArray();
+        $values = $column->getDataGrid()->getDataMapper()->getData($relationField, $object);
+        $value = $this->filterValue($column, $values);
+        foreach ($this->columnTypeExtensions as $extension) {
+            $value = $extension->filterValue($column, $value);
         }
 
+        return $value;
+    }
+
+    protected function filterValue(ColumnInterface $column, $value)
+    {
         $values = [];
         $objectValues = [];
-        /** @var array $mappingFields */
+        /** @var array<string> $mappingFields */
         $mappingFields = $column->getOption('field_mapping');
 
-        if (true === is_array($value)) {
+        if (true === is_iterable($value)) {
             foreach ($value as $object) {
                 foreach ($mappingFields as $field) {
                     $objectValues[$field] = $column->getDataGrid()->getDataMapper()->getData($field, $object);
@@ -62,16 +74,5 @@ class Entity extends ColumnAbstractType
         }
 
         return $values;
-    }
-
-    public function initOptions(OptionsResolver $optionsResolver): void
-    {
-        $optionsResolver->setDefaults([
-            'relation_field' => function (Options $options, $previousValue) {
-                return $previousValue ?? $options['name'];
-            },
-        ]);
-
-        $optionsResolver->setAllowedTypes('relation_field', 'string');
     }
 }

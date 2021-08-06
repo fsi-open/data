@@ -15,29 +15,32 @@ use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Data\DataRowsetInterface;
 use FSi\Component\DataGrid\Data\DataRowset;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
-use FSi\Component\DataGrid\Event\PostBindDataEvent;
 use FSi\Component\DataGrid\Event\PostBuildViewEvent;
 use FSi\Component\DataGrid\Event\PostSetDataEvent;
-use FSi\Component\DataGrid\Event\PreBindDataEvent;
 use FSi\Component\DataGrid\Event\PreBuildViewEvent;
 use FSi\Component\DataGrid\Event\PreSetDataEvent;
 use FSi\Component\DataGrid\Exception\DataGridException;
 use InvalidArgumentException;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use RuntimeException;
 
+use function current;
+use function key;
+use function next;
+use function reset;
 use function sprintf;
 
-final class DataGrid implements DataGridInterface
+class DataGrid implements DataGridInterface
 {
-    private DataGridFactoryInterface $dataGridFactory;
+    protected DataGridFactoryInterface $dataGridFactory;
+    protected EventDispatcherInterface $eventDispatcher;
+    protected ?DataRowsetInterface $rowset = null;
     private string $name;
     private DataMapperInterface $dataMapper;
-    private EventDispatcherInterface $eventDispatcher;
     /**
      * @var array<string,ColumnInterface>
      */
     private array $columns = [];
-    private ?DataRowsetInterface $rowset = null;
 
     public function __construct(
         string $name,
@@ -61,11 +64,11 @@ final class DataGrid implements DataGridInterface
         return $this->name;
     }
 
-    public function addColumn(string $name, string $type = 'text', array $options = []): DataGridInterface
+    public function addColumn(string $name, string $type, array $options = []): DataGridInterface
     {
-        return $this->addColumnInstance(
-            $this->dataGridFactory->createColumn($this, $type, $name, $options)
-        );
+        $columnType = $this->dataGridFactory->getColumnType($type);
+
+        return $this->addColumnInstance($columnType->createColumn($this, $name, $options));
     }
 
     public function addColumnInstance(ColumnInterface $column): DataGridInterface
@@ -151,42 +154,85 @@ final class DataGrid implements DataGridInterface
     {
         $event = new PreSetDataEvent($this, $data);
         $this->eventDispatcher->dispatch($event);
-        $data = $event->getData();
-        if (false === is_iterable($data)) {
-            throw new InvalidArgumentException(sprintf(
-                'The data returned by the "DataGridEvents::PRE_SET_DATA" class needs to be iterable, "%s" given!',
-                is_object($data) ? get_class($data) : gettype($data)
-            ));
-        }
-
-        $this->rowset = new DataRowset($data);
-
+        $this->rowset = new DataRowset($event->getData());
         $this->eventDispatcher->dispatch(new PostSetDataEvent($this, $this->rowset));
     }
 
-    public function bindData($data): void
+    public function count(): int
     {
-        $event = new PreBindDataEvent($this, $data);
-        $this->eventDispatcher->dispatch($event);
-        $data = $event->getData();
-
-        foreach ($data as $index => $values) {
-            if (false === isset($this->rowset[$index])) {
-                continue;
-            }
-
-            $source = $this->rowset[$index];
-
-            foreach ($this->getColumns() as $column) {
-                $columnType = $column->getType();
-
-                foreach ($this->dataGridFactory->getColumnTypeExtensions($columnType) as $extension) {
-                    $extension->bindData($column, $index, $source, $values);
-                }
-            }
+        if (null === $this->rowset) {
+            throw $this->createUninitializedDataException();
         }
+        return count($this->rowset);
+    }
 
-        $this->eventDispatcher->dispatch(new PostBindDataEvent($this, $data));
+    /**
+     * @return array<string,mixed>|object|false
+     */
+    public function current()
+    {
+        if (null === $this->rowset) {
+            throw $this->createUninitializedDataException();
+        }
+        return current($this->rowset);
+    }
+
+    /**
+     * @return int|string|null
+     */
+    public function key()
+    {
+        if (null === $this->rowset) {
+            throw $this->createUninitializedDataException();
+        }
+        return key($this->rowset);
+    }
+
+    public function next(): void
+    {
+        if (null === $this->rowset) {
+            throw $this->createUninitializedDataException();
+        }
+        next($this->rowset);
+    }
+
+    public function rewind(): void
+    {
+        if (null === $this->rowset) {
+            throw $this->createUninitializedDataException();
+        }
+        reset($this->rowset);
+    }
+
+    public function valid(): bool
+    {
+        return null !== $this->key();
+    }
+
+    public function offsetExists($offset)
+    {
+        if (null === $this->rowset) {
+            throw $this->createUninitializedDataException();
+        }
+        return $this->rowset->offsetExists($offset);
+    }
+
+    public function offsetGet($offset)
+    {
+        if (null === $this->rowset) {
+            throw $this->createUninitializedDataException();
+        }
+        return $this->rowset->offsetGet($offset);
+    }
+
+    public function offsetSet($offset, $value)
+    {
+        throw new RuntimeException('Method not implemented');
+    }
+
+    public function offsetUnset($offset)
+    {
+        throw new RuntimeException('Method not implemented');
     }
 
     public function getDataMapper(): DataMapperInterface
@@ -194,14 +240,17 @@ final class DataGrid implements DataGridInterface
         return $this->dataMapper;
     }
 
-    private function getRowset(): DataRowsetInterface
+    protected function getRowset(): DataRowsetInterface
     {
         if (null === $this->rowset) {
-            throw new DataGridException(
-                'Before you will be able to crete view from DataGrid you need to call method setData'
-            );
+            throw $this->createUninitializedDataException();
         }
 
         return $this->rowset;
+    }
+
+    private function createUninitializedDataException(): DataGridException
+    {
+        return new DataGridException("DataGrid {$this->name} has not been initialized with data.");
     }
 }

@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension;
 
 use FSi\Component\DataGrid\Column\ColumnInterface;
-use FSi\Component\DataGrid\Column\CellViewInterface;
 use FSi\Component\DataGrid\Column\ColumnAbstractTypeExtension;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Collection;
@@ -20,7 +19,6 @@ use FSi\Component\DataGrid\Extension\Core\ColumnType\DateTime;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Money;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Number;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Text;
-use FSi\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
 use InvalidArgumentException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -28,6 +26,18 @@ use function is_callable;
 
 class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
 {
+    public static function getExtendedColumnTypes(): array
+    {
+        return [
+            Text::class,
+            Boolean::class,
+            DateTime::class,
+            Collection::class,
+            Number::class,
+            Money::class,
+        ];
+    }
+
     public function filterValue(ColumnInterface $column, $value)
     {
         $this->validateEmptyValueOption($column);
@@ -45,18 +55,6 @@ class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
         }
 
         return $value;
-    }
-
-    public function getExtendedColumnTypes(): array
-    {
-        return [
-            Text::class,
-            Boolean::class,
-            DateTime::class,
-            Collection::class,
-            Number::class,
-            Money::class,
-        ];
     }
 
     public function initOptions(OptionsResolver $optionsResolver): void
@@ -113,7 +111,7 @@ class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
     /**
      * @param mixed $value
      * @param mixed $emptyValue
-     * @return array|string
+     * @return array<string,mixed>|string
      */
     private function populateValue($value, $emptyValue)
     {
@@ -152,6 +150,12 @@ class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
         return $value;
     }
 
+    /**
+     * @param mixed $value
+     * @param string|callable|null $format
+     * @param string|null $glue
+     * @return mixed
+     */
     private function formatValue($value, $format = null, ?string $glue = null)
     {
         if (true === is_array($value) && null !== $glue && null === $format) {
@@ -198,7 +202,7 @@ class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
     }
 
     /**
-     * @param array $value
+     * @param array<string,mixed> $value
      * @param string|callable $template
      * @return string
      */

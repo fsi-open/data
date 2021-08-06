@@ -29,14 +29,6 @@ class ConfigurationBuilderTest extends TestCase
     private Kernel $kernel;
     private ConfigurationBuilder $subscriber;
 
-    public function testSubscribedEvents(): void
-    {
-        self::assertEquals(
-            [PreSetDataEvent::class => ['readConfiguration', 128]],
-            $this->subscriber::getSubscribedEvents()
-        );
-    }
-
     public function testReadConfigurationFromOneBundle(): void
     {
         $container = $this->createMock(ContainerInterface::class);
@@ -62,7 +54,7 @@ class ConfigurationBuilderTest extends TestCase
         $dataGrid->method('getName')->willReturn('news');
         $dataGrid->expects(self::once())->method('addColumn')->with('id', 'number', ['label' => 'Identity']);
 
-        $this->subscriber->readConfiguration(new PreSetDataEvent($dataGrid, []));
+        ($this->subscriber)(new PreSetDataEvent($dataGrid, []));
     }
 
     public function testReadConfigurationFromManyBundles(): void
@@ -103,7 +95,7 @@ class ConfigurationBuilderTest extends TestCase
             )
         ;
 
-        $this->subscriber->readConfiguration(new PreSetDataEvent($dataGrid, []));
+        ($this->subscriber)(new PreSetDataEvent($dataGrid, []));
     }
 
     public function testMainConfigurationOverridesBundles(): void
@@ -128,7 +120,7 @@ class ConfigurationBuilderTest extends TestCase
                 ['created_at', 'date', ['label' => 'Created at']]
             );
 
-        $this->subscriber->readConfiguration(new PreSetDataEvent($dataGrid, []));
+        ($this->subscriber)(new PreSetDataEvent($dataGrid, []));
     }
 
     public function testBundleConfigUsedWhenNoFileFoundInMainDirectory(): void
@@ -157,7 +149,7 @@ class ConfigurationBuilderTest extends TestCase
         $dataGrid->method('getName')->willReturn('user');
         $dataGrid->expects(self::once())->method('addColumn')->with('username', 'text', []);
 
-        $this->subscriber->readConfiguration(new PreSetDataEvent($dataGrid, []));
+        ($this->subscriber)(new PreSetDataEvent($dataGrid, []));
     }
 
     public function testExceptionThrownWhenMainConfigPathIsNotADirectory(): void
@@ -177,7 +169,7 @@ class ConfigurationBuilderTest extends TestCase
         $dataGrid = $this->getMockBuilder(DataGridInterface::class)->disableOriginalConstructor()->getMock();
         $dataGrid->method('getName')->willReturn('news');
 
-        $this->subscriber->readConfiguration(new PreSetDataEvent($dataGrid, []));
+        ($this->subscriber)(new PreSetDataEvent($dataGrid, []));
     }
 
     protected function setUp(): void

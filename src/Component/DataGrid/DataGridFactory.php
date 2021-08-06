@@ -11,30 +11,22 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid;
 
-use FSi\Component\DataGrid\Column\CellView;
-use FSi\Component\DataGrid\Column\CellViewInterface;
-use FSi\Component\DataGrid\Column\Column;
-use FSi\Component\DataGrid\Column\ColumnInterface;
-use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
 use FSi\Component\DataGrid\Column\ColumnTypeInterface;
-use FSi\Component\DataGrid\Column\HeaderView;
-use FSi\Component\DataGrid\Column\HeaderViewInterface;
 use FSi\Component\DataGrid\Exception\DataGridColumnException;
 use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use InvalidArgumentException;
 use Psr\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 use function array_key_exists;
-use function count;
+use function sprintf;
 
-class DataGridFactory implements DataGridFactoryInterface
+final class DataGridFactory implements DataGridFactoryInterface
 {
     /**
      * @var array<DataGridExtensionInterface>
      */
-    private array $extensions;
+    private array $extensions = [];
     private DataMapperInterface $dataMapper;
     private EventDispatcherInterface $eventDispatcher;
     /**
@@ -47,12 +39,12 @@ class DataGridFactory implements DataGridFactoryInterface
     private array $columnTypes = [];
 
     /**
-     * @param array<DataGridExtensionInterface> $extensions
+     * @param iterable<DataGridExtensionInterface> $extensions
      * @param DataMapperInterface $dataMapper
      * @param EventDispatcherInterface $eventDispatcher
      */
     public function __construct(
-        array $extensions,
+        iterable $extensions,
         DataMapperInterface $dataMapper,
         EventDispatcherInterface $eventDispatcher
     ) {
@@ -63,10 +55,11 @@ class DataGridFactory implements DataGridFactoryInterface
                     DataGridExtensionInterface::class
                 ));
             }
+
+            $this->extensions[] = $extension;
         }
 
         $this->dataMapper = $dataMapper;
-        $this->extensions = $extensions;
         $this->eventDispatcher = $eventDispatcher;
     }
 
@@ -96,31 +89,6 @@ class DataGridFactory implements DataGridFactoryInterface
         return $this->columnTypes[$type];
     }
 
-    /**
-     * @param ColumnTypeInterface $columnType
-     * @return array<ColumnTypeExtensionInterface>
-     */
-    public function getColumnTypeExtensions(ColumnTypeInterface $columnType): array
-    {
-        $extensions = [];
-        foreach ($this->extensions as $extension) {
-            if ($extension->hasColumnTypeExtensions($columnType)) {
-                $extensions[] = $extension->getColumnTypeExtensions($columnType);
-            }
-        }
-
-        if (0 === count($extensions)) {
-            return [];
-        }
-
-        return array_merge(...$extensions);
-    }
-
-    public function getDataMapper(): DataMapperInterface
-    {
-        return $this->dataMapper;
-    }
-
     public function createDataGrid(string $name): DataGridInterface
     {
         if (true === array_key_exists($name, $this->dataGrids)) {
@@ -133,60 +101,6 @@ class DataGridFactory implements DataGridFactoryInterface
         $this->dataGrids[$name] = new DataGrid($name, $this, $this->dataMapper, $this->eventDispatcher);
 
         return $this->dataGrids[$name];
-    }
-
-    public function createColumn(
-        DataGridInterface $dataGrid,
-        string $type,
-        string $name,
-        array $options
-    ): ColumnInterface {
-        $optionsResolver = new OptionsResolver();
-        $optionsResolver->setRequired('name');
-        $optionsResolver->setAllowedTypes('name', 'string');
-
-        $columnType = $this->getColumnType($type);
-        $columnType->initOptions($optionsResolver);
-        foreach ($this->getColumnTypeExtensions($columnType) as $extension) {
-            $extension->initOptions($optionsResolver);
-        }
-
-        return new Column(
-            $dataGrid,
-            $columnType,
-            $name,
-            $optionsResolver->resolve(array_merge(['name' => $name], $options))
-        );
-    }
-
-    public function createCellView(ColumnInterface $column, $source): CellViewInterface
-    {
-        $columnType = $column->getType();
-        $value = $columnType->filterValue($column, $columnType->getValue($column, $source));
-        foreach ($this->getColumnTypeExtensions($columnType) as $extension) {
-            $value = $extension->filterValue($column, $value);
-        }
-
-        $cellView = new CellView($column, $value);
-        $columnType->buildCellView($column, $cellView);
-        foreach ($this->getColumnTypeExtensions($columnType) as $extension) {
-            $extension->buildCellView($column, $cellView);
-        }
-
-        return $cellView;
-    }
-
-    public function createHeaderView(ColumnInterface $column): HeaderViewInterface
-    {
-        $view = new HeaderView($column);
-
-        $columnType = $column->getType();
-        $columnType->buildHeaderView($column, $view);
-        foreach ($this->getColumnTypeExtensions($columnType) as $extension) {
-            $extension->buildHeaderView($column, $view);
-        }
-
-        return $view;
     }
 
     /**

@@ -22,7 +22,16 @@ class Text extends ColumnAbstractType
         return 'text';
     }
 
-    public function filterValue(ColumnInterface $column, $value)
+    protected function initOptions(OptionsResolver $optionsResolver): void
+    {
+        $optionsResolver->setDefaults([
+            'trim' => false
+        ]);
+
+        $optionsResolver->setAllowedTypes('trim', 'bool');
+    }
+
+    protected function filterValue(ColumnInterface $column, $value)
     {
         $trim = $column->getOption('trim');
         if ($trim === true) {
@@ -36,14 +45,5 @@ class Text extends ColumnAbstractType
         }
 
         return $value;
-    }
-
-    public function initOptions(OptionsResolver $optionsResolver): void
-    {
-        $optionsResolver->setDefaults([
-            'trim' => false
-        ]);
-
-        $optionsResolver->setAllowedTypes('trim', 'bool');
     }
 }

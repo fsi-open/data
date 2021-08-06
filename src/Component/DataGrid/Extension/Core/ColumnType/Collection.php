@@ -22,7 +22,16 @@ class Collection extends ColumnAbstractType
         return 'collection';
     }
 
-    public function filterValue(ColumnInterface $column, $value)
+    protected function initOptions(OptionsResolver $optionsResolver): void
+    {
+        $optionsResolver->setDefaults([
+            'collection_glue' => ' '
+        ]);
+
+        $optionsResolver->setAllowedTypes('collection_glue', 'string');
+    }
+
+    protected function filterValue(ColumnInterface $column, $value)
     {
         $value = (array) $value;
         foreach ($value as &$val) {
@@ -34,14 +43,5 @@ class Collection extends ColumnAbstractType
         }
 
         return $value;
-    }
-
-    public function initOptions(OptionsResolver $optionsResolver): void
-    {
-        $optionsResolver->setDefaults([
-            'collection_glue' => ' '
-        ]);
-
-        $optionsResolver->setAllowedTypes('collection_glue', 'string');
     }
 }

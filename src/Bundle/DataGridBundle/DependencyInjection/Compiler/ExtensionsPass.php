@@ -18,13 +18,9 @@ use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 
 final class ExtensionsPass implements CompilerPassInterface
 {
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
         $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../../Resources/config'));
-        if (true === $container->hasExtension('doctrine')) {
-            $loader->load('datagrid_doctrine.xml');
-        }
-
         if (true === $container->hasExtension('stof_doctrine_extensions')) {
             $loader->load('datagrid_gedmo.xml');
         }

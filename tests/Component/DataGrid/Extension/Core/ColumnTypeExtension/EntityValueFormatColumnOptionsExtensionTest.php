@@ -9,17 +9,19 @@
 
 declare(strict_types=1);
 
-namespace Tests\FSi\Component\DataGrid\Extension\Doctrine\ColumnTypeExtension;
+namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension;
 
 use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Exception\DataGridException;
-use FSi\Component\DataGrid\Extension\Doctrine\ColumnTypeExtension\ValueFormatColumnOptionsExtension;
+use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\EntityValueFormatColumnOptionsExtension;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class ValueFormatColumnOptionsExtensionTest extends TestCase
+use function array_key_exists;
+
+class EntityValueFormatColumnOptionsExtensionTest extends TestCase
 {
-    private ValueFormatColumnOptionsExtension $extension;
+    private EntityValueFormatColumnOptionsExtension $extension;
 
     public function testGlueAndEmptyValueAsStringWithoutOneValue(): void
     {
@@ -119,7 +121,7 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
         $this->assertFilteredValue($options, [0 => ['id' => 1, 'name' => 'Foo']], 'unreachable');
     }
 
-    public function testFormatGlueAndGlueMultiple()
+    public function testFormatGlueAndGlueMultiple(): void
     {
         $options = [
             'glue_multiple' => '<br />',
@@ -143,10 +145,15 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->extension = new ValueFormatColumnOptionsExtension();
+        $this->extension = new EntityValueFormatColumnOptionsExtension();
     }
 
-    private function assertFilteredValue(array $options, $value, $filteredValue): void
+    /**
+     * @param array<string,mixed> $options
+     * @param array<int,mixed> $value
+     * @param string $filteredValue
+     */
+    private function assertFilteredValue(array $options, array $value, string $filteredValue): void
     {
         $column = $this->createMock(ColumnInterface::class);
 
@@ -154,15 +161,14 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
         $this->extension->initOptions($optionsResolver);
         $options = $optionsResolver->resolve($options);
 
-            $column->expects($this->any())
-            ->method('getOption')
-            ->will($this->returnCallback(function (string $option) use ($options) {
+        $column->method('getOption')
+            ->willReturnCallback(static function (string $option) use ($options) {
                 if (true === array_key_exists($option, $options)) {
                     return $options[$option];
                 }
 
                 return null;
-            }));
+            });
 
         $this->assertSame($filteredValue, $this->extension->filterValue($column, $value));
     }

@@ -27,7 +27,35 @@ class Number extends ColumnAbstractType
         return 'number';
     }
 
-    public function filterValue(ColumnInterface $column, $value)
+    protected function initOptions(OptionsResolver $optionsResolver): void
+    {
+        $defaults = [
+            'round_mode' => null,
+            'precision' => 2,
+            'format' => false,
+            'format_decimals' => 2,
+            'format_dec_point' => '.',
+            'format_thousands_sep' => ',',
+        ];
+
+        $optionsResolver->setDefaults($defaults);
+
+        $optionsResolver->setAllowedTypes('precision', 'integer');
+        $optionsResolver->setAllowedTypes('format', 'bool');
+        $optionsResolver->setAllowedTypes('format_decimals', 'integer');
+        $optionsResolver->setAllowedTypes('format_dec_point', 'string');
+        $optionsResolver->setAllowedTypes('format_thousands_sep', 'string');
+
+        $optionsResolver->setAllowedValues('round_mode', [
+            null,
+            self::ROUND_HALF_UP,
+            self::ROUND_HALF_DOWN,
+            self::ROUND_HALF_EVEN,
+            self::ROUND_HALF_ODD,
+        ]);
+    }
+
+    protected function filterValue(ColumnInterface $column, $value)
     {
         $precision = (int) $column->getOption('precision');
         $roundMode = $column->getOption('round_mode');
@@ -56,33 +84,5 @@ class Number extends ColumnAbstractType
         }
 
         return $value;
-    }
-
-    public function initOptions(OptionsResolver $optionsResolver): void
-    {
-        $defaults = [
-            'round_mode' => null,
-            'precision' => 2,
-            'format' => false,
-            'format_decimals' => 2,
-            'format_dec_point' => '.',
-            'format_thousands_sep' => ',',
-        ];
-
-        $optionsResolver->setDefaults($defaults);
-
-        $optionsResolver->setAllowedTypes('precision', 'integer');
-        $optionsResolver->setAllowedTypes('format', 'bool');
-        $optionsResolver->setAllowedTypes('format_decimals', 'integer');
-        $optionsResolver->setAllowedTypes('format_dec_point', 'string');
-        $optionsResolver->setAllowedTypes('format_thousands_sep', 'string');
-
-        $optionsResolver->setAllowedValues('round_mode', [
-            null,
-            self::ROUND_HALF_UP,
-            self::ROUND_HALF_DOWN,
-            self::ROUND_HALF_EVEN,
-            self::ROUND_HALF_ODD,
-        ]);
     }
 }

@@ -17,18 +17,18 @@ use FSi\Component\DataGrid\Column\HeaderViewInterface;
 use InvalidArgumentException;
 use RuntimeException;
 
-final class DataGridView implements DataGridViewInterface
+class DataGridView implements DataGridViewInterface
 {
     /**
      * @var array<string,ColumnInterface>
      */
-    private array $columns = [];
+    protected array $columns = [];
+    protected DataRowsetInterface $rowset;
     /**
      * @var array<string,HeaderViewInterface>
      */
     private array $columnsHeaders = [];
     private string $name;
-    private DataRowsetInterface $rowset;
 
     /**
      * @param string $name
@@ -44,7 +44,7 @@ final class DataGridView implements DataGridViewInterface
             }
 
             $this->columns[$column->getName()] = $column;
-            $this->columnsHeaders[$column->getName()] = $column->getDataGrid()->getFactory()->createHeaderView($column);
+            $this->columnsHeaders[$column->getName()] = $column->getType()->createHeaderView($column);
         }
 
         $this->name = $name;
@@ -100,7 +100,7 @@ final class DataGridView implements DataGridViewInterface
 
     public function offsetGet($offset): DataGridRowViewInterface
     {
-        if ($this->offsetExists($offset)) {
+        if (isset($this->rowset[$offset])) {
             return new DataGridRowView($this->columns, $offset, $this->rowset[$offset]);
         }
 

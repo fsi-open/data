@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid;
 
-use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
 use FSi\Component\DataGrid\Column\ColumnTypeInterface;
 
 interface DataGridExtensionInterface
@@ -27,12 +26,4 @@ interface DataGridExtensionInterface
      * @return ColumnTypeInterface
      */
     public function getColumnType(string $type): ColumnTypeInterface;
-
-    public function hasColumnTypeExtensions(ColumnTypeInterface $type): bool;
-
-    /**
-     * @param ColumnTypeInterface $type
-     * @return array<ColumnTypeExtensionInterface>
-     */
-    public function getColumnTypeExtensions(ColumnTypeInterface $type): array;
 }

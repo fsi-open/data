@@ -13,6 +13,7 @@ namespace FSi\Component\DataGrid\Extension\Core\ColumnType;
 
 use FSi\Component\DataGrid\Column\ColumnAbstractType;
 use FSi\Component\DataGrid\Column\ColumnInterface;
+use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 use function array_key_exists;
@@ -21,8 +22,13 @@ class Action extends ColumnAbstractType
 {
     protected OptionsResolver $actionOptionsResolver;
 
-    public function __construct()
+    /**
+     * @param array<ColumnTypeExtensionInterface> $columnTypeExtensions
+     */
+    public function __construct(array $columnTypeExtensions = [])
     {
+        parent::__construct($columnTypeExtensions);
+
         $this->actionOptionsResolver = new OptionsResolver();
     }
 
@@ -31,7 +37,35 @@ class Action extends ColumnAbstractType
         return 'action';
     }
 
-    public function filterValue(ColumnInterface $column, $value)
+    public function getActionOptionsResolver(): OptionsResolver
+    {
+        return $this->actionOptionsResolver;
+    }
+
+    protected function initOptions(OptionsResolver $optionsResolver): void
+    {
+        $optionsResolver->setDefaults([
+            'actions' => [],
+        ]);
+
+        $optionsResolver->setAllowedTypes('actions', 'array');
+
+        $this->actionOptionsResolver->setDefaults([
+            'redirect_uri' => null,
+            'domain' => null,
+            'protocol' => 'http://'
+        ]);
+
+        $this->actionOptionsResolver->setRequired([
+            'uri_scheme'
+        ]);
+
+        $this->actionOptionsResolver->setAllowedTypes('redirect_uri', ['string', 'null']);
+        $this->actionOptionsResolver->setAllowedTypes('uri_scheme', 'string');
+        $this->actionOptionsResolver->setAllowedValues('protocol', ['http://', 'https://']);
+    }
+
+    protected function filterValue(ColumnInterface $column, $value)
     {
         $return = [];
         $actions = $column->getOption('actions');
@@ -56,33 +90,5 @@ class Action extends ColumnAbstractType
         }
 
         return $return;
-    }
-
-    public function initOptions(OptionsResolver $optionsResolver): void
-    {
-        $optionsResolver->setDefaults([
-            'actions' => [],
-        ]);
-
-        $optionsResolver->setAllowedTypes('actions', 'array');
-
-        $this->actionOptionsResolver->setDefaults([
-            'redirect_uri' => null,
-            'domain' => null,
-            'protocol' => 'http://'
-        ]);
-
-        $this->actionOptionsResolver->setRequired([
-            'uri_scheme'
-        ]);
-
-        $this->actionOptionsResolver->setAllowedTypes('redirect_uri', ['string', 'null']);
-        $this->actionOptionsResolver->setAllowedTypes('uri_scheme', 'string');
-        $this->actionOptionsResolver->setAllowedValues('protocol', ['http://', 'https://']);
-    }
-
-    public function getActionOptionsResolver(): OptionsResolver
-    {
-        return $this->actionOptionsResolver;
     }
 }

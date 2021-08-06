@@ -36,7 +36,10 @@ final class PreSetDataEvent
         return $this->dataGrid;
     }
 
-    public function getData()
+    /**
+     * @return iterable<int|string,array|object>
+     */
+    public function getData(): iterable
     {
         return $this->data;
     }

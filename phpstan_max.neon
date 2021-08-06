@@ -1,0 +1,19 @@
+includes:
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+parameters:
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false
+    level: 8
+    paths:
+        - src/Component/DataGrid
+        - src/Bundle/DataGridBundle
+        - tests/Component/DataGrid
+        - tests/Bundle/DataGridBundle
+    excludePaths:
+        - src/Bundle/DataGridBundle/DependencyInjection/Configuration.php
+        - tests/Bundle/DataGridBundle/Fixtures/var
+    ignoreErrors:
+        - message: '#Property Symfony\\Component\\HttpFoundation\\Request::\$request \(Symfony\\Component\\HttpFoundation\\InputBag\) does not accept Symfony\\Component\\HttpFoundation\\ParameterBag\.#'
+          path: tests/Bundle/DataGridBundle/DataGrid/Extension/Symfony/EventSubscriber/BindRequestTest.php
+        - message: '#PHPDoc tag @var for variable \$metadata contains generic type Doctrine\\ORM\\Mapping\\ClassMetadataInfo\<Tests\\FSi\\Component\\DataGrid\\Fixtures\\EntityTree\> but class Doctrine\\ORM\\Mapping\\ClassMetadataInfo is not generic\.#'
+          path: tests/Component/DataGrid/Extension/Gedmo/ColumnType/TreeTest.php

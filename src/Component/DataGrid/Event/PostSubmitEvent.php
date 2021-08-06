@@ -13,7 +13,7 @@ namespace FSi\Component\DataGrid\Event;
 
 use FSi\Component\DataGrid\DataGridInterface;
 
-final class PostBindDataEvent
+final class PostSubmitEvent
 {
     private DataGridInterface $dataGrid;
     /**
@@ -36,6 +36,9 @@ final class PostBindDataEvent
         return $this->dataGrid;
     }
 
+    /**
+     * @return mixed
+     */
     public function getData()
     {
         return $this->data;

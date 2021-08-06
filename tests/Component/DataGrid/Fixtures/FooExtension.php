@@ -19,7 +19,7 @@ class FooExtension extends DataGridAbstractExtension
     protected function loadColumnTypes(): array
     {
         return [
-            new ColumnType\FooType(),
+            new ColumnType\FooType([]),
         ];
     }
 }

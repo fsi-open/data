@@ -11,17 +11,17 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid\Extension\Core\EventSubscriber;
 
+use FSi\Component\DataGrid\Event\DataGridEventSubscriberInterface;
 use FSi\Component\DataGrid\Event\PreBuildViewEvent;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class ColumnOrder implements EventSubscriberInterface
+class ColumnOrder implements DataGridEventSubscriberInterface
 {
-    public static function getSubscribedEvents(): array
+    public static function getPriority(): int
     {
-        return [PreBuildViewEvent::class => ['preBuildView', 128]];
+        return 128;
     }
 
-    public function preBuildView(PreBuildViewEvent $event): void
+    public function __invoke(PreBuildViewEvent $event): void
     {
         $dataGrid = $event->getDataGrid();
         $columns = $dataGrid->getColumns();

@@ -28,7 +28,31 @@ class Money extends ColumnAbstractType
         return 'money';
     }
 
-    public function filterValue(ColumnInterface $column, $value)
+    protected function initOptions(OptionsResolver $optionsResolver): void
+    {
+        $optionsResolver->setDefaults([
+            'round_mode' => self::ROUND_HALF_UP,
+            'precision' => 2,
+            'decimals' => 2,
+            'dec_point' => '.',
+            'thousands_sep' => ',',
+            'value_currency_separator' => ' ',
+            'currency' => null,
+            'currency_field' => null,
+        ]);
+
+        $optionsResolver->setAllowedTypes('round_mode', 'integer');
+        $optionsResolver->setAllowedTypes('precision', 'integer');
+        $optionsResolver->setAllowedTypes('decimals', 'integer');
+        $optionsResolver->setAllowedTypes('decimals', 'integer');
+        $optionsResolver->setAllowedTypes('dec_point', 'string');
+        $optionsResolver->setAllowedTypes('thousands_sep', 'string');
+        $optionsResolver->setAllowedTypes('value_currency_separator', 'string');
+        $optionsResolver->setAllowedTypes('currency', ['null', 'string']);
+        $optionsResolver->setAllowedTypes('currency_field', ['null', 'string']);
+    }
+
+    protected function filterValue(ColumnInterface $column, $value)
     {
         $precision = $column->getOption('precision');
         $roundmode = $column->getOption('round_mode');
@@ -71,29 +95,5 @@ class Money extends ColumnAbstractType
         }
 
         return $value;
-    }
-
-    public function initOptions(OptionsResolver $optionsResolver): void
-    {
-        $optionsResolver->setDefaults([
-            'round_mode' => self::ROUND_HALF_UP,
-            'precision' => 2,
-            'decimals' => 2,
-            'dec_point' => '.',
-            'thousands_sep' => ',',
-            'value_currency_separator' => ' ',
-            'currency' => null,
-            'currency_field' => null,
-        ]);
-
-        $optionsResolver->setAllowedTypes('round_mode', 'integer');
-        $optionsResolver->setAllowedTypes('precision', 'integer');
-        $optionsResolver->setAllowedTypes('decimals', 'integer');
-        $optionsResolver->setAllowedTypes('decimals', 'integer');
-        $optionsResolver->setAllowedTypes('dec_point', 'string');
-        $optionsResolver->setAllowedTypes('thousands_sep', 'string');
-        $optionsResolver->setAllowedTypes('value_currency_separator', 'string');
-        $optionsResolver->setAllowedTypes('currency', ['null', 'string']);
-        $optionsResolver->setAllowedTypes('currency_field', ['null', 'string']);
     }
 }

@@ -21,7 +21,7 @@ class Batch extends ColumnAbstractType
         return 'batch';
     }
 
-    public function getValue(ColumnInterface $column, $object)
+    protected function getValue(ColumnInterface $column, $object)
     {
         return null;
     }

@@ -17,7 +17,7 @@ use RuntimeException;
 class DataRowset implements DataRowsetInterface
 {
     /**
-     * @var array<int|string,array|object>
+     * @var array<int|string,array<string,mixed>|object>
      */
     protected array $data = [];
 
@@ -36,11 +36,17 @@ class DataRowset implements DataRowsetInterface
         return count($this->data);
     }
 
+    /**
+     * @return array<string,mixed>|object|false
+     */
     public function current()
     {
         return current($this->data);
     }
 
+    /**
+     * @return int|string|null
+     */
     public function key()
     {
         return key($this->data);
@@ -72,7 +78,7 @@ class DataRowset implements DataRowsetInterface
             return $this->data[$offset];
         }
 
-        throw new InvalidArgumentException(sprintf('Row "%s" does not exist in rowset.', $offset));
+        throw new InvalidArgumentException("Row \"{$offset}\" does not exist in rowset.");
     }
 
     public function offsetSet($offset, $value): void

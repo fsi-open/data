@@ -11,43 +11,61 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid\Column;
 
+use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\Exception\DataGridColumnException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+use function array_reduce;
+use function array_walk;
+use function get_class;
+use function is_a;
 use function sprintf;
 
 abstract class ColumnAbstractType implements ColumnTypeInterface
 {
-    public function getValue(ColumnInterface $column, $object)
+    use ColumnTypeTrait;
+
+    /**
+     * @param array<ColumnTypeExtensionInterface> $columnTypeExtensions
+     */
+    public function __construct(array $columnTypeExtensions = [])
     {
-        $values = [];
-        if (false === $column->hasOption('field_mapping') || 0 === count($column->getOption('field_mapping'))) {
-            throw new DataGridColumnException(
-                sprintf('"field_mapping" option is missing in column "%s"', $column->getName())
+        array_walk($columnTypeExtensions, static function (ColumnTypeExtensionInterface $columnTypeExtension): void {
+            $found = array_reduce(
+                $columnTypeExtension::getExtendedColumnTypes(),
+                static fn(bool $found, string $extendedColumnType): bool
+                    => $found || true === is_a(static::class, $extendedColumnType, true),
+                false
             );
-        }
 
-        foreach ($column->getOption('field_mapping') as $field) {
-            $values[$field] = $column->getDataGrid()->getDataMapper()->getData($field, $object);
-        }
+            if (false === $found) {
+                throw new DataGridColumnException(
+                    sprintf(
+                        'DataGrid column extension of class %s does not extend column type %s',
+                        get_class($columnTypeExtension),
+                        static::class
+                    )
+                );
+            }
+        });
 
-        return $values;
+        $this->columnTypeExtensions = $columnTypeExtensions;
     }
 
-    public function filterValue(ColumnInterface $column, $value)
+    public function createColumn(DataGridInterface $dataGrid, string $name, array $options): ColumnInterface
     {
-        return $value;
+        return new Column($dataGrid, $this, $name, $this->resolveOptions($name, $options));
     }
 
-    public function buildCellView(ColumnInterface $column, CellViewInterface $view): void
+    protected function initOptions(OptionsResolver $optionsResolver): void
     {
     }
 
-    public function buildHeaderView(ColumnInterface $column, HeaderViewInterface $view): void
+    protected function buildHeaderView(ColumnInterface $column, HeaderViewInterface $view): void
     {
     }
 
-    public function initOptions(OptionsResolver $optionsResolver): void
+    protected function buildCellView(ColumnInterface $column, CellViewInterface $view): void
     {
     }
 }

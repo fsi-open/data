@@ -6,6 +6,7 @@
     <file>.</file>
     <exclude-pattern>bin</exclude-pattern>
     <exclude-pattern>vendor</exclude-pattern>
+    <exclude-pattern>tests/Bundle/DataGridBundle/Fixtures/var</exclude-pattern>
 
     <arg name="cache" value=".phpcs-cache"/>
     <arg name="encoding" value="utf-8"/>

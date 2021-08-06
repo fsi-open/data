@@ -14,16 +14,18 @@ namespace Tests\FSi\Bundle\DataGridBundle\Fixtures;
 use Twig\Extension\RuntimeExtensionInterface;
 use Twig\RuntimeLoader\RuntimeLoaderInterface;
 
-use function array_key_exists;
 use function get_class;
 
 class TwigRuntimeLoader implements RuntimeLoaderInterface
 {
     /**
-     * @var array<RuntimeExtensionInterface>
+     * @var array<object>
      */
     private array $instances = [];
 
+    /**
+     * @param array<object> $instances
+     */
     public function __construct(array $instances)
     {
         foreach ($instances as $instance) {
@@ -36,12 +38,12 @@ class TwigRuntimeLoader implements RuntimeLoaderInterface
         $this->instances[get_class($runtime)] = $runtime;
     }
 
-    public function load($class)
+    /**
+     * @param class-string $class
+     * @return object|null
+     */
+    public function load($class): ?object
     {
-        if (true === array_key_exists($class, $this->instances)) {
-            return $this->instances[$class];
-        }
-
-        return null;
+        return $this->instances[$class] ?? null;
     }
 }

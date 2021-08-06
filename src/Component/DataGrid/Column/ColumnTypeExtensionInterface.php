@@ -16,14 +16,17 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 interface ColumnTypeExtensionInterface
 {
     /**
-     * @param ColumnInterface $column
-     * @param mixed $data
-     * @param array|object $object
-     * @param int|string $index
+     * @return array<int,class-string<ColumnTypeInterface>>
      */
-    public function bindData(ColumnInterface $column, $data, $object, $index): void;
+    public static function getExtendedColumnTypes(): array;
 
-    public function buildCellView(ColumnInterface $column, CellViewInterface $view): void;
+    /**
+     * @param ColumnInterface $column
+     * @param CellViewInterface $view
+     * @param int|string $index
+     * @param array<string,mixed>|object $source
+     */
+    public function buildCellView(ColumnInterface $column, CellViewInterface $view, $index, $source): void;
 
     public function buildHeaderView(ColumnInterface $column, HeaderViewInterface $view): void;
 
@@ -35,9 +38,4 @@ interface ColumnTypeExtensionInterface
     public function filterValue(ColumnInterface $column, $value);
 
     public function initOptions(OptionsResolver $optionsResolver): void;
-
-    /**
-     * @return array<int,class-string<ColumnTypeInterface>>
-     */
-    public function getExtendedColumnTypes(): array;
 }

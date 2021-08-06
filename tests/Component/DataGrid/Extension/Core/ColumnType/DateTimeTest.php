@@ -13,10 +13,7 @@ namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnType;
 
 use DateTime;
 use DateTimeImmutable;
-use FSi\Component\DataGrid\DataGridFactory;
-use FSi\Component\DataGrid\DataGridFactoryInterface;
 use FSi\Component\DataGrid\DataGridInterface;
-use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\DateTime as DateTimeColumnType;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
@@ -24,25 +21,22 @@ use FSi\Component\DataGrid\Exception\DataGridColumnException;
 use InvalidArgumentException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
-use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
 class DateTimeTest extends TestCase
 {
-    private DataGridFactoryInterface $dataGridFactory;
+    private DateTimeColumnType $columnType;
 
     public function testDateTimeValue(): void
     {
-        $column = $this->dataGridFactory->createColumn(
+        $column = $this->columnType->createColumn(
             $this->getDataGridMock(),
-            DateTimeColumnType::class,
             'datetime',
             ['field_mapping' => ['datetime']]
         );
 
         $dateTimeObject = new DateTime('2012-05-03 12:41:11');
-        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+        $cellView = $this->columnType->createCellView($column, 1, (object) [
             'datetime' => $dateTimeObject,
         ]);
 
@@ -54,15 +48,14 @@ class DateTimeTest extends TestCase
 
     public function testDateTimeImmutableValue(): void
     {
-        $column = $this->dataGridFactory->createColumn(
+        $column = $this->columnType->createColumn(
             $this->getDataGridMock(),
-            DateTimeColumnType::class,
             'datetime',
             ['field_mapping' => ['datetime']]
         );
 
         $dateTimeObject = new DateTimeImmutable('2012-05-03 12:41:11');
-        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+        $cellView = $this->columnType->createCellView($column, 1, (object) [
             'datetime' => $dateTimeObject,
         ]);
 
@@ -74,14 +67,13 @@ class DateTimeTest extends TestCase
 
     public function testNullValue(): void
     {
-        $column = $this->dataGridFactory->createColumn(
+        $column = $this->columnType->createColumn(
             $this->getDataGridMock(),
-            DateTimeColumnType::class,
             'datetime',
             ['field_mapping' => ['datetime']]
         );
 
-        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+        $cellView = $this->columnType->createCellView($column, 1, (object) [
             'datetime' => null,
         ]);
 
@@ -90,9 +82,8 @@ class DateTimeTest extends TestCase
         $inputTypes = ['datetime', 'string', 'timestamp'];
 
         foreach ($inputTypes as $input_type) {
-            $column = $this->dataGridFactory->createColumn(
+            $column = $this->columnType->createColumn(
                 $this->getDataGridMock(),
-                DateTimeColumnType::class,
                 'datetime',
                 [
                     'field_mapping' => ['datetime'],
@@ -100,7 +91,7 @@ class DateTimeTest extends TestCase
                 ]
             );
 
-            $cellView = $this->dataGridFactory->createCellView($column, (object) [
+            $cellView = $this->columnType->createCellView($column, 1, (object) [
                 'datetime' => null,
             ]);
 
@@ -110,9 +101,8 @@ class DateTimeTest extends TestCase
 
     public function testFormatOption(): void
     {
-        $column = $this->dataGridFactory->createColumn(
+        $column = $this->columnType->createColumn(
             $this->getDataGridMock(),
-            DateTimeColumnType::class,
             'datetime',
             [
                 'field_mapping' => ['datetime'],
@@ -121,7 +111,7 @@ class DateTimeTest extends TestCase
         );
 
         $dateTimeObject = new DateTime('2012-05-03 12:41:11');
-        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+        $cellView = $this->columnType->createCellView($column, 1, (object) [
             'datetime' => $dateTimeObject,
         ]);
 
@@ -133,9 +123,8 @@ class DateTimeTest extends TestCase
 
     public function testFormatOptionWithDateTimeImmutable(): void
     {
-        $column = $this->dataGridFactory->createColumn(
+        $column = $this->columnType->createColumn(
             $this->getDataGridMock(),
-            DateTimeColumnType::class,
             'datetime',
             [
                 'field_mapping' => ['datetime'],
@@ -144,7 +133,7 @@ class DateTimeTest extends TestCase
         );
 
         $dateTimeObject = new DateTimeImmutable('2012-05-03 12:41:11');
-        $cellView = $this->dataGridFactory->createCellView($column, (object) [
+        $cellView = $this->columnType->createCellView($column, 1, (object) [
             'datetime' => $dateTimeObject,
         ]);
 
@@ -164,9 +153,8 @@ class DateTimeTest extends TestCase
             'datetime' => $dateTimeObject->getTimestamp()
         ];
 
-        $column = $this->dataGridFactory->createColumn(
+        $column = $this->columnType->createColumn(
             $this->getDataGridMock(),
-            DateTimeColumnType::class,
             'datetime',
             [
                 'field_mapping' => ['datetime'],
@@ -174,7 +162,7 @@ class DateTimeTest extends TestCase
             ]
         );
 
-        $cellView = $this->dataGridFactory->createCellView($column, $value);
+        $cellView = $this->columnType->createCellView($column, 1, $value);
 
         $this->assertSame(
             ['datetime' => $dateTimeObject->format('Y-m-d H:i:s')],
@@ -182,7 +170,7 @@ class DateTimeTest extends TestCase
         );
 
         $this->expectException(InvalidArgumentException::class);
-        $this->dataGridFactory->createCellView($column, $brokenValue);
+        $this->columnType->createCellView($column, 1, $brokenValue);
     }
 
     public function testStringValueWithMissingFieldsFormat(): void
@@ -192,9 +180,8 @@ class DateTimeTest extends TestCase
             'datetime' => $dateTimeObject->format('Y-m-d H:i:s')
         ];
 
-        $column = $this->dataGridFactory->createColumn(
+        $column = $this->columnType->createColumn(
             $this->getDataGridMock(),
-            DateTimeColumnType::class,
             'datetime',
             [
                 'field_mapping' => ['datetime'],
@@ -203,7 +190,7 @@ class DateTimeTest extends TestCase
         );
 
         $this->expectException(DataGridColumnException::class);
-        $this->dataGridFactory->createCellView($column, $value);
+        $this->columnType->createCellView($column, 1, $value);
     }
 
     public function testStringValue(): void
@@ -216,9 +203,8 @@ class DateTimeTest extends TestCase
             'datetime' => $dateTimeObject->format('Y-m-d H:i:s')
         ];
 
-        $column = $this->dataGridFactory->createColumn(
+        $column = $this->columnType->createColumn(
             $this->getDataGridMock(),
-            DateTimeColumnType::class,
             'datetime',
             [
                 'field_mapping' => ['datetime'],
@@ -226,7 +212,7 @@ class DateTimeTest extends TestCase
                 'input_type' => 'string',
             ]
         );
-        $cellView = $this->dataGridFactory->createCellView($column, $value);
+        $cellView = $this->columnType->createCellView($column, 1, $value);
 
         $this->assertSame(
             ['datetime' => $dateTimeObject->format('Y-m-d H:i:s')],
@@ -234,7 +220,7 @@ class DateTimeTest extends TestCase
         );
 
         $this->expectException(DataGridColumnException::class);
-        $this->dataGridFactory->createCellView($column, $brokenValue);
+        $this->columnType->createCellView($column, 1, $brokenValue);
     }
 
     public function testArrayValueWithMissingFieldsFormat(): void
@@ -246,9 +232,8 @@ class DateTimeTest extends TestCase
             'time' => $dateObject->format('Y-m-d H:i:s'),
         ];
 
-        $column = $this->dataGridFactory->createColumn(
+        $column = $this->columnType->createColumn(
             $this->getDataGridMock(),
-            DateTimeColumnType::class,
             'datetime',
             [
                 'field_mapping' => ['datetime', 'time'],
@@ -257,7 +242,7 @@ class DateTimeTest extends TestCase
         );
 
         $this->expectException(DataGridColumnException::class);
-        $this->dataGridFactory->createCellView($column, $value);
+        $this->columnType->createCellView($column, 1, $value);
     }
 
     public function testArrayValueWithMissingFieldsFormatForDateTimeImmutable(): void
@@ -269,9 +254,8 @@ class DateTimeTest extends TestCase
             'time' => $dateObject->format('Y-m-d H:i:s'),
         ];
 
-        $column = $this->dataGridFactory->createColumn(
+        $column = $this->columnType->createColumn(
             $this->getDataGridMock(),
-            DateTimeColumnType::class,
             'datetime',
             [
                 'field_mapping' => ['datetime', 'time'],
@@ -280,7 +264,7 @@ class DateTimeTest extends TestCase
         );
 
         $this->expectException(DataGridColumnException::class);
-        $this->dataGridFactory->createCellView($column, $value);
+        $this->columnType->createCellView($column, 1, $value);
     }
 
     public function testArrayValueWithWrongFieldsFormat(): void
@@ -292,9 +276,8 @@ class DateTimeTest extends TestCase
             'time' => $dateObject->format('Y-m-d H:i:s'),
         ];
 
-        $column = $this->dataGridFactory->createColumn(
+        $column = $this->columnType->createColumn(
             $this->getDataGridMock(),
-            DateTimeColumnType::class,
             'datetime',
             [
                 'field_mapping' => ['datetime', 'time'],
@@ -307,7 +290,7 @@ class DateTimeTest extends TestCase
         );
 
         $this->expectException(DataGridColumnException::class);
-        $this->dataGridFactory->createCellView($column, $value);
+        $this->columnType->createCellView($column, 1, $value);
     }
 
     public function testArrayValue(): void
@@ -323,9 +306,8 @@ class DateTimeTest extends TestCase
             'datetime_immutable' => $dateTimeImmutableObject,
         ];
 
-        $column = $this->dataGridFactory->createColumn(
+        $column = $this->columnType->createColumn(
             $this->getDataGridMock(),
-            DateTimeColumnType::class,
             'datetime',
             [
                 'field_mapping' => ['datetime', 'time', 'string', 'timestamp', 'datetime_immutable'],
@@ -339,7 +321,7 @@ class DateTimeTest extends TestCase
                 ],
             ]
         );
-        $cellView = $this->dataGridFactory->createCellView($column, $value);
+        $cellView = $this->columnType->createCellView($column, 1, $value);
 
         $expectedResult = [
             'datetime' => $dateTimeObject->format('Y-m-d H:i:s'),
@@ -365,9 +347,8 @@ class DateTimeTest extends TestCase
             'datetime_immutable' => $dateTimeImmutableObject,
         ];
 
-        $column = $this->dataGridFactory->createColumn(
+        $column = $this->columnType->createColumn(
             $this->getDataGridMock(),
-            DateTimeColumnType::class,
             'datetime',
             [
                 'datetime_format' => 'Y.d.m',
@@ -382,7 +363,7 @@ class DateTimeTest extends TestCase
                 ],
             ]
         );
-        $cellView = $this->dataGridFactory->createCellView($column, $value);
+        $cellView = $this->columnType->createCellView($column, 1, $value);
 
         $expectedResult = [
             'datetime' => $dateTimeObject->format('Y.d.m'),
@@ -397,11 +378,7 @@ class DateTimeTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dataGridFactory = new DataGridFactory(
-            [new SimpleDataGridExtension(new DefaultColumnOptionsExtension(), new DateTimeColumnType())],
-            $this->createMock(DataMapperInterface::class),
-            $this->createMock(EventDispatcherInterface::class)
-        );
+        $this->columnType = new DateTimeColumnType([new DefaultColumnOptionsExtension()]);
     }
 
     /**

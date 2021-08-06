@@ -21,7 +21,7 @@ class FooType extends ColumnAbstractType
         return 'foo';
     }
 
-    public function filterValue(ColumnInterface $column, $value)
+    protected function filterValue(ColumnInterface $column, $value)
     {
         return $value;
     }

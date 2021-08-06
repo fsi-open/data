@@ -11,43 +11,111 @@ declare(strict_types=1);
 
 namespace FSi\Bundle\DataGridBundle\DependencyInjection\Compiler;
 
+use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\DependencyInjectionExtension;
+use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
+use FSi\Component\DataGrid\Exception\DataGridException;
+use ReflectionNamedType;
+use RuntimeException;
+use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
 
-class DataGridPass implements CompilerPassInterface
+use function is_a;
+use function sprintf;
+
+final class DataGridPass implements CompilerPassInterface
 {
     public function process(ContainerBuilder $container): void
     {
-        if (!$container->hasDefinition('datagrid.extension')) {
-            return;
+        if (true === $container->hasExtension('stof_doctrine_extensions')) {
+            $loader = new XmlFileLoader($container, new FileLocator(__DIR__ . '/../../Resources/config'));
+            $loader->load('datagrid_gedmo.xml');
         }
 
-        $columns = [];
-        foreach ($container->findTaggedServiceIds('datagrid.column') as $serviceId => $tag) {
-            $alias = $tag[0]['alias'] ?? $serviceId;
+        if (true === $container->hasDefinition(DependencyInjectionExtension::class)) {
+            $columns = [];
+            foreach ($container->findTaggedServiceIds('datagrid.column') as $serviceId => $tag) {
+                $columns[] = new Reference($serviceId);
+            }
 
-            $columns[$alias] = new Reference($serviceId);
+            $columnExtensions = [];
+            foreach ($container->findTaggedServiceIds('datagrid.column_extension') as $serviceId => $tag) {
+                $columnExtensions[] = new Reference($serviceId);
+            }
+
+            foreach ($columns as $columnReference) {
+                $columnDefinition = $container->getDefinition((string) $columnReference);
+                $columnClass = $columnDefinition->getClass();
+                if (null === $columnClass) {
+                    throw new DataGridException(
+                        sprintf(
+                            'DataGrid column type service %s has no class',
+                            (string) $columnReference
+                        )
+                    );
+                }
+                $columnTypeExtensionsReferences = [];
+                foreach ($columnExtensions as $columnExtensionReference) {
+                    $columnExtensionDefinition = $container->getDefinition((string) $columnExtensionReference);
+                    $columnExtensionClass = $columnExtensionDefinition->getClass();
+                    if (null === $columnExtensionClass) {
+                        throw new DataGridException(
+                            sprintf(
+                                'DataGrid column extension service %s has no class',
+                                (string) $columnExtensionReference
+                            )
+                        );
+                    }
+                    if (false === is_a($columnExtensionClass, ColumnTypeExtensionInterface::class, true)) {
+                        throw new DataGridException(
+                            sprintf(
+                                'DataGrid column extension class %s must implement %s',
+                                $columnExtensionClass,
+                                ColumnTypeExtensionInterface::class
+                            )
+                        );
+                    }
+                    foreach ($columnExtensionClass::getExtendedColumnTypes() as $extendedColumnType) {
+                        if (is_a($columnClass, $extendedColumnType, true)) {
+                            $columnTypeExtensionsReferences[] = $columnExtensionReference;
+                        }
+                    }
+                }
+
+                $columnDefinition->replaceArgument('$columnTypeExtensions', $columnTypeExtensionsReferences);
+            }
         }
 
-        $container->getDefinition('datagrid.extension')->replaceArgument(0, $columns);
+        if (true === $container->hasDefinition('event_dispatcher')) {
+            $eventDispatcher = $container->getDefinition('event_dispatcher');
 
-        $columnExtensions = [];
-        foreach ($container->findTaggedServiceIds('datagrid.column_extension') as $serviceId => $tag) {
-            $alias = $tag[0]['alias'] ?? $serviceId;
+            foreach ($container->findTaggedServiceIds('datagrid.event_subscriber') as $serviceId => $tag) {
+                $defaultPriorityMethod = $tag[0]['default_priority_method'] ?? null;
+                $subscriberDefinition = $container->getDefinition($serviceId);
+                $subscriberReflection = $container->getReflectionClass($subscriberDefinition->getClass());
+                if (null === $subscriberReflection) {
+                    throw new RuntimeException("Unable to reflect DataGrid event subscriber {$serviceId}");
+                }
+                $priority = 0;
+                if (null !== $defaultPriorityMethod) {
+                    $priorityMethodReflection = $subscriberReflection->getMethod($defaultPriorityMethod);
+                    $priority = $priorityMethodReflection->invoke(null);
+                }
 
-            $columnExtensions[$alias] = new Reference($serviceId);
+                $subscriberInvokeMethodReflection = $subscriberReflection->getMethod('__invoke');
+                $subscriberInvokeMethodEventArgumentReflection = $subscriberInvokeMethodReflection->getParameters()[0];
+                $eventTypeReflection = $subscriberInvokeMethodEventArgumentReflection->getType();
+                if (false === $eventTypeReflection instanceof ReflectionNamedType) {
+                    throw new RuntimeException(
+                        "Unable to reflect class name of the first argument of {$serviceId}::__invoke()"
+                    );
+                }
+                $eventClass = $eventTypeReflection->getName();
+
+                $eventDispatcher->addMethodCall('addListener', [$eventClass, new Reference($serviceId), $priority]);
+            }
         }
-
-        $container->getDefinition('datagrid.extension')->replaceArgument(1, $columnExtensions);
-
-        $subscribers = [];
-        foreach ($container->findTaggedServiceIds('datagrid.subscriber') as $serviceId => $tag) {
-            $alias = $tag[0]['alias'] ?? $serviceId;
-
-            $subscribers[$alias] = new Reference($serviceId);
-        }
-
-        $container->getDefinition('datagrid.extension')->replaceArgument(2, $subscribers);
     }
 }

@@ -64,9 +64,4 @@ class DataGridFactoryTest extends TestCase
         $this->expectExceptionMessage('There is no column with type "bar" registered in factory.');
         $this->factory->getColumnType('bar');
     }
-
-    public function testGetDataMapper(): void
-    {
-        self::assertInstanceOf(DataMapperInterface::class, $this->factory->getDataMapper());
-    }
 }

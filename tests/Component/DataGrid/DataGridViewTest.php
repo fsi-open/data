@@ -35,7 +35,7 @@ class DataGridViewTest extends TestCase
         $column->method('getType')->willReturn($columnType);
         $column->method('getDataGrid')->willReturn($dataGrid);
 
-        $dataGridFactory->method('createHeaderView')
+        $columnType->method('createHeaderView')
             ->willReturnCallback(function () {
                 $headerView = $this->createMock(HeaderViewInterface::class);
                 $headerView->method('getName')->willReturn('ColumnHeaderView');

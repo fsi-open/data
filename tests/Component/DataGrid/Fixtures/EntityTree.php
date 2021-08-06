@@ -13,21 +13,21 @@ namespace Tests\FSi\Component\DataGrid\Fixtures;
 
 class EntityTree
 {
-    public $id;
-    public $left = 'left';
-    public $right = 'right';
-    public $root = 'root';
-    public $level = 'level';
-    public $parent;
+    public string $id;
+    public string $left = 'left';
+    public string $right = 'right';
+    public string $root = 'root';
+    public string $level = 'level';
+    public ?EntityTree $parent = null;
 
-    public function __construct($id = null)
+    public function __construct(string $id)
     {
         $this->id = $id;
     }
 
-    public function getParent()
+    public function getParent(): ?self
     {
-        if (!isset($this->parent)) {
+        if (null === $this->parent) {
             $this->parent = new EntityTree("bar");
         }
 

@@ -11,104 +11,59 @@ declare(strict_types=1);
 
 namespace FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\ColumnTypeExtension;
 
-use DateTimeInterface;
+use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\CellFormBuilder\CellFormBuilderInterface;
 use FSi\Bundle\DataGridBundle\Form\Type\RowType;
 use FSi\Component\DataGrid\Column\CellViewInterface;
+use FSi\Component\DataGrid\Column\ColumnAbstractType;
 use FSi\Component\DataGrid\Column\ColumnAbstractTypeExtension;
 use FSi\Component\DataGrid\Column\ColumnInterface;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\DateTime;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Number;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Text;
-use FSi\Component\DataGrid\Extension\Doctrine\ColumnType\Entity;
-use FSi\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
-use Symfony\Bridge\Doctrine\Form\Type\EntityType;
+use FSi\Component\DataGrid\Column\ColumnTypeInterface;
+use FSi\Component\DataGrid\DataGridCellFormHandlerInterface;
+use FSi\Component\DataGrid\Exception\DataGridColumnException;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
-use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 use function array_key_exists;
+use function array_keys;
+use function implode;
 
-class FormExtension extends ColumnAbstractTypeExtension
+class FormExtension extends ColumnAbstractTypeExtension implements DataGridCellFormHandlerInterface
 {
+    /**
+     * @var array<class-string<ColumnTypeInterface>,CellFormBuilderInterface>
+     */
+    private array $cellFormBuilders = [];
     private FormFactoryInterface $formFactory;
-    private bool $csrfTokenEnabled;
+    private bool $csrfProtectionEnabled;
     /**
      * @var array<string,FormInterface>
      */
     private array $forms = [];
 
-    public function __construct(FormFactoryInterface $formFactory, bool $csrfTokenEnabled = true)
+    public static function getExtendedColumnTypes(): array
     {
-        $this->formFactory = $formFactory;
-        $this->csrfTokenEnabled = $csrfTokenEnabled;
+        return [ColumnAbstractType::class];
     }
 
-    public function bindData(ColumnInterface $column, $data, $object, $index): void
-    {
-        if (false === $column->getOption('editable')) {
-            return;
-        }
-
-        $formData = [];
-        switch ($column->getType()->getId()) {
-            case 'entity':
-                $relationField = $column->getOption('relation_field');
-                if (false === array_key_exists($relationField, $data)) {
-                    return;
-                }
-
-                $formData[$relationField] = $data[$relationField];
-                break;
-
-            default:
-                $fieldMapping = $column->getOption('field_mapping');
-                foreach ($fieldMapping as $field) {
-                    if (false === array_key_exists($field, $data)) {
-                        return;
-                    }
-
-                    $formData[$field] = $data[$field];
-                }
-        }
-
-        $form = $this->createForm($column, $index, $object);
-        $form->submit([$index => $formData]);
-        if (true === $form->isValid()) {
-            $data = $form->getData();
-            foreach ($data as $fields) {
-                foreach ($fields as $field => $value) {
-                    $column->getDataGrid()->getDataMapper()->setData($field, $object, $value);
-                }
+    /**
+     * @param iterable<CellFormBuilderInterface> $cellFormBuilders
+     * @param FormFactoryInterface $formFactory
+     * @param bool $csrfProtectionEnabled
+     */
+    public function __construct(
+        iterable $cellFormBuilders,
+        FormFactoryInterface $formFactory,
+        bool $csrfProtectionEnabled = true
+    ) {
+        foreach ($cellFormBuilders as $cellFormBuilder) {
+            foreach ($cellFormBuilder::getSupportedColumnTypes() as $supportedColumnType) {
+                $this->cellFormBuilders[$supportedColumnType] = $cellFormBuilder;
             }
         }
-    }
-
-    public function buildCellView(ColumnInterface $column, CellViewInterface $view): void
-    {
-        if (false === $column->getOption('editable')) {
-            return;
-        }
-
-        $source = $view->getAttribute('source');
-        $index = $view->getAttribute('row');
-        $form = $this->createForm($column, $index, $source);
-
-        $view->setAttribute('form', $form->createView());
-    }
-
-    public function getExtendedColumnTypes(): array
-    {
-        return [
-            Text::class,
-            Boolean::class,
-            Number::class,
-            DateTime::class,
-            Entity::class,
-            Tree::class,
-        ];
+        $this->formFactory = $formFactory;
+        $this->csrfProtectionEnabled = $csrfProtectionEnabled;
     }
 
     public function initOptions(OptionsResolver $optionsResolver): void
@@ -124,95 +79,68 @@ class FormExtension extends ColumnAbstractTypeExtension
         $optionsResolver->setAllowedTypes('form_type', 'array');
     }
 
+    public function submit(ColumnInterface $column, $index, $source, $data): void
+    {
+        if (false === $column->getOption('editable')) {
+            return;
+        }
+
+        $formData = $this->getFormBuilder($column)->prepareFormData($column, $data);
+        $form = $this->getForm($column, $index, $source);
+        $form->submit([$index => $formData]);
+        if (true === $form->isSubmitted() && true === $form->isValid()) {
+            $data = $form->getData();
+            foreach ($data as $fields) {
+                foreach ($fields as $field => $value) {
+                    $column->getDataGrid()->getDataMapper()->setData($field, $source, $value);
+                }
+            }
+        }
+    }
+
+    public function buildCellView(ColumnInterface $column, CellViewInterface $view, $index, $source): void
+    {
+        if (false === $column->getOption('editable')) {
+            return;
+        }
+
+        $view->setAttribute('form', $this->getForm($column, $index, $source)->createView());
+    }
+
+    public function isValid(ColumnInterface $column, $index): bool
+    {
+        $form = $this->getForm($column, $index, null);
+
+        return true === $form->isSubmitted() && true === $form->isValid();
+    }
+
     /**
      * @param ColumnInterface $column
      * @param int|string $index
-     * @param array|object $object
-     * @return FormInterface
+     * @param array<string,mixed>|object|null $object
+     * @return FormInterface<FormInterface>
      */
-    private function createForm(ColumnInterface $column, $index, $object): FormInterface
+    private function getForm(ColumnInterface $column, $index, $object): FormInterface
     {
-        $formId = implode([$column->getName(), $column->getType()->getId(), $index]);
-        if (array_key_exists($formId, $this->forms)) {
+        $formId = implode([$column->getDataGrid()->getName(), $column->getName(), $index]);
+        if (true === array_key_exists($formId, $this->forms)) {
             return $this->forms[$formId];
         }
 
-        // Create fields array. There are column types like entity where field_mapping
-        // should not be used to build field array.
-        $fields = [];
-        switch ($column->getType()->getId()) {
-            case 'entity':
-                $field = [
-                    'name' => $column->getOption('relation_field'),
-                    'type' => EntityType::class,
-                    'options' => [],
-                ];
-
-                $fields[$column->getOption('relation_field')] = $field;
-                break;
-
-            default:
-                foreach ($column->getOption('field_mapping') as $fieldName) {
-                    $field = [
-                        'name' => $fieldName,
-                        'type' => null,
-                        'options' => [],
-                    ];
-                    $fields[$fieldName] = $field;
-                }
-        }
-
-        //Pass fields form options from column into $fields array.
-        $fieldsOptions = $column->getOption('form_options');
-        foreach ($fieldsOptions as $fieldName => $fieldOptions) {
-            if (array_key_exists($fieldName, $fields)) {
-                if (is_array($fieldOptions)) {
-                    $fields[$fieldName]['options'] = $fieldOptions;
-                }
-            }
-        }
-
-        //Pass fields form type from column into $fields array.
-        $fieldsTypes = $column->getOption('form_type');
-        foreach ($fieldsTypes as $fieldName => $fieldType) {
-            if (true === array_key_exists($fieldName, $fields)) {
-                if (true === is_string($fieldType)) {
-                    $fields[$fieldName]['type'] = $fieldType;
-                }
-            }
-        }
-
-        //Build data array, the data array holds data that should be passed into
-        //form elements.
-        switch ($column->getType()->getId()) {
-            case 'datetime':
-                foreach ($fields as &$field) {
-                    $value = $column->getDataGrid()->getDataMapper()->getData($field['name'], $object);
-                    if (null === $field['type']) {
-                        $field['type'] = DateTimeType::class;
-                    }
-                    if (true === is_numeric($value) && false === array_key_exists('input', $field['options'])) {
-                        $field['options']['input'] = 'timestamp';
-                    }
-                    if (true === is_string($value) && false === array_key_exists('input', $field['options'])) {
-                        $field['options']['input'] = 'string';
-                    }
-                    if (
-                        true === $value instanceof DateTimeInterface
-                        && false === array_key_exists('input', $field['options'])
-                    ) {
-                        $field['options']['input'] = 'datetime';
-                    }
-                }
-                break;
+        if (null === $object) {
+            throw new DataGridColumnException(
+                "DataGrid '{$column->getDataGrid()->getName()}' does not have data bound"
+            );
         }
 
         $formBuilderOptions = ['entry_type' => RowType::class];
-        if ($this->csrfTokenEnabled) {
+        if (true === $this->csrfProtectionEnabled) {
             $formBuilderOptions['csrf_protection'] = false;
         }
-
+        $fields = $this->getFormBuilder($column)
+            ->prepareFormFields($column, $object, $column->getOption('form_type'), $column->getOption('form_options'));
         $formBuilderOptions['entry_options']['fields'] = $fields;
+
         $formData = [];
         foreach (array_keys($fields) as $fieldName) {
             $formData[$fieldName] = $column->getDataGrid()->getDataMapper()->getData($fieldName, $object);
@@ -230,5 +158,17 @@ class FormExtension extends ColumnAbstractTypeExtension
         $this->forms[$formId] = $formBuilder->getForm();
 
         return $this->forms[$formId];
+    }
+
+    private function getFormBuilder(ColumnInterface $column): CellFormBuilderInterface
+    {
+        $columnTypeClass = get_class($column->getType());
+        foreach ($this->cellFormBuilders as $supportedColumnType => $cellFormBuilder) {
+            if (true === is_a($columnTypeClass, $supportedColumnType, true)) {
+                return $cellFormBuilder;
+            }
+        }
+
+        throw new DataGridColumnException("Unable to find CellFormBuilder for column of class \"{$columnTypeClass}\"");
     }
 }

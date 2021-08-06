@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Tests\FSi\Component\DataGrid;
 
 use FSi\Component\DataGrid\Column\ColumnInterface;
+use FSi\Component\DataGrid\Column\ColumnTypeInterface;
 use FSi\Component\DataGrid\DataGridFactoryInterface;
 use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\DataGridRowView;
@@ -22,17 +23,17 @@ class DataGridRowViewTest extends TestCase
 {
     public function testCreateDataGridRowView(): void
     {
-        $source = ['SOURCE'];
+        $source = ['SOURCE' => 'VALUE'];
 
         $cellView = $this->createMock(CellViewInterface::class);
-
-        $factory = $this->createMock(DataGridFactoryInterface::class);
-        $dataGrid = $this->createMock(DataGridInterface::class);
         $column = $this->createMock(ColumnInterface::class);
+        $columnType = $this->createMock(ColumnTypeInterface::class);
 
-        $dataGrid->expects(self::atLeastOnce())->method('getFactory')->willReturn($factory);
-        $column->expects(self::atLeastOnce())->method('getDataGrid')->willReturn($dataGrid);
-        $factory->expects(self::atLeastOnce())->method('createCellView')->with($column, $source)->willReturn($cellView);
+        $column->expects(self::atLeastOnce())->method('getType')->willReturn($columnType);
+        $columnType->expects(self::atLeastOnce())
+            ->method('createCellView')
+            ->with($column, 0, $source)
+            ->willReturn($cellView);
 
         $columns = [
             'foo' => $column

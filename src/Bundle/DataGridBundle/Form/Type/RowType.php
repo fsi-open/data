@@ -18,8 +18,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 final class RowType extends AbstractType
 {
     /**
-     * @param FormBuilderInterface $builder
-     * @param array{fields:array{name:string,type:string,options:array}} $options
+     * @param FormBuilderInterface<FormBuilderInterface> $builder
+     * @param array{fields:array<string,array{name:string,type:string,options:array<string,mixed>}>} $options
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {

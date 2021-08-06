@@ -11,22 +11,17 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnType;
 
-use FSi\Component\DataGrid\DataGridFactory;
-use FSi\Component\DataGrid\DataGridFactoryInterface;
 use FSi\Component\DataGrid\DataGridInterface;
-use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
 use FSi\Component\DataGrid\Extension\Core\ColumnType\Number;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
-use Tests\FSi\Component\DataGrid\Fixtures\SimpleDataGridExtension;
 
 class NumberTest extends TestCase
 {
-    private DataGridFactoryInterface $dataGridFactory;
+    private Number $columnType;
 
     public function testPrecision(): void
     {
@@ -99,17 +94,18 @@ class NumberTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dataGridFactory = new DataGridFactory(
-            [new SimpleDataGridExtension(new DefaultColumnOptionsExtension(), new Number())],
-            $this->createMock(DataMapperInterface::class),
-            $this->createMock(EventDispatcherInterface::class)
-        );
+        $this->columnType = new Number([new DefaultColumnOptionsExtension()]);
     }
 
-    private function assertCellValue(array $options, $value, array $expectedValue): void
+    /**
+     * @param array<string,mixed> $options
+     * @param object $value
+     * @param array<string,mixed> $expectedValue
+     */
+    private function assertCellValue(array $options, object $value, array $expectedValue): void
     {
-        $column = $this->dataGridFactory->createColumn($this->getDataGridMock(), Number::class, 'number', $options);
-        $cellView = $this->dataGridFactory->createCellView($column, $value);
+        $column = $this->columnType->createColumn($this->getDataGridMock(), 'number', $options);
+        $cellView = $this->columnType->createCellView($column, 1, $value);
 
         $this->assertSame($expectedValue, $cellView->getValue());
     }

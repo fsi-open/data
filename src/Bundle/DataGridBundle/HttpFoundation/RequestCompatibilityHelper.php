@@ -16,6 +16,11 @@ use Symfony\Component\HttpFoundation\ParameterBag;
 
 final class RequestCompatibilityHelper
 {
+    /**
+     * @param ParameterBag<string,mixed> $bag
+     * @param string $name
+     * @return array<mixed>
+     */
     public static function get(ParameterBag $bag, string $name): array
     {
         if (true === class_exists(InputBag::class) && true === $bag instanceof InputBag) {

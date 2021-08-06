@@ -13,11 +13,19 @@ namespace FSi\Bundle\DataGridBundle\Twig\Node;
 
 use FSi\Bundle\DataGridBundle\Twig\Extension\DataGridRuntime;
 use Twig\Compiler;
+use Twig\Extension\AbstractExtension;
 use Twig\Node\Expression\ArrayExpression;
 use Twig\Node\Node;
 
 class DataGridThemeNode extends Node
 {
+    /**
+     * @param Node<Node> $dataGrid
+     * @param Node<Node> $theme
+     * @param ArrayExpression<AbstractExtension> $vars
+     * @param int $lineno
+     * @param string|null $tag
+     */
     public function __construct(
         Node $dataGrid,
         Node $theme,
