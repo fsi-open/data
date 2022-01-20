@@ -11,12 +11,20 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource\Driver\Doctrine\ORM;
 
+use ArrayIterator;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator as DoctrinePaginator;
 use FSi\Component\DataSource\Result;
+use Iterator;
 
-class Paginator extends DoctrinePaginator implements Result
+class Paginator implements Result
 {
-    public function __construct($query)
+    /**
+     * @var DoctrinePaginator<mixed>
+     */
+    private DoctrinePaginator $paginator;
+
+    public function __construct(QueryBuilder $query)
     {
         // Avoid DDC-2213 bug/mistake
         $em = $query->getEntityManager();
@@ -28,6 +36,24 @@ class Paginator extends DoctrinePaginator implements Result
             }
         }
 
-        parent::__construct($query, $fetchJoinCollection);
+        $this->paginator = new DoctrinePaginator($query, $fetchJoinCollection);
+    }
+
+    /**
+     * @return ArrayIterator<int|string,mixed>
+     */
+    public function getIterator(): Iterator
+    {
+        return $this->paginator->getIterator();
+    }
+
+    public function count(): int
+    {
+        return $this->paginator->count();
+    }
+
+    public function setUseOutputWalkers(?bool $useOutputWalkers): void
+    {
+        $this->paginator->setUseOutputWalkers($useOutputWalkers);
     }
 }

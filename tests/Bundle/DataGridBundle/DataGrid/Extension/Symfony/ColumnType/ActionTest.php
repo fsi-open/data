@@ -179,7 +179,7 @@ class ActionTest extends TestCase
     {
         $this->router = $this->createMock(RouterInterface::class);
         $this->requestStack = $this->createMock(RequestStack::class);
-        $this->requestStack->method('getMasterRequest')->willReturn(new Request());
+        $this->requestStack->method('getCurrentRequest')->willReturn(new Request());
         $this->columnType = new Action($this->router, $this->requestStack, [new DefaultColumnOptionsExtension()]);
     }
 

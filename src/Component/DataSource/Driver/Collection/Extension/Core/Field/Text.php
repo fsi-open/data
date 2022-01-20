@@ -12,13 +12,22 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Driver\Collection\Extension\Core\Field;
 
 use FSi\Component\DataSource\Driver\Collection\CollectionAbstractField;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class Text extends CollectionAbstractField
 {
-    protected $comparisons = ['eq', 'neq', 'in', 'notIn', 'contains'];
-
-    public function getType(): string
+    public function getId(): string
     {
         return 'text';
+    }
+
+    public function initOptions(OptionsResolver $optionsResolver): void
+    {
+        parent::initOptions($optionsResolver);
+
+        $optionsResolver->setAllowedValues(
+            'comparison',
+            ['eq', 'neq', 'in', 'notIn', 'contains']
+        );
     }
 }

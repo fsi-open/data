@@ -16,9 +16,9 @@ use function array_key_exists;
 class AttributesContainer implements AttributesContainerInterface
 {
     /**
-     * @var array
+     * @var array<string,mixed>
      */
-    protected $attributes = [];
+    protected array $attributes = [];
 
     public function hasAttribute(string $name): bool
     {
@@ -44,7 +44,7 @@ class AttributesContainer implements AttributesContainerInterface
         return $this->attributes;
     }
 
-    public function removeAttribute($name): void
+    public function removeAttribute(string $name): void
     {
         unset($this->attributes[$name]);
     }

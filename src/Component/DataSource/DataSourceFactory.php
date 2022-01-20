@@ -13,46 +13,27 @@ namespace FSi\Component\DataSource;
 
 use FSi\Component\DataSource\Driver\DriverFactoryManagerInterface;
 use FSi\Component\DataSource\Exception\DataSourceException;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 use function array_key_exists;
 
 class DataSourceFactory implements DataSourceFactoryInterface
 {
+    private EventDispatcherInterface $eventDispatcher;
+
+    private DriverFactoryManagerInterface $driverFactoryManager;
+
     /**
      * @var array<DataSourceInterface>
      */
-    protected $datasources = [];
+    private array $dataSources = [];
 
-    /**
-     * @var DriverFactoryManagerInterface
-     */
-    protected $driverFactoryManager;
-
-    /**
-     * @var array<DataSourceExtensionInterface>
-     */
-    protected $extensions = [];
-
-    /**
-     * @param DriverFactoryManagerInterface $driverFactoryManager
-     * @param array<DataSourceExtensionInterface> $extensions
-     * @throws DataSourceException
-     */
-    public function __construct(DriverFactoryManagerInterface $driverFactoryManager, array $extensions = [])
-    {
+    public function __construct(
+        EventDispatcherInterface $eventDispatcher,
+        DriverFactoryManagerInterface $driverFactoryManager
+    ) {
+        $this->eventDispatcher = $eventDispatcher;
         $this->driverFactoryManager = $driverFactoryManager;
-
-        foreach ($extensions as $extension) {
-            if (false === $extension instanceof DataSourceExtensionInterface) {
-                throw new DataSourceException(sprintf(
-                    'Instance of %s expected, "%s" given.',
-                    DataSourceExtensionInterface::class,
-                    is_object($extension) ? get_class($extension) : gettype($extension)
-                ));
-            }
-        }
-
-        $this->extensions = $extensions;
     }
 
     public function createDataSource(
@@ -60,37 +41,20 @@ class DataSourceFactory implements DataSourceFactoryInterface
         array $driverOptions = [],
         string $name = 'datasource'
     ): DataSourceInterface {
-        $driverFactory = $this->driverFactoryManager->getFactory($driverName);
-        $driver = $driverFactory->createDriver($driverOptions);
+        $driver = $this->driverFactoryManager->getFactory($driverName)->createDriver($driverOptions);
 
         $this->checkDataSourceName($name);
 
-        $datasource = new DataSource($driver, $name);
-        $this->datasources[$name] = $datasource;
-
-        foreach ($this->extensions as $extension) {
-            $datasource->addExtension($extension);
-        }
-
-        $datasource->setFactory($this);
+        $datasource = new DataSource($name, $this, $this->eventDispatcher, $driver);
+        $this->dataSources[$name] = $datasource;
 
         return $datasource;
-    }
-
-    public function addExtension(DataSourceExtensionInterface $extension): void
-    {
-        $this->extensions[] = $extension;
-    }
-
-    public function getExtensions(): array
-    {
-        return $this->extensions;
     }
 
     public function getAllParameters(): array
     {
         $result = [];
-        foreach ($this->datasources as $datasource) {
+        foreach ($this->dataSources as $datasource) {
             $result[] = $datasource->getParameters();
         }
 
@@ -104,7 +68,7 @@ class DataSourceFactory implements DataSourceFactoryInterface
     public function getOtherParameters(DataSourceInterface $except): array
     {
         $result = [];
-        foreach ($this->datasources as $datasource) {
+        foreach ($this->dataSources as $datasource) {
             if ($datasource !== $except) {
                 $result[] = $datasource->getParameters();
             }
@@ -117,21 +81,13 @@ class DataSourceFactory implements DataSourceFactoryInterface
         return $result;
     }
 
-    public function addDataSource(DataSourceInterface $datasource): void
-    {
-        $name = $datasource->getName();
-        $this->checkDataSourceName($name, $datasource);
-        $this->datasources[$name] = $datasource;
-        $datasource->setFactory($this);
-    }
-
     private function checkDataSourceName(string $name, ?DataSourceInterface $datasource = null): void
     {
         if ('' === $name) {
             throw new DataSourceException('Name of data source can\'t be empty.');
         }
 
-        if (true === array_key_exists($name, $this->datasources) && ($this->datasources[$name] !== $datasource)) {
+        if (true === array_key_exists($name, $this->dataSources) && ($this->dataSources[$name] !== $datasource)) {
             throw new DataSourceException('Name of data source must be unique.');
         }
 

@@ -12,14 +12,10 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Event\DataSourceEvent;
 
 use FSi\Component\DataSource\DataSourceInterface;
-use Symfony\Contracts\EventDispatcher\Event;
 
-class DataSourceEventArgs extends Event
+abstract class DataSourceEventArgs
 {
-    /**
-     * @var DataSourceInterface
-     */
-    private $datasource;
+    private DataSourceInterface $datasource;
 
     public function __construct(DataSourceInterface $datasource)
     {

@@ -11,72 +11,49 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource;
 
-use Countable;
 use FSi\Component\DataSource\Driver\DriverInterface;
 use FSi\Component\DataSource\Event\DataSourceEvent;
-use FSi\Component\DataSource\Event\DataSourceEvents;
+use FSi\Component\DataSource\Event\FieldEvent;
 use FSi\Component\DataSource\Exception\DataSourceException;
-use FSi\Component\DataSource\Field\FieldTypeInterface;
-use IteratorAggregate;
-use Symfony\Component\EventDispatcher\EventDispatcher;
+use FSi\Component\DataSource\Field\FieldInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 
 use function array_key_exists;
 use function array_reduce;
 use function get_class;
 use function gettype;
+use function is_array;
+use function sprintf;
 
 class DataSource implements DataSourceInterface
 {
-    /**
-     * @var DriverInterface
-     */
-    private $driver;
+    private DriverInterface $driver;
+
+    private string $name;
 
     /**
-     * @var string
+     * @var array<FieldInterface>
      */
-    private $name;
+    private array $fields = [];
 
-    /**
-     * @var array<FieldTypeInterface>
-     */
-    private $fields = [];
+    private ?DataSourceFactoryInterface $factory;
 
-    /**
-     * @var array<DataSourceExtensionInterface>
-     */
-    private $extensions = [];
+    private EventDispatcherInterface $eventDispatcher;
 
-    /**
-     * @var DataSourceView|null
-     */
-    private $view;
+    private ?int $maxResults = null;
 
-    /**
-     * @var DataSourceFactoryInterface|null
-     */
-    private $factory;
-
-    /**
-     * @var int
-     */
-    private $maxResults;
-
-    /**
-     * @var int
-     */
-    private $firstResult;
+    private ?int $firstResult = null;
 
     /**
      * Cache for methods that depends on fields data (cache is dropped whenever
      * any of fields is dirty, or fields have changed).
      *
      * @var array{
-     *   parameters?: array,
-     *   result?: array{maxresults: int|null, firstresult: int|null, result: Result}
+     *   parameters?: array<string, array<string, array<string, mixed>>>,
+     *   result?: array{max_results: int|null, first_result: int|null, result: Result}
      * }
      */
-    private $cache = [];
+    private array $cache = [];
 
     /**
      * Flag set as true when fields or their data is modifying, or even new
@@ -84,23 +61,22 @@ class DataSource implements DataSourceInterface
      *
      * @var bool
      */
-    private $dirty = true;
+    private bool $dirty = true;
 
-    /**
-     * @var EventDispatcher
-     */
-    private $eventDispatcher;
-
-    public function __construct(DriverInterface $driver, string $name = 'datasource')
-    {
+    public function __construct(
+        string $name,
+        DataSourceFactoryInterface $factory,
+        EventDispatcherInterface $eventDispatcher,
+        DriverInterface $driver
+    ) {
         if (1 !== preg_match('/^[\w]+$/', $name)) {
             throw new DataSourceException('Name of data source may contain only word characters and digits.');
         }
 
-        $this->driver = $driver;
         $this->name = $name;
-        $this->eventDispatcher = new EventDispatcher();
-        $driver->setDataSource($this);
+        $this->factory = $factory;
+        $this->eventDispatcher = $eventDispatcher;
+        $this->driver = $driver;
     }
 
     public function hasField(string $name): bool
@@ -109,34 +85,14 @@ class DataSource implements DataSourceInterface
     }
 
     public function addField(
-        $name,
-        ?string $type = null,
-        ?string $comparison = null,
+        string $name,
+        string $type,
         array $options = []
     ): DataSourceInterface {
-        if (true === $name instanceof FieldTypeInterface) {
-            $field = $name;
-            $name = $name->getName();
-
-            if (null === $name) {
-                throw new DataSourceException('Given field has no name set.');
-            }
-        } else {
-            if (null === $type) {
-                throw new DataSourceException('"type" can\'t be null.');
-            }
-            if (null === $comparison) {
-                throw new DataSourceException('"comparison" can\'t be null.');
-            }
-            $field = $this->driver->getFieldType($type);
-            $field->setName($name);
-            $field->setComparison($comparison);
-            $field->setOptions($options);
-        }
+        $field = $this->driver->getFieldType($type)->createField($this, $name, $options);
 
         $this->dirty = true;
-        $this->fields[$name] = $field;
-        $field->setDataSource($this);
+        $this->fields[$field->getName()] = $field;
 
         return $this;
     }
@@ -156,7 +112,7 @@ class DataSource implements DataSourceInterface
         $this->dirty = true;
     }
 
-    public function getField(string $name): FieldTypeInterface
+    public function getField(string $name): FieldInterface
     {
         if (false === $this->hasField($name)) {
             throw new DataSourceException(
@@ -182,27 +138,36 @@ class DataSource implements DataSourceInterface
     {
         $this->dirty = true;
 
-        // PreBindParameters event.
-        $event = new DataSourceEvent\ParametersEventArgs($this, $parameters);
-        $this->eventDispatcher->dispatch($event, DataSourceEvents::PRE_BIND_PARAMETERS);
+        $event = new DataSourceEvent\PreBindParameters($this, $parameters);
+        $this->eventDispatcher->dispatch($event);
         $parameters = $event->getParameters();
 
         if (false === is_array($parameters)) {
             throw new DataSourceException(
                 sprintf(
-                    'Parameters after "datasource.pre_bind_parameters" event must be an array but are %s.',
+                    'Parameters after PreBindParameters event must be an array but are %s.',
                     true === is_object($parameters) ? get_class($parameters) : gettype($parameters)
                 )
             );
         }
 
-        foreach ($this->getFields() as $field) {
-            $field->bindParameter($parameters);
+        if (true === array_key_exists($this->name, $parameters) && true === is_array($parameters[$this->name])) {
+            $dataSourceFieldParameters = $parameters[$this->name][DataSourceInterface::PARAMETER_FIELDS] ?? [];
+
+            foreach ($this->fields as $field) {
+                $event = new FieldEvent\PreBindParameter($field, $dataSourceFieldParameters[$field->getName()] ?? null);
+                $this->eventDispatcher->dispatch($event);
+                $parameter = $event->getParameter();
+
+                $field->bindParameter($parameter);
+
+                $event = new FieldEvent\PostBindParameter($field);
+                $this->eventDispatcher->dispatch($event);
+            }
         }
 
-        // PostBindParameters event.
-        $event = new DataSourceEvent\DataSourceEventArgs($this);
-        $this->eventDispatcher->dispatch($event, DataSourceEvents::POST_BIND_PARAMETERS);
+        $event = new DataSourceEvent\PostBindParameters($this);
+        $this->eventDispatcher->dispatch($event);
     }
 
     public function getResult(): Result
@@ -211,15 +176,11 @@ class DataSource implements DataSourceInterface
 
         if (
             true === array_key_exists('result', $this->cache)
-            && $this->cache['result']['maxresults'] === $this->getMaxResults()
-            && $this->cache['result']['firstresult'] === $this->getFirstResult()
+            && $this->cache['result']['max_results'] === $this->getMaxResults()
+            && $this->cache['result']['first_result'] === $this->getFirstResult()
         ) {
             return $this->cache['result']['result'];
         }
-
-        // PreGetResult event.
-        $event = new DataSourceEvent\DataSourceEventArgs($this);
-        $this->eventDispatcher->dispatch($event, DataSourceEvents::PRE_GET_RESULT);
 
         $result = $this->driver->getResult($this->fields, $this->getFirstResult(), $this->getMaxResults());
 
@@ -227,16 +188,11 @@ class DataSource implements DataSourceInterface
             $field->setDirty(false);
         }
 
-        // PostGetResult event.
-        $event = new DataSourceEvent\ResultEventArgs($this, $result);
-        $this->eventDispatcher->dispatch($event, DataSourceEvents::POST_GET_RESULT);
-        $result = $event->getResult();
-
         // Creating cache.
         $this->cache['result'] = [
             'result' => $result,
-            'firstresult' => $this->getFirstResult(),
-            'maxresults' => $this->getMaxResults(),
+            'first_result' => $this->getFirstResult(),
+            'max_results' => $this->getMaxResults(),
         ];
 
         return $result;
@@ -268,46 +224,21 @@ class DataSource implements DataSourceInterface
         return $this->firstResult;
     }
 
-    public function addExtension(DataSourceExtensionInterface $extension): void
-    {
-        $this->dirty = true;
-        $this->extensions[] = $extension;
-
-        foreach ($extension->loadSubscribers() as $subscriber) {
-            $this->eventDispatcher->addSubscriber($subscriber);
-        }
-
-        foreach ($extension->loadDriverExtensions() as $driverExtension) {
-            if (true === in_array($this->driver->getType(), $driverExtension->getExtendedDriverTypes(), true)) {
-                $this->driver->addExtension($driverExtension);
-            }
-        }
-    }
-
-    public function getExtensions(): array
-    {
-        return $this->extensions;
-    }
-
     public function createView(): DataSourceViewInterface
     {
-        $view = new DataSourceView($this);
+        $event = new DataSourceEvent\PreBuildView($this->getFields());
+        $this->eventDispatcher->dispatch($event);
 
-        // PreBuildView event.
-        $event = new DataSourceEvent\ViewEventArgs($this, $view);
-        $this->eventDispatcher->dispatch($event, DataSourceEvents::PRE_BUILD_VIEW);
+        $view = new DataSourceView(
+            $this->getName(),
+            $event->getFields(),
+            $this->getParameters(),
+            $this->getOtherParameters()
+        );
 
-        foreach ($this->fields as $key => $field) {
-            $view->addField($field->createView());
-        }
+        $this->eventDispatcher->dispatch(new DataSourceEvent\PostBuildView($this, $view));
 
-        $this->view = $view;
-
-        // PostBuildView event.
-        $event = new DataSourceEvent\ViewEventArgs($this, $view);
-        $this->eventDispatcher->dispatch($event, DataSourceEvents::POST_BUILD_VIEW);
-
-        return $this->view;
+        return $view;
     }
 
     public function getParameters(): array
@@ -319,18 +250,28 @@ class DataSource implements DataSourceInterface
 
         $parameters = [];
 
-        // PreGetParameters event.
-        $event = new DataSourceEvent\ParametersEventArgs($this, $parameters);
-        $this->eventDispatcher->dispatch($event, DataSourceEvents::PRE_GET_PARAMETERS);
+        $event = new DataSourceEvent\PreGetParameters($this, $parameters);
+        $this->eventDispatcher->dispatch($event);
         $parameters = $event->getParameters();
 
+        $dataSourceName = $this->name;
+
         foreach ($this->fields as $field) {
-            $field->getParameter($parameters);
+            $event = new FieldEvent\PostGetParameter($field, $field->getParameter());
+            $this->eventDispatcher->dispatch($event);
+
+            if (false === array_key_exists($dataSourceName, $parameters)) {
+                $parameters[$dataSourceName] = [];
+            }
+            if (false === array_key_exists(DataSourceInterface::PARAMETER_FIELDS, $parameters[$dataSourceName])) {
+                $parameters[$dataSourceName][DataSourceInterface::PARAMETER_FIELDS] = [];
+            }
+            $parameters[$dataSourceName][DataSourceInterface::PARAMETER_FIELDS][$field->getName()]
+                = $event->getParameter();
         }
 
-        // PostGetParameters event.
-        $event = new DataSourceEvent\ParametersEventArgs($this, $parameters);
-        $this->eventDispatcher->dispatch($event, DataSourceEvents::POST_GET_PARAMETERS);
+        $event = new DataSourceEvent\PostGetParameters($this, $parameters);
+        $this->eventDispatcher->dispatch($event);
         $parameters = $event->getParameters();
 
         // Clearing parameters from empty values.
@@ -358,16 +299,15 @@ class DataSource implements DataSourceInterface
         return [];
     }
 
-    public function setFactory(DataSourceFactoryInterface $factory): void
-    {
-        $this->factory = $factory;
-    }
-
     public function getFactory(): ?DataSourceFactoryInterface
     {
         return $this->factory;
     }
 
+    /**
+     * @param array<string,mixed> $array
+     * @return array<string,mixed>
+     */
     private static function cleanData(array $array): array
     {
         $newArray = [];
@@ -391,7 +331,7 @@ class DataSource implements DataSourceInterface
     private function checkFieldsClarity(): void
     {
         // Initialize with dirty flag.
-        $dirty = array_reduce($this->getFields(), static function (bool $dirty, FieldTypeInterface $field): bool {
+        $dirty = array_reduce($this->getFields(), static function (bool $dirty, FieldInterface $field): bool {
             return $dirty || $field->isDirty();
         }, $this->dirty);
 

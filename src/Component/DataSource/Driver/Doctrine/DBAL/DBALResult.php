@@ -18,12 +18,12 @@ use InvalidArgumentException;
 use RuntimeException;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 
+/**
+ * @template-extends ArrayCollection<int|string,mixed>
+ */
 class DBALResult extends ArrayCollection implements Result
 {
-    /**
-     * @var int
-     */
-    private $count;
+    private int $count;
 
     /**
      * @param Paginator $paginator

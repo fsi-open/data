@@ -22,6 +22,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Repository\DefaultRepositoryFactory;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\Persistence\ManagerRegistry;
+use FSi\Component\DataIndexer\DataIndexerInterface;
 use FSi\Component\DataIndexer\DoctrineDataIndexer;
 use FSi\Component\DataIndexer\Exception\InvalidArgumentException;
 use FSi\Component\DataIndexer\Exception\RuntimeException;
@@ -77,7 +78,7 @@ final class DoctrineDataIndexerTest extends TestCase
         $managerRegistry = $this->createMock(ManagerRegistry::class);
         $managerRegistry->method('getManagerForClass')->willReturn(null);
 
-        $class = "\\FSi\\Component\\DataIndexer\\DataIndexer";
+        $class = DataIndexerInterface::class;
 
         $this->expectException(InvalidArgumentException::class);
         new DoctrineDataIndexer($managerRegistry, $class);
@@ -151,6 +152,7 @@ final class DoctrineDataIndexerTest extends TestCase
         $this->em->flush();
         $this->em->clear();
 
+        /** @var array<int,News> $news */
         $news = $dataIndexer->getDataSlice(array("foo", "bar"));
 
         self::assertSame([$news[0]->getId(), $news[1]->getId()], ["bar", "foo"]);
@@ -167,6 +169,7 @@ final class DoctrineDataIndexerTest extends TestCase
         $this->em->flush();
         $this->em->clear();
 
+        /** @var array<int,Post> $news */
         $news = $dataIndexer->getDataSlice(["foo|foo1", "bar|bar1"]);
 
         self::assertSame([

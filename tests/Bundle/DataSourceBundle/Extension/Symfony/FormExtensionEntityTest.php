@@ -13,14 +13,16 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\Tools\Setup;
 use Doctrine\Persistence\ManagerRegistry;
-use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Driver\DriverExtension;
+use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\EventSubscriber\FieldPreBindParameter;
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Field\FormFieldExtension;
-use Tests\FSi\Bundle\DataSourceBundle\Fixtures\Form\Extension\TestCore\TestFieldType;
+use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\FormStorage;
+use FSi\Component\DataSource\Field\Field;
+use FSi\Component\DataSource\Field\FieldView;
+use FSi\Component\DataSource\Field\Type\EntityTypeInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 use Tests\FSi\Bundle\DataSourceBundle\Fixtures\News;
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Event\FieldEvent;
-use FSi\Component\DataSource\Field\FieldAbstractExtension;
-use FSi\Component\DataSource\Field\FieldViewInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Doctrine\Form\DoctrineOrmExtension;
 use Symfony\Component\Form\Extension\Core\CoreExtension;
@@ -38,37 +40,35 @@ class FormExtensionEntityTest extends TestCase
     {
         $formFactory = $this->getFormFactory();
         $translator = $this->createMock(TranslatorInterface::class);
-        $extension = new DriverExtension($formFactory, $translator);
-        $datasource = $this->createMock(DataSourceInterface::class);
-        $datasource->method('getName')->willReturn('datasource');
+        $formStorage = new FormStorage($formFactory);
+        $fieldExtension = new FormFieldExtension($formStorage, $translator);
+        $fieldPreBindParameterSubscriber = new FieldPreBindParameter($formStorage);
+        $dataSource = $this->createMock(DataSourceInterface::class);
+        $dataSource->method('getName')->willReturn('datasource');
 
-        /** @var array<FormFieldExtension> $extensions */
-        $extensions = $extension->getFieldTypeExtensions('entity');
         $parameters = ['datasource' => [DataSourceInterface::PARAMETER_FIELDS => ['name' => 'value']]];
+
+        $fieldType = $this->createMock(EntityTypeInterface::class);
+        $optionsResolver = new OptionsResolver();
+        $optionsResolver->setRequired('name');
+        $optionsResolver->setAllowedTypes('name', 'string');
+        $optionsResolver->setDefault('name', 'name');
+        $optionsResolver->setRequired('comparison');
+        $optionsResolver->setAllowedTypes('comparison', 'string');
+        $fieldExtension->initOptions($optionsResolver, $fieldType);
+        $options = $optionsResolver->resolve(['comparison' => 'eq', 'form_options' => ['class' => News::class]]);
+        $field = new Field($dataSource, $fieldType, 'name', $options);
+
+        $event = new FieldEvent\PreBindParameter($field, $parameters);
+        ($fieldPreBindParameterSubscriber)($event);
         // Form extension will remove 'name' => 'value' since this is not valid entity id
         // (since we have no entities at all).
-        $parameters2 = ['datasource' => [DataSourceInterface::PARAMETER_FIELDS => []]];
+        self::assertEquals(null, $event->getParameter());
 
-        $field = new TestFieldType($datasource, 'entity', 'eq');
-        $args = new FieldEvent\ParameterEventArgs($field, $parameters);
-        foreach ($extensions as $ext) {
-            self::assertInstanceOf(FieldAbstractExtension::class, $ext);
-            $field->addExtension($ext);
-            $field->setOptions([
-                'form_options' => ['class' => News::class],
-            ]);
-            $ext->preBindParameter($args);
-        }
-        $parameters = $args->getParameter();
-        self::assertEquals($parameters2, $parameters);
+        $fieldView = new FieldView($field);
+        $fieldExtension->buildView($field, $fieldView);
 
-        $fieldView = $this->getMockBuilder(FieldViewInterface::class)->setConstructorArgs([$field])->getMock();
-        $fieldView->expects(self::atLeastOnce())->method('setAttribute');
-
-        $args = new FieldEvent\ViewEventArgs($field, $fieldView);
-        foreach ($extensions as $ext) {
-            $ext->postBuildView($args);
-        }
+        self::assertTrue($fieldView->hasAttribute('form'));
     }
 
     private function getFormFactory(): FormFactoryInterface

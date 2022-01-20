@@ -21,6 +21,9 @@ class DBALFieldsTest extends TestBase
         $this->loadTestData($this->getMemoryConnection());
     }
 
+    /**
+     * @return array<int,array{string,string,array<int,array{string,mixed,mixed}>}>
+     */
     public function fieldsProvider(): array
     {
         return [
@@ -181,12 +184,15 @@ class DBALFieldsTest extends TestBase
 
     /**
      * @dataProvider fieldsProvider
+     * @param string $fieldName
+     * @param string $datasourceType
+     * @param array<int,array{string,mixed,mixed}> $typeParams
      */
     public function testFieldResult(string $fieldName, string $datasourceType, array $typeParams): void
     {
         foreach ($typeParams as [$comparison, $parameter, $expectedCount]) {
             $datasource = $this->getNewsDataSource();
-            $datasource->addField($fieldName, $datasourceType, $comparison);
+            $datasource->addField($fieldName, $datasourceType, ['comparison' => $comparison]);
 
             $datasource->bindParameters([
                 $datasource->getName() => [

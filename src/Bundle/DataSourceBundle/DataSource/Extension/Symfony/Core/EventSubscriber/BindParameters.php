@@ -11,19 +11,18 @@ declare(strict_types=1);
 
 namespace FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Core\EventSubscriber;
 
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use FSi\Component\DataSource\Event\DataSourceEvents;
+use FSi\Component\DataSource\Event\DataSourceEventSubscriberInterface;
 use FSi\Component\DataSource\Event\DataSourceEvent;
 use Symfony\Component\HttpFoundation\Request;
 
-class BindParameters implements EventSubscriberInterface
+class BindParameters implements DataSourceEventSubscriberInterface
 {
-    public static function getSubscribedEvents(): array
+    public static function getPriority(): int
     {
-        return [DataSourceEvents::PRE_BIND_PARAMETERS => ['preBindParameters', 1024]];
+        return 1024;
     }
 
-    public function preBindParameters(DataSourceEvent\ParametersEventArgs $event): void
+    public function __invoke(DataSourceEvent\PreBindParameters $event): void
     {
         $parameters = $event->getParameters();
         if (true === $parameters instanceof Request) {

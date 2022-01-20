@@ -9,18 +9,6 @@
     </parameters>
 
     <services>
-        <!-- Doctrine extensions -->
-        <service id="datasource.driver.doctrine_orm.extension" class="%datasource.driver.extension.class%">
-            <argument type="string">doctrine-orm</argument>
-            <!-- All services with tag "datasource.driver.doctrine_orm.field" are inserted here by DataSourcePass -->
-            <argument type="collection" />
-            <!-- All services with tag "datasource.driver.doctrine_orm.field.subscriber" are inserted here by DataSourcePass -->
-            <argument type="collection" />
-            <!-- All services with tag "datasource.driver.doctrine_orm.subscriber" are inserted here by DataSourcePass -->
-            <argument type="collection" />
-            <tag name="datasource.driver.extension" alias="doctrine-orm" />
-        </service>
-
         <!-- DoctrineFactory -->
         <service id="datasource.driver.doctrine_orm.factory" class="%datasource.driver.doctrine_orm.factory.class%">
             <argument type="service" id="doctrine" />

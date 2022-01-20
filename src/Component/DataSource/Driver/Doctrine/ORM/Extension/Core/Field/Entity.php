@@ -11,32 +11,52 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field;
 
+use Doctrine\ORM\QueryBuilder;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Exception\DBALDriverException;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineAbstractField;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\Exception\DoctrineDriverException;
-use Doctrine\ORM\QueryBuilder;
-use FSi\Component\DataSource\Exception\FieldException;
+use FSi\Component\DataSource\Field\FieldInterface;
+use FSi\Component\DataSource\Field\Type\EntityTypeInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class Entity extends DoctrineAbstractField
+use function sprintf;
+
+class Entity extends DoctrineAbstractField implements EntityTypeInterface
 {
-    protected $comparisons = ['eq', 'neq', 'memberof', 'notmemberof', 'in', 'isNull'];
-
-    public function getType(): string
+    public function getId(): string
     {
         return 'entity';
     }
 
-    public function buildQuery(QueryBuilder $qb, string $alias): void
+    public function initOptions(OptionsResolver $optionsResolver): void
     {
-        $data = $this->getCleanParameter();
-        $fieldName = $this->getFieldName($alias);
-        $name = $this->getName();
+        parent::initOptions($optionsResolver);
 
+        $optionsResolver->setAllowedValues('comparison', ['eq', 'neq', 'memberOf', 'notMemberOf', 'in', 'isNull']);
+    }
+
+    public function buildQuery(QueryBuilder $qb, string $alias, FieldInterface $field): void
+    {
+        if (false === $field->getType() instanceof static) {
+            throw new DBALDriverException(
+                sprintf(
+                    'Field\'s "%s" type "%s" is not compatible with type "%s"',
+                    $field->getName(),
+                    $field->getType()->getId(),
+                    $this->getId()
+                )
+            );
+        }
+
+        $data = $field->getParameter();
         if (true === $this->isEmpty($data)) {
             return;
         }
 
-        $comparison = $this->getComparison();
-        $func = sprintf('and%s', ucfirst($this->getOption('clause')));
+        $fieldName = $this->getQueryFieldName($field, $alias);
+        $name = $field->getName();
+        $comparison = $field->getOption('comparison');
+        $func = sprintf('and%s', ucfirst($field->getOption('clause')));
 
         switch ($comparison) {
             case 'eq':
@@ -49,12 +69,12 @@ class Entity extends DoctrineAbstractField
                 $qb->setParameter($name, $data);
                 break;
 
-            case 'memberof':
+            case 'memberOf':
                 $qb->$func(":$name MEMBER OF $fieldName");
                 $qb->setParameter($name, $data);
                 break;
 
-            case 'notmemberof':
+            case 'notMemberOf':
                 $qb->$func(":$name NOT MEMBER OF $fieldName");
                 $qb->setParameter($name, $data);
                 break;

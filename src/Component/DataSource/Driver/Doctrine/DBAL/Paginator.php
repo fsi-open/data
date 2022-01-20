@@ -24,9 +24,18 @@ class Paginator implements Result
         $this->query = $query;
     }
 
+    /**
+     * @return ArrayIterator<int,array<string,mixed>>
+     */
     public function getIterator(): ArrayIterator
     {
-        return new ArrayIterator($this->query->execute()->fetchAll());
+        $statement = $this->query->getConnection()->executeQuery(
+            $this->query->getSQL(),
+            $this->query->getParameters(),
+            $this->query->getParameterTypes()
+        );
+
+        return new ArrayIterator($statement->fetchAllAssociative());
     }
 
     public function count(): int
@@ -39,11 +48,16 @@ class Paginator implements Result
         $query->resetQueryParts(array_keys($query->getQueryParts()));
 
         $query
-            ->select('COUNT(*) count')
+            ->select('COUNT(*)')
             ->from(sprintf('(%s)', $sql), 'orig_query')
         ;
 
-        $row = $query->execute()->fetch();
-        return (int) $row['count'];
+        $statement = $query->getConnection()->executeQuery(
+            $query->getSQL(),
+            $query->getParameters(),
+            $query->getParameterTypes()
+        );
+
+        return (int) $statement->fetchOne();
     }
 }

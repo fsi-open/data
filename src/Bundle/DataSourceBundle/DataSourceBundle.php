@@ -14,16 +14,14 @@ namespace FSi\Bundle\DataSourceBundle;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use FSi\Bundle\DataSourceBundle\DependencyInjection\Compiler\DataSourcePass;
-use FSi\Bundle\DataSourceBundle\DependencyInjection\Compiler\TemplatePathPass;
 use FSi\Bundle\DataSourceBundle\DependencyInjection\FSIDataSourceExtension;
 
 class DataSourceBundle extends Bundle
 {
-    public function build(ContainerBuilder $container)
+    public function build(ContainerBuilder $container): void
     {
         parent::build($container);
         $container->addCompilerPass(new DataSourcePass());
-        $container->addCompilerPass(new TemplatePathPass());
     }
 
     public function getContainerExtension()

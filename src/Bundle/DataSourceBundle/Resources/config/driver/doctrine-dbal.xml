@@ -9,18 +9,6 @@
     </parameters>
 
     <services>
-        <!-- Doctrine extensions -->
-        <service id="datasource.driver.doctrine_dbal.extension" class="%datasource.driver.extension.class%">
-            <argument type="string">doctrine-dbal</argument>
-            <!-- All services with tag "datasource.driver.doctrine_dbal.field" are inserted here by DataSourcePass -->
-            <argument type="collection"/>
-            <!-- All services with tag "datasource.driver.doctrine_dbal.field.subscriber" are inserted here by DataSourcePass -->
-            <argument type="collection"/>
-            <!-- All services with tag "datasource.driver.doctrine_dbal.subscriber" are inserted here by DataSourcePass -->
-            <argument type="collection"/>
-            <tag name="datasource.driver.extension" alias="doctrine-dbal"/>
-        </service>
-
         <!-- DBALFactory -->
         <service id="datasource.driver.doctrine_dbal.factory" class="%datasource.driver.doctrine_dbal.factory.class%">
             <argument type="service" id="doctrine"/>
@@ -60,9 +48,6 @@
         </service>
 
         <!-- OrderingExtension -->
-        <service id="datasource.driver.doctrine_dbal.subscriber.ordering" class="FSi\Component\DataSource\Extension\Core\Ordering\Driver\DBALExtension">
-            <tag name="datasource.driver.doctrine-dbal.subscriber" alias="ordering"/>
-        </service>
         <service id="datasource.driver.doctrine_dbal.field.subscriber.ordering" class="FSi\Component\DataSource\Extension\Core\Ordering\Field\FieldExtension">
             <tag name="datasource.driver.doctrine-dbal.field.subscriber" alias="ordering"/>
         </service>

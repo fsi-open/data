@@ -15,54 +15,28 @@ use ArrayAccess;
 use Countable;
 use FSi\Component\DataSource\Field\FieldViewInterface;
 use FSi\Component\DataSource\Util\AttributesContainerInterface;
-use IteratorAggregate;
 use SeekableIterator;
 
 /**
- * DataSources view is responsible for keeping options needed to build view, fields view objects,
- * and proxy some requests to DataSource.
+ * @template-extends ArrayAccess<string,FieldViewInterface>
+ * @template-extends SeekableIterator<string,FieldViewInterface>
  */
 interface DataSourceViewInterface extends AttributesContainerInterface, ArrayAccess, Countable, SeekableIterator
 {
     public function getName(): string;
 
     /**
-     * Returns parameters that were bound to datasource.
+     * @return array<string, array<string, array<string, mixed>>>
      */
     public function getParameters(): array;
 
     /**
-     * Returns parameters that were bound to all datasources.
+     * @return array<string, array<string, array<string, mixed>>>
      */
     public function getAllParameters(): array;
 
     /**
-     * Returns parameters that were bound to other datasources.
+     * @return array<string, array<string, array<string, mixed>>>
      */
     public function getOtherParameters(): array;
-
-    public function hasField(string $name): bool;
-
-    public function removeField(string $name): void;
-
-    public function getField(string $name): FieldViewInterface;
-
-    /**
-     * @return array<FieldViewInterface>
-     */
-    public function getFields(): array;
-
-    public function clearFields(): void;
-
-    public function addField(FieldViewInterface $fieldView): void;
-
-    /**
-     * @param array<FieldViewInterface> $fields
-     */
-    public function setFields(array $fields): void;
-
-    /**
-     * @return Countable&IteratorAggregate
-     */
-    public function getResult(): IteratorAggregate;
 }

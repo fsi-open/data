@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Tests\FSi\Component\DataSource\Fixtures;
 
 use DateTimeImmutable;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 
@@ -25,65 +26,67 @@ class News
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $id;
+    private int $id;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $title;
+    private ?string $title = null;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $author;
+    private ?string $author = null;
 
     /**
      * @ORM\Column(type="string", length=500, nullable=true)
      */
-    private $short_content;
+    private ?string $short_content = null;
 
     /**
      * @ORM\Column(type="text", nullable=true)
      */
-    private $content;
+    private ?string $content = null;
 
     /**
      * @ORM\Column(type="datetime_immutable")
      */
-    private $create_date;
+    private ?DateTimeImmutable $create_date = null;
 
     /**
      * @ORM\Column(type="time_immutable")
      */
-    private $create_time;
+    private ?DateTimeImmutable $create_time = null;
 
     /**
      * @ORM\ManyToOne(targetEntity="Tests\FSi\Component\DataSource\Fixtures\Category", inversedBy="news")
      */
-    private $category;
+    private ?Category $category = null;
 
     /**
      * @ORM\ManyToOne(targetEntity="Tests\FSi\Component\DataSource\Fixtures\Category")
      */
-    private $category2;
+    private ?Category $category2 = null;
 
     /**
      * @ORM\ManyToMany(targetEntity="Tests\FSi\Component\DataSource\Fixtures\Group")
+     * @var Collection<int,Group>
      */
-    private $groups;
+    private Collection $groups;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $tags;
+    private ?string $tags = null;
 
     /**
      * @ORM\Column(type="boolean")
      */
-    private $active = false;
+    private bool $active = false;
 
-    public function __construct()
+    public function __construct(int $id)
     {
+        $this->id = $id;
         $this->groups = new ArrayCollection();
     }
 
@@ -173,9 +176,9 @@ class News
     }
 
     /**
-     * @return ArrayCollection<Group>
+     * @return Collection<int,Group>
      */
-    public function getGroups(): ArrayCollection
+    public function getGroups(): Collection
     {
         return $this->groups;
     }

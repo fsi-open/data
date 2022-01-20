@@ -11,8 +11,7 @@ namespace Tests\FSi\Bundle\DataSourceBundle\DataSource\Extension\Configuration\E
 
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Configuration\EventSubscriber\ConfigurationBuilder;
 use FSi\Component\DataSource\DataSourceInterface;
-use FSi\Component\DataSource\Event\DataSourceEvent\ParametersEventArgs;
-use FSi\Component\DataSource\Event\DataSourceEvents;
+use FSi\Component\DataSource\Event\DataSourceEvent\PreBindParameters;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -25,20 +24,9 @@ class ConfigurationBuilderTest extends TestCase
     /**
      * @var Kernel&MockObject
      */
-    private $kernel;
+    private Kernel $kernel;
 
-    /**
-     * @var ConfigurationBuilder
-     */
-    private $subscriber;
-
-    public function testSubscribedEvents(): void
-    {
-        self::assertEquals(
-            ConfigurationBuilder::getSubscribedEvents(),
-            [DataSourceEvents::PRE_BIND_PARAMETERS => ['readConfiguration', 1024]]
-        );
-    }
+    private ConfigurationBuilder $subscriber;
 
     public function testReadConfigurationFromOneBundle(): void
     {
@@ -62,9 +50,12 @@ class ConfigurationBuilderTest extends TestCase
 
         $dataSource = $this->createMock(DataSourceInterface::class);
         $dataSource->method('getName')->willReturn('news');
-        $dataSource->expects(self::once())->method('addField')->with('title', 'text', 'like', ['label' => 'Title']);
+        $dataSource->expects(self::once())
+            ->method('addField')
+            ->with('title', 'text', ['comparison' => 'like', 'label' => 'Title'])
+        ;
 
-        $this->subscriber->readConfiguration(new ParametersEventArgs($dataSource, []));
+        ($this->subscriber)(new PreBindParameters($dataSource, []));
     }
 
     public function testReadConfigurationFromManyBundles(): void
@@ -97,11 +88,11 @@ class ConfigurationBuilderTest extends TestCase
         $dataSource->expects(self::exactly(2))
             ->method('addField')
             ->withConsecutive(
-                ['title', 'text', 'like', ['label' => 'News Title']],
-                ['author', null, null, []]
+                ['title', 'text', ['comparison' => 'like', 'label' => 'News Title']],
+                ['author', 'text', ['comparison' => 'like']]
             );
 
-        $this->subscriber->readConfiguration(new ParametersEventArgs($dataSource, []));
+        ($this->subscriber)(new PreBindParameters($dataSource, []));
     }
 
     public function testMainConfigurationOverridesBundles(): void
@@ -122,12 +113,12 @@ class ConfigurationBuilderTest extends TestCase
         $dataSource->expects(self::exactly(2))
             ->method('addField')
             ->withConsecutive(
-                ['title_short', 'text', null, ['label' => 'Short title']],
-                ['created_at', 'date', null, ['label' => 'Created at']]
+                ['title_short', 'text', ['label' => 'Short title']],
+                ['created_at', 'date', ['label' => 'Created at']]
             )
         ;
 
-        $this->subscriber->readConfiguration(new ParametersEventArgs($dataSource, []));
+        ($this->subscriber)(new PreBindParameters($dataSource, []));
     }
 
     public function testBundleConfigUsedWhenNoFileFoundInMainDirectory(): void
@@ -153,9 +144,9 @@ class ConfigurationBuilderTest extends TestCase
 
         $dataSource = $this->createMock(DataSourceInterface::class);
         $dataSource->method('getName')->willReturn('user');
-        $dataSource->expects(self::once())->method('addField')->with('username', 'text', null, []);
+        $dataSource->expects(self::once())->method('addField')->with('username', 'text', []);
 
-        $this->subscriber->readConfiguration(new ParametersEventArgs($dataSource, []));
+        ($this->subscriber)(new PreBindParameters($dataSource, []));
     }
 
     public function testExceptionThrownWhenMainConfigPathIsNotADirectory(): void
@@ -175,7 +166,7 @@ class ConfigurationBuilderTest extends TestCase
         $dataSource = $this->createMock(DataSourceInterface::class);
         $dataSource->method('getName')->willReturn('news');
 
-        $this->subscriber->readConfiguration(new ParametersEventArgs($dataSource, []));
+        ($this->subscriber)(new PreBindParameters($dataSource, []));
     }
 
     protected function setUp(): void

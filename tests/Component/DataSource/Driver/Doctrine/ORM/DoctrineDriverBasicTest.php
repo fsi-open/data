@@ -11,23 +11,37 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataSource\Driver\Doctrine\ORM;
 
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\ORM\Tools\SchemaTool;
+use Doctrine\ORM\Tools\Setup;
+use Doctrine\Persistence\ManagerRegistry;
+use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineAbstractField;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineDriver;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineFieldInterface;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Event\PostGetResult;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Event\PreGetResult;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\Exception\DoctrineDriverException;
-use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\CoreExtension;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field;
-use FSi\Component\DataSource\Exception\DataSourceException;
-use FSi\Component\DataSource\Exception\FieldException;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field\Boolean;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field\Date;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field\DateTime;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field\Entity;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field\Number;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field\Text;
+use FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field\Time;
+use FSi\Component\DataSource\Field\FieldInterface;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
-use Tests\FSi\Component\DataSource\Fixtures\DoctrineDriverExtension;
-use Tests\FSi\Component\DataSource\Fixtures\FieldExtension;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
+use Tests\FSi\Component\DataSource\Fixtures\Category;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use stdClass;
+use Tests\FSi\Component\DataSource\Fixtures\Group;
+use Tests\FSi\Component\DataSource\Fixtures\News;
 
 class DoctrineDriverBasicTest extends TestCase
 {
@@ -74,13 +88,16 @@ class DoctrineDriverBasicTest extends TestCase
     /**
      * @param MockObject|EntityManagerInterface $em
      * @param MockObject|QueryBuilder $qb
-     * @param array $map
+     * @param array<int,array{string,bool}> $map
      */
-    private function extendWithRootEntities(EntityManagerInterface $em, $qb, array $map = [['entity', true]]): void
-    {
+    private function extendWithRootEntities(
+        EntityManagerInterface $em,
+        QueryBuilder $qb,
+        array $map = [['entity', true]]
+    ): void {
         $returnMap = [];
         foreach ($map as $info) {
-            /** @var MockObject|ClassMetadata $metadata */
+            /** @var MockObject|ClassMetadata<object> $metadata */
             $metadata = $this->createMock(ClassMetadata::class);
             $metadata->isIdentifierComposite = $info[1];
 
@@ -101,7 +118,12 @@ class DoctrineDriverBasicTest extends TestCase
         $em = $this->getEntityManagerMock();
         $qb = $this->getQueryBuilderMock($em);
         $qb->method('getRootAliases')->willReturn(['e']);
-        new DoctrineDriver([], $qb);
+        new DoctrineDriver(
+            $this->createMock(ManagerRegistry::class),
+            $this->createMock(EventDispatcherInterface::class),
+            [],
+            $qb
+        );
     }
 
     /**
@@ -112,17 +134,24 @@ class DoctrineDriverBasicTest extends TestCase
         $fields = [];
 
         for ($x = 0; $x < 6; $x++) {
-            $field = $this->createMock(DoctrineAbstractField::class);
-            $field->expects(self::once())->method('buildQuery');
+            $fieldType = $this->createMock(DoctrineAbstractField::class);
+            $fieldType->expects(self::once())->method('buildQuery');
+            $field = $this->createMock(FieldInterface::class);
+            $field->method('getType')->willReturn($fieldType);
 
             $fields[] = $field;
         }
 
-        $em = $this->getEntityManagerMock();
-        $qb = $this->getQueryBuilderMock($em);
-        $this->extendWithRootEntities($em, $qb);
+        $em = $this->createEntityManager();
 
-        $driver = new DoctrineDriver([], $qb);
+        $qb = $em->createQueryBuilder()->select('n')->from(News::class, 'n');
+
+        $driver = new DoctrineDriver(
+            $this->createMock(ManagerRegistry::class),
+            $this->createMock(EventDispatcherInterface::class),
+            [],
+            $qb
+        );
         $driver->getResult($fields, 0, 20);
     }
 
@@ -131,7 +160,9 @@ class DoctrineDriverBasicTest extends TestCase
      */
     public function testGetResultException1(): void
     {
-        $fields = [$this->createMock(FieldTypeInterface::class)];
+        $fieldType = $this->createMock(FieldTypeInterface::class);
+        $field = $this->createMock(FieldInterface::class);
+        $field->method('getType')->willReturn($fieldType);
 
         $em = $this->getEntityManagerMock();
         $qb = $this->getMockBuilder(QueryBuilder::class)->setConstructorArgs([$em])->getMock();
@@ -140,45 +171,14 @@ class DoctrineDriverBasicTest extends TestCase
 
         $em->method('createQueryBuilder')->willReturn($qb);
 
-        $driver = new DoctrineDriver([], $qb);
+        $driver = new DoctrineDriver(
+            $this->createMock(ManagerRegistry::class),
+            $this->createMock(EventDispatcherInterface::class),
+            [],
+            $qb
+        );
         $this->expectException(DoctrineDriverException::class);
-        $driver->getResult($fields, 0, 20);
-    }
-
-    /**
-     * Checks exception when trying to access the query builder not during getResult method.
-     */
-    public function testGetQueryException(): void
-    {
-        $em = $this->getEntityManagerMock();
-        $qb = $this->getQueryBuilderMock($em);
-
-        $driver = new DoctrineDriver([], $qb);
-        $this->expectException(DoctrineDriverException::class);
-        $driver->getQueryBuilder();
-    }
-
-    /**
-     * Checks CoreExtension.
-     */
-    public function testCoreExtension(): void
-    {
-        $em = $this->getEntityManagerMock();
-        $qb = $this->getQueryBuilderMock($em);
-        $driver = new DoctrineDriver([new CoreExtension()], $qb);
-
-        self::assertTrue($driver->hasFieldType('text'));
-        self::assertTrue($driver->hasFieldType('number'));
-        self::assertTrue($driver->hasFieldType('entity'));
-        self::assertTrue($driver->hasFieldType('date'));
-        self::assertTrue($driver->hasFieldType('time'));
-        self::assertTrue($driver->hasFieldType('datetime'));
-        self::assertTrue($driver->hasFieldType('boolean'));
-        self::assertFalse($driver->hasFieldType('wrong'));
-
-        $driver->getFieldType('text');
-        $this->expectException(DataSourceException::class);
-        $driver->getFieldType('wrong');
+        $driver->getResult([$field], 0, 20);
     }
 
     /**
@@ -186,34 +186,43 @@ class DoctrineDriverBasicTest extends TestCase
      *
      * @dataProvider fieldNameProvider
      */
-    public function testCoreFields($type): void
+    public function testCoreFields(string $type): void
     {
         $em = $this->getEntityManagerMock();
         $qb = $this->getQueryBuilderMock($em);
         $this->extendWithRootEntities($em, $qb);
 
-        $driver = new DoctrineDriver([new CoreExtension()], $qb);
+        $managerRegistry = $this->createMock(ManagerRegistry::class);
+        $managerRegistry->method('getManager')->willReturn($em);
+        $managerRegistry->method('getManagerForClass')->willReturn($em);
+
+        $dataSource = $this->createMock(DataSourceInterface::class);
+
+        $driver = new DoctrineDriver(
+            $managerRegistry,
+            $this->createMock(EventDispatcherInterface::class),
+            [
+                new Boolean([]),
+                new Date([]),
+                new DateTime([]),
+                new Entity([]),
+                new Number([]),
+                new Text([]),
+                new Time([]),
+            ],
+            $qb
+        );
         self::assertTrue($driver->hasFieldType($type));
-        $field = $driver->getFieldType($type);
-        self::assertInstanceOf(DoctrineFieldInterface::class, $field);
+        $fieldType = $driver->getFieldType($type);
+        self::assertInstanceOf(DoctrineFieldInterface::class, $fieldType);
 
-        self::assertTrue($field->getOptionsResolver()->isDefined('field'));
-
-        $comparisons = $field->getAvailableComparisons();
-        self::assertGreaterThan(0, count($comparisons));
-
-        foreach ($comparisons as $cmp) {
-            $field = $driver->getFieldType($type);
-            $field->setName('name');
-            $field->setComparison($cmp);
-            $field->setOptions([]);
-        }
+        $field = $fieldType->createField($dataSource, 'test', ['comparison' => 'eq']);
 
         self::assertEquals($field->getOption('field'), $field->getName());
 
-        $this->expectException(FieldException::class);
-        $field = $driver->getFieldType($type);
-        $field->setComparison('wrong');
+        $this->expectException(InvalidOptionsException::class);
+        $fieldType = $driver->getFieldType($type);
+        $fieldType->createField($dataSource, 'test', ['comparison' => 'wrong']);
     }
 
     /**
@@ -221,47 +230,45 @@ class DoctrineDriverBasicTest extends TestCase
      */
     public function testExtensionsCalls(): void
     {
-        $em = $this->getEntityManagerMock();
-        $qb = $this->getQueryBuilderMock($em);
-        $this->extendWithRootEntities($em, $qb);
+        $em = $this->createEntityManager();
+        $qb = $em->createQueryBuilder()->select('n')->from(News::class, 'n');
 
-        $extension = new DoctrineDriverExtension();
-        $driver = new DoctrineDriver([], $qb);
-        $driver->addExtension($extension);
+        $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
+        $driver = new DoctrineDriver($this->createMock(ManagerRegistry::class), $eventDispatcher, [], $qb);
 
+        $eventDispatcher->expects(self::exactly(2))
+            ->method('dispatch')
+            ->withConsecutive([self::isInstanceOf(PreGetResult::class)], [self::isInstanceOf(PostGetResult::class)]);
         $driver->getResult([], 0, 20);
-        self::assertEquals(['preGetResult', 'postGetResult'], $extension->getCalls());
-
-        $this->expectException(DoctrineDriverException::class);
-        $driver->getQueryBuilder();
     }
 
-    /**
-     * Checks fields extensions calls.
-     */
-    public function testFieldsExtensionsCalls(): void
+    private function createEntityManager(): EntityManager
     {
-        $extension = new FieldExtension();
-        $parameter = [];
-        $fields = [
-            new Field\Text(), new Field\Number(), new Field\Date(), new Field\Time(),
-            new Field\DateTime(), new Field\Entity()
+        $dbParams = [
+            'driver' => 'pdo_sqlite',
+            'memory' => true,
         ];
 
-        foreach ($fields as $field) {
-            $field->addExtension($extension);
+        $config = Setup::createAnnotationMetadataConfiguration(
+            [__DIR__ . '/../../../Fixtures'],
+            true,
+            null,
+            null,
+            false
+        );
+        $em = EntityManager::create($dbParams, $config);
+        $tool = new SchemaTool($em);
+        $classes = [
+            $em->getClassMetadata(News::class),
+            $em->getClassMetadata(Category::class),
+            $em->getClassMetadata(Group::class),
+        ];
+        $tool->createSchema($classes);
 
-            $field->bindParameter([]);
-            self::assertEquals(['preBindParameter', 'postBindParameter'], $extension->getCalls());
-            $extension->resetCalls();
+        $managerRegistry = $this->createMock(ManagerRegistry::class);
+        $managerRegistry->method('getManager')->willReturn($em);
+        $managerRegistry->method('getManagerForClass')->willReturn($em);
 
-            $field->getParameter($parameter);
-            self::assertEquals(['postGetParameter'], $extension->getCalls());
-            $extension->resetCalls();
-
-            $field->createView();
-            self::assertEquals(['postBuildView'], $extension->getCalls());
-            $extension->resetCalls();
-        }
+        return $em;
     }
 }

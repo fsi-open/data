@@ -116,11 +116,11 @@ class Action extends ColumnAbstractType
                 }
 
                 if (true === $options['redirect_uri']) {
-                    $masterRequest = $this->requestStack->getMasterRequest();
-                    if (null === $masterRequest) {
+                    $currentRequest = $this->requestStack->getCurrentRequest();
+                    if (null === $currentRequest) {
                         throw new RuntimeException("Unable to generate redirect_uri because of out of request scope");
                     }
-                    $parameters['redirect_uri'] = $masterRequest->getRequestUri();
+                    $parameters['redirect_uri'] = $currentRequest->getRequestUri();
                 }
             }
 

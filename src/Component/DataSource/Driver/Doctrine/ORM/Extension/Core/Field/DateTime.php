@@ -12,13 +12,23 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field;
 
 use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineAbstractField;
+use FSi\Component\DataSource\Field\Type\DateTimeTypeInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class DateTime extends DoctrineAbstractField
+class DateTime extends DoctrineAbstractField implements DateTimeTypeInterface
 {
-    protected $comparisons = ['eq', 'neq', 'lt', 'lte', 'gt', 'gte', 'in', 'notIn', 'between', 'isNull'];
-
-    public function getType(): string
+    public function getId(): string
     {
         return 'datetime';
+    }
+
+    public function initOptions(OptionsResolver $optionsResolver): void
+    {
+        parent::initOptions($optionsResolver);
+
+        $optionsResolver->setAllowedValues(
+            'comparison',
+            ['eq', 'neq', 'lt', 'lte', 'gt', 'gte', 'in', 'notIn', 'between', 'isNull']
+        );
     }
 }

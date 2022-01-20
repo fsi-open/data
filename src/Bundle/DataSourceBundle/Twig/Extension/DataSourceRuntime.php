@@ -30,22 +30,22 @@ class DataSourceRuntime implements RuntimeExtensionInterface
     /**
      * Default theme key in themes array.
      */
-    public const DEFAULT_THEME = 0;
+    public const DEFAULT_THEME = '_default_theme';
 
     /**
-     * @var array<int,TemplateWrapper>
+     * @var array<string,TemplateWrapper>
      */
     private array $themes;
     /**
-     * @var array<int,array<string,mixed>>
+     * @var array<string,array<string,mixed>>
      */
     private array $themesVars;
     /**
-     * @var array<int,string>
+     * @var array<string,string>
      */
     private array $routes;
     /**
-     * @var array<int,array<string,mixed>>
+     * @var array<string,array<string,mixed>>
      */
     private array $additionalParameters;
     private RequestStack $requestStack;
@@ -73,7 +73,7 @@ class DataSourceRuntime implements RuntimeExtensionInterface
      * Set theme for specific DataSource.
      * Theme is nothing more than twig template that contains some or all of blocks required to render DataSource.
      *
-     * @param DataSourceViewInterface $dataSource
+     * @param DataSourceViewInterface<FieldViewInterface> $dataSource
      * @param TemplateWrapper|string $theme
      * @param array<string,mixed> $vars
      */
@@ -83,25 +83,28 @@ class DataSourceRuntime implements RuntimeExtensionInterface
             $theme = $this->environment->load($theme);
         }
 
-        $dataSourceId = spl_object_id($dataSource);
-        $this->themes[$dataSourceId] = $theme;
-        $this->themesVars[$dataSourceId] = $vars;
+        $this->themes[$dataSource->getName()] = $theme;
+        $this->themesVars[$dataSource->getName()] = $vars;
     }
 
     /**
      * Set route and optionally additional parameters for specific DataSource.
      *
-     * @param DataSourceViewInterface $dataSource
+     * @param DataSourceViewInterface<FieldViewInterface> $dataSource
      * @param string $route
      * @param array<string,mixed> $additionalParameters
      */
     public function setRoute(DataSourceViewInterface $dataSource, string $route, array $additionalParameters = []): void
     {
-        $dataSourceId = spl_object_id($dataSource);
-        $this->routes[$dataSourceId] = $route;
-        $this->additionalParameters[$dataSourceId] = $additionalParameters;
+        $this->routes[$dataSource->getName()] = $route;
+        $this->additionalParameters[$dataSource->getName()] = $additionalParameters;
     }
 
+    /**
+     * @param DataSourceViewInterface<FieldViewInterface> $view
+     * @param array<string,mixed> $vars
+     * @return string
+     */
     public function dataSourceFilter(DataSourceViewInterface $view, array $vars = []): string
     {
         $blockNames = [
@@ -112,20 +115,22 @@ class DataSourceRuntime implements RuntimeExtensionInterface
         $viewData = [
             'datasource' => $view,
             'vars' => array_merge(
-                $this->getVars($view),
+                $this->getVars($view->getName()),
                 $vars
             )
         ];
 
-        return $this->renderTheme($view, $viewData, $blockNames);
+        return $this->renderTheme($view->getName(), $viewData, $blockNames);
     }
 
+    /**
+     * @param DataSourceViewInterface<FieldViewInterface> $view
+     * @return int
+     */
     public function dataSourceFilterCount(DataSourceViewInterface $view): int
     {
-        $fields = $view->getFields();
-
         $count = 0;
-        foreach ($fields as $field) {
+        foreach ($view as $field) {
             if (true === $field->hasAttribute('form')) {
                 $count++;
             }
@@ -134,49 +139,60 @@ class DataSourceRuntime implements RuntimeExtensionInterface
         return $count;
     }
 
+    /**
+     * @param FieldViewInterface $fieldView
+     * @param array<string,mixed> $vars
+     * @return string
+     */
     public function dataSourceField(FieldViewInterface $fieldView, array $vars = []): string
     {
-        $dataSourceView = $fieldView->getDataSourceView();
+        $dataSourceName = $fieldView->getDataSourceName();
         $blockNames = [
-            "datasource_{$dataSourceView->getName()}_field_name_{$fieldView->getName()}",
-            "datasource_{$dataSourceView->getName()}_field_type_{$fieldView->getType()}",
+            "datasource_{$dataSourceName}_field_name_{$fieldView->getName()}",
+            "datasource_{$dataSourceName}_field_type_{$fieldView->getType()}",
             "datasource_field_name_{$fieldView->getName()}",
             "datasource_field_type_{$fieldView->getType()}",
-            "datasource_{$dataSourceView->getName()}_field",
+            "datasource_{$dataSourceName}_field",
             'datasource_field',
         ];
 
         $viewData = [
             'field' => $fieldView,
             'vars' => array_merge(
-                $this->getVars($fieldView->getDataSourceView()),
+                $this->getVars($dataSourceName),
                 $vars
             )
         ];
 
-        return $this->renderTheme($dataSourceView, $viewData, $blockNames);
+        return $this->renderTheme($dataSourceName, $viewData, $blockNames);
     }
 
-    public function dataSourceSort(FieldViewInterface $fieldView, array $options = [], array $vars = [])
+    /**
+     * @param FieldViewInterface $fieldView
+     * @param array<string,mixed> $options
+     * @param array<string,mixed> $vars
+     * @return string
+     */
+    public function dataSourceSort(FieldViewInterface $fieldView, array $options = [], array $vars = []): string
     {
         if (false === $fieldView->getAttribute('sortable')) {
             return '';
         }
 
-        $dataSourceView = $fieldView->getDataSourceView();
+        $dataSourceName = $fieldView->getDataSourceName();
         $blockNames = [
-            "datasource_{$dataSourceView->getName()}_sort",
+            "datasource_{$dataSourceName}_sort",
             'datasource_sort',
         ];
 
-        $options = $this->resolveSortOptions($options, $dataSourceView);
+        $options = $this->resolveSortOptions($options, $dataSourceName);
         $ascendingUrl = $this->getUrl(
-            $dataSourceView,
+            $dataSourceName,
             $options,
             $fieldView->getAttribute('parameters_sort_ascending')
         );
         $descendingUrl = $this->getUrl(
-            $dataSourceView,
+            $dataSourceName,
             $options,
             $fieldView->getAttribute('parameters_sort_descending')
         );
@@ -188,15 +204,21 @@ class DataSourceRuntime implements RuntimeExtensionInterface
             'ascending' => $options['ascending'],
             'descending' => $options['descending'],
             'vars' => array_merge(
-                $this->getVars($fieldView->getDataSourceView()),
+                $this->getVars($dataSourceName),
                 $vars
             )
         ];
 
-        return $this->renderTheme($dataSourceView, $viewData, $blockNames);
+        return $this->renderTheme($dataSourceName, $viewData, $blockNames);
     }
 
-    public function dataSourcePagination(DataSourceViewInterface $view, $options = [], $vars = []): string
+    /**
+     * @param DataSourceViewInterface<FieldViewInterface> $view
+     * @param array<string,mixed> $options
+     * @param array<string,mixed> $vars
+     * @return string
+     */
+    public function dataSourcePagination(DataSourceViewInterface $view, array $options = [], array $vars = []): string
     {
         $blockNames = [
             'datasource_' . $view->getName() . '_pagination',
@@ -231,7 +253,7 @@ class DataSourceRuntime implements RuntimeExtensionInterface
         $pagesAnchors = [];
         $pagesUrls = [];
         foreach ($pages as $page) {
-            $pagesUrls[$page] = $this->getUrl($view, $options, $pagesParams[$page]);
+            $pagesUrls[$page] = $this->getUrl($view->getName(), $options, $pagesParams[$page]);
         }
 
         $viewData = [
@@ -239,28 +261,34 @@ class DataSourceRuntime implements RuntimeExtensionInterface
             'page_anchors' => $pagesAnchors,
             'pages_urls' => $pagesUrls,
             'first' => 1,
-            'first_url' => $this->getUrl($view, $options, $pagesParams[1]),
+            'first_url' => $this->getUrl($view->getName(), $options, $pagesParams[1]),
             'last' => $pageCount,
-            'last_url' => $this->getUrl($view, $options, $pagesParams[$pageCount]),
+            'last_url' => $this->getUrl($view->getName(), $options, $pagesParams[$pageCount]),
             'current' => $current,
             'active_class' => $options['active_class'],
             'disabled_class' => $options['disabled_class'],
             'translation_domain' => $options['translation_domain'],
-            'vars' => array_merge($this->getVars($view), $vars),
+            'vars' => array_merge($this->getVars($view->getName()), $vars),
         ];
         if (1 !== $current && true === array_key_exists($current - 1, $pagesParams)) {
             $viewData['prev'] = $current - 1;
-            $viewData['prev_url'] = $this->getUrl($view, $options, $pagesParams[$current - 1]);
+            $viewData['prev_url'] = $this->getUrl($view->getName(), $options, $pagesParams[$current - 1]);
         }
         if ($pageCount !== $current && true === array_key_exists($current + 1, $pagesParams)) {
             $viewData['next'] = $current + 1;
-            $viewData['next_url'] = $this->getUrl($view, $options, $pagesParams[$current + 1]);
+            $viewData['next_url'] = $this->getUrl($view->getName(), $options, $pagesParams[$current + 1]);
         }
 
-        return $this->renderTheme($view, $viewData, $blockNames);
+        return $this->renderTheme($view->getName(), $viewData, $blockNames);
     }
 
-    public function dataSourceMaxResults(DataSourceViewInterface $view, $options = [], $vars = []): string
+    /**
+     * @param DataSourceViewInterface<FieldViewInterface> $view
+     * @param array<string,mixed> $options
+     * @param array<string,mixed> $vars
+     * @return string
+     */
+    public function dataSourceMaxResults(DataSourceViewInterface $view, array $options = [], array $vars = []): string
     {
         $options = $this->resolveMaxResultsOptions($options, $view);
         $blockNames = [
@@ -276,7 +304,7 @@ class DataSourceRuntime implements RuntimeExtensionInterface
         $results = [];
         foreach ($options['results'] as $resultsPerPage) {
             $baseParameters[$view->getName()][PaginationExtension::PARAMETER_MAX_RESULTS] = $resultsPerPage;
-            $results[$resultsPerPage] = $this->getUrl($view, $options, $baseParameters);
+            $results[$resultsPerPage] = $this->getUrl($view->getName(), $options, $baseParameters);
         }
 
         $viewData = [
@@ -284,19 +312,24 @@ class DataSourceRuntime implements RuntimeExtensionInterface
             'results' => $results,
             'active_class' => $options['active_class'],
             'max_results' => $view->getAttribute('max_results'),
-            'vars' => array_merge($this->getVars($view), $vars),
+            'vars' => array_merge($this->getVars($view->getName()), $vars),
         ];
 
-        return $this->renderTheme($view, $viewData, $blockNames);
+        return $this->renderTheme($view->getName(), $viewData, $blockNames);
     }
 
+    /**
+     * @param array<string,mixed> $options
+     * @param DataSourceViewInterface<FieldViewInterface> $dataSource
+     * @return array<string,mixed>
+     */
     private function resolvePaginationOptions(array $options, DataSourceViewInterface $dataSource): array
     {
         $optionsResolver = new OptionsResolver();
         $optionsResolver
             ->setDefined(['max_pages'])
             ->setDefaults([
-                'route' => $this->getCurrentRoute($dataSource),
+                'route' => $this->getCurrentRoute($dataSource->getName()),
                 'additional_parameters' => [],
                 'active_class' => 'active',
                 'disabled_class' => 'disabled',
@@ -315,15 +348,16 @@ class DataSourceRuntime implements RuntimeExtensionInterface
     /**
      * Validate and resolve options passed in Twig to datasource_results_per_page_widget
      *
-     * @param array $options
-     * @return array
+     * @param array<string,mixed> $options
+     * @param DataSourceViewInterface<FieldViewInterface> $dataSource
+     * @return array<string,mixed>
      */
     private function resolveMaxResultsOptions(array $options, DataSourceViewInterface $dataSource): array
     {
         $optionsResolver = new OptionsResolver();
         $optionsResolver
             ->setDefaults([
-                'route' => $this->getCurrentRoute($dataSource),
+                'route' => $this->getCurrentRoute($dataSource->getName()),
                 'active_class' => 'active',
                 'additional_parameters' => [],
                 'results' => [5, 10, 20, 50, 100]
@@ -336,12 +370,17 @@ class DataSourceRuntime implements RuntimeExtensionInterface
         return $optionsResolver->resolve($options);
     }
 
-    private function resolveSortOptions(array $options, DataSourceViewInterface $dataSource): array
+    /**
+     * @param array<string,mixed> $options
+     * @param string $dataSourceName
+     * @return array<string,mixed>
+     */
+    private function resolveSortOptions(array $options, string $dataSourceName): array
     {
         $optionsResolver = new OptionsResolver();
         $optionsResolver
             ->setDefaults([
-                'route' => $this->getCurrentRoute($dataSource),
+                'route' => $this->getCurrentRoute($dataSourceName),
                 'additional_parameters' => [],
                 'ascending' => '&uarr;',
                 'descending' => '&darr;',
@@ -363,13 +402,13 @@ class DataSourceRuntime implements RuntimeExtensionInterface
         $this->themes[self::DEFAULT_THEME] = $this->environment->load($this->baseTemplate);
     }
 
-    private function getCurrentRoute(DataSourceViewInterface $dataSource): string
+    private function getCurrentRoute(string $dataSourceName): string
     {
-        if (isset($this->routes[$dataSource->getName()])) {
-            return $this->routes[$dataSource->getName()];
+        if (true === array_key_exists($dataSourceName, $this->routes)) {
+            return $this->routes[$dataSourceName];
         }
 
-        $request = $this->requestStack->getMasterRequest();
+        $request = $this->requestStack->getCurrentRequest();
         if (null === $request) {
             throw new RuntimeException('Some datasource widget was called out of any request scope.');
         }
@@ -390,17 +429,16 @@ class DataSourceRuntime implements RuntimeExtensionInterface
      * Return list of templates that might be useful to render DataSourceView.
      * Always the last template will be default one.
      *
-     * @param DataSourceViewInterface $dataSource
+     * @param string $dataSourceName
      * @return array<TemplateWrapper>
      */
-    private function getTemplates(DataSourceViewInterface $dataSource): array
+    private function getTemplates(string $dataSourceName): array
     {
         $this->initTemplate();
 
         $templates = [];
-        $dataSourceId = spl_object_id($dataSource);
-        if (array_key_exists($dataSourceId, $this->themes)) {
-            $templates[] = $this->themes[$dataSourceId];
+        if (array_key_exists($dataSourceName, $this->themes)) {
+            $templates[] = $this->themes[$dataSourceName];
         }
         $templates[] = $this->themes[self::DEFAULT_THEME];
 
@@ -410,40 +448,46 @@ class DataSourceRuntime implements RuntimeExtensionInterface
     /**
      * Return vars passed to theme. Those vars will be added to block context.
      *
-     * @param DataSourceViewInterface $dataSource
+     * @param string $dataSourceName
      * @return array<string,mixed>
      */
-    private function getVars(DataSourceViewInterface $dataSource): array
+    private function getVars(string $dataSourceName): array
     {
-        return $this->themesVars[spl_object_id($dataSource)] ?? [];
+        return $this->themesVars[$dataSourceName] ?? [];
     }
 
     /**
      * Return additional parameters that should be passed to the URL generation for specified datasource.
      *
-     * @param DataSourceViewInterface $dataSource
-     * @param array $options
-     * @param array $parameters
+     * @param string $dataSourceName
+     * @param array<string,mixed> $options
+     * @param array<string,mixed> $parameters
      * @return string
      */
-    private function getUrl(DataSourceViewInterface $dataSource, array $options = [], array $parameters = []): string
+    private function getUrl(string $dataSourceName, array $options = [], array $parameters = []): string
     {
         return $this->router->generate(
             $options['route'],
             array_merge(
-                $this->additionalParameters[spl_object_id($dataSource)] ?? [],
+                $this->additionalParameters[$dataSourceName] ?? [],
                 $options['additional_parameters'] ?? [],
                 $parameters
             )
         );
     }
 
+    /**
+     * @param string $dataSourceName
+     * @param array<string,mixed> $contextVars
+     * @param array<int,string> $availableBlocks
+     * @return string
+     */
     private function renderTheme(
-        DataSourceViewInterface $view,
+        string $dataSourceName,
         array $contextVars = [],
         array $availableBlocks = []
     ): string {
-        $templates = $this->getTemplates($view);
+        $templates = $this->getTemplates($dataSourceName);
         $contextVars = $this->environment->mergeGlobals($contextVars);
 
         foreach ($availableBlocks as $blockName) {

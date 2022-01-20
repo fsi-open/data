@@ -12,20 +12,26 @@ declare(strict_types=1);
 namespace Tests\FSi\Component\DataSource\Extension\Core;
 
 use FSi\Component\DataSource\DataSourceFactory;
+use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Driver\Collection\CollectionFactory;
-use FSi\Component\DataSource\Driver\Collection\Extension\Core\CoreExtension;
 use FSi\Component\DataSource\Driver\DriverFactoryManager;
-use FSi\Component\DataSource\Extension\Core\Pagination\EventSubscriber\Events;
+use FSi\Component\DataSource\Extension\Core\Pagination\EventSubscriber\PaginationPostBuildView;
+use FSi\Component\DataSource\Extension\Core\Pagination\EventSubscriber\PaginationPostGetParameters;
+use FSi\Component\DataSource\Extension\Core\Pagination\EventSubscriber\PaginationPreBindParameters;
 use FSi\Component\DataSource\Extension\Core\Pagination\PaginationExtension;
 use FSi\Component\DataSource\Event\DataSourceEvent;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Tests\FSi\Component\DataSource\Fixtures\TestResult;
 use PHPUnit\Framework\TestCase;
-use FSi\Component\DataSource\Driver\DriverInterface;
-use FSi\Component\DataSource\DataSource;
 use FSi\Component\DataSource\DataSourceViewInterface;
+
+use function array_key_exists;
 
 class PaginationExtensionTest extends TestCase
 {
+    /**
+     * @return array<int,array{first_result:int,max_results:int,page:int|null,current_page:int}>
+     */
     public function paginationCases(): array
     {
         return [
@@ -56,22 +62,17 @@ class PaginationExtensionTest extends TestCase
      */
     public function testPaginationExtension(int $firstResult, int $maxResults, ?int $page, int $currentPage): void
     {
-        $driver = $this->createMock(DriverInterface::class);
-        $extension = new PaginationExtension();
-
-        $datasource = $this->getMockBuilder(DataSource::class)->setConstructorArgs([$driver])->getMock();
-
+        $datasource = $this->createMock(DataSourceInterface::class);
         $datasource->method('getName')->willReturn('datasource');
         $datasource->method('getResult')->willReturn(new TestResult());
         $datasource->method('getMaxResults')->willReturn($maxResults);
         $datasource->method('getFirstResult')->willReturn($firstResult);
 
-        $subscribers = $extension->loadSubscribers();
-        $subscriber = array_shift($subscribers);
-        self::assertInstanceOf(Events::class, $subscriber);
+        $postGetParametersSubscriber = new PaginationPostGetParameters();
+        $paginationPostBuildViewSubscriber = new PaginationPostBuildView();
 
-        $event = new DataSourceEvent\ParametersEventArgs($datasource, []);
-        $subscriber->postGetParameters($event);
+        $event = new DataSourceEvent\PostGetParameters($datasource, []);
+        ($postGetParametersSubscriber)($event);
 
         if (null !== $page) {
             self::assertSame(
@@ -85,7 +86,7 @@ class PaginationExtensionTest extends TestCase
             );
         } else {
             $parameters = $event->getParameters();
-            if (isset($parameters['datasource'])) {
+            if (true === array_key_exists('datasource', $parameters)) {
                 self::assertArrayNotHasKey(PaginationExtension::PARAMETER_PAGE, $parameters['datasource']);
             }
         }
@@ -101,18 +102,16 @@ class PaginationExtensionTest extends TestCase
             )
         ;
 
-        $subscriber->postBuildView(new DataSourceEvent\ViewEventArgs($datasource, $view));
+        ($paginationPostBuildViewSubscriber)(new DataSourceEvent\PostBuildView($datasource, $view));
     }
 
     public function testSetMaxResultsByBindRequest(): void
     {
-        $extensions = [
-            new PaginationExtension()
-        ];
-        $driverExtensions = [new CoreExtension()];
-        $driverFactory = new CollectionFactory($driverExtensions);
+        $eventDispatcher = new EventDispatcher();
+        $eventDispatcher->addListener(DataSourceEvent\PreBindParameters::class, new PaginationPreBindParameters());
+        $driverFactory = new CollectionFactory($eventDispatcher, []);
         $driverFactoryManager = new DriverFactoryManager([$driverFactory]);
-        $factory = new DataSourceFactory($driverFactoryManager, $extensions);
+        $factory = new DataSourceFactory($eventDispatcher, $driverFactoryManager);
         $dataSource = $factory->createDataSource('collection', [], 'foo_source');
 
         $dataSource->bindParameters([

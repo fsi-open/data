@@ -14,7 +14,7 @@ use Symfony\Component\Form\AbstractExtension;
 
 class DatasourceExtension extends AbstractExtension
 {
-    protected function loadTypes()
+    protected function loadTypes(): array
     {
         return [new BetweenType()];
     }

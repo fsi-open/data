@@ -12,11 +12,12 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Driver\Doctrine\ORM;
 
 use Doctrine\ORM\QueryBuilder;
+use FSi\Component\DataSource\Field\FieldInterface;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
 
 interface DoctrineFieldInterface extends FieldTypeInterface
 {
-    public function buildQuery(QueryBuilder $qb, string $alias): void;
+    public function buildQuery(QueryBuilder $qb, string $alias, FieldInterface $field): void;
 
     public function getDBALType(): ?string;
 }

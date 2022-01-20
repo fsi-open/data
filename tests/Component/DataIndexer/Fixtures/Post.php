@@ -20,26 +20,26 @@ class Post
      * @ORM\Column(type="string")
      * @ORM\Id
      */
-    protected $id_first_part;
+    protected string $id_first_part;
 
     /**
      * @ORM\Column(type="string")
      * @ORM\Id
      */
-    protected $id_second_part;
+    protected string $id_second_part;
 
-    public function __construct($id_first_part, $id_second_part)
+    public function __construct(string $id_first_part, string $id_second_part)
     {
         $this->id_first_part = $id_first_part;
         $this->id_second_part = $id_second_part;
     }
 
-    public function getIdFirstPart()
+    public function getIdFirstPart(): string
     {
         return $this->id_first_part;
     }
 
-    public function getIdSecondPart()
+    public function getIdSecondPart(): string
     {
         return $this->id_second_part;
     }

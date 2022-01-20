@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataSource\Fixtures;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -23,19 +25,26 @@ class Category
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $id;
+    private int $id;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $name;
+    private ?string $name;
 
     /**
      * @ORM\OneToMany(targetEntity="Tests\FSi\Component\DataSource\Fixtures\News", mappedBy="category")
+     * @var Collection<int,News>
      */
-    private $news;
+    private Collection $news;
 
-    public function getId(): ?int
+    public function __construct(int $id)
+    {
+        $this->id = $id;
+        $this->news = new ArrayCollection();
+    }
+
+    public function getId(): int
     {
         return $this->id;
     }
@@ -48,6 +57,14 @@ class Category
     public function getName(): ?string
     {
         return $this->name;
+    }
+
+    /**
+     * @return array<int,News>
+     */
+    public function getNews(): array
+    {
+        return $this->news->toArray();
     }
 
     public function __toString(): string

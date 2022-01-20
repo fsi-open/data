@@ -14,9 +14,10 @@ namespace FSi\Component\DataSource\Driver\Doctrine\ORM;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\Exception\DoctrineDriverException;
-use FSi\Component\DataSource\Driver\DriverExtensionInterface;
 use FSi\Component\DataSource\Driver\DriverFactoryInterface;
 use FSi\Component\DataSource\Driver\DriverInterface;
+use FSi\Component\DataSource\Field\FieldTypeInterface;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -29,43 +30,50 @@ use function sprintf;
 
 class DoctrineFactory implements DriverFactoryInterface
 {
-    /**
-     * @var ManagerRegistry
-     */
-    private $registry;
+    private ManagerRegistry $registry;
+
+    private EventDispatcherInterface $eventDispatcher;
 
     /**
-     * @var array<DriverExtensionInterface>
+     * @var array<FieldTypeInterface>
      */
-    private $extensions;
+    private array $fieldTypes;
 
-    /**
-     * @var OptionsResolver
-     */
-    private $optionsResolver;
+    private OptionsResolver $optionsResolver;
+
+    public static function getDriverType(): string
+    {
+        return 'doctrine-orm';
+    }
 
     /**
      * @param ManagerRegistry $registry
-     * @param array<DriverExtensionInterface> $extensions
+     * @param EventDispatcherInterface $eventDispatcher
+     * @param array<FieldTypeInterface> $fieldTypes
      */
-    public function __construct(ManagerRegistry $registry, array $extensions = [])
-    {
+    public function __construct(
+        ManagerRegistry $registry,
+        EventDispatcherInterface $eventDispatcher,
+        array $fieldTypes
+    ) {
         $this->registry = $registry;
-        $this->extensions = $extensions;
+        $this->eventDispatcher = $eventDispatcher;
+        $this->fieldTypes = $fieldTypes;
         $this->optionsResolver = new OptionsResolver();
         $this->initOptions();
-    }
-
-    public function getDriverType(): string
-    {
-        return 'doctrine-orm';
     }
 
     public function createDriver(array $options = []): DriverInterface
     {
         $options = $this->optionsResolver->resolve($options);
 
-        return new DoctrineDriver($this->extensions, $options['qb'], $options['useOutputWalkers']);
+        return new DoctrineDriver(
+            $this->registry,
+            $this->eventDispatcher,
+            $this->fieldTypes,
+            $options['qb'],
+            $options['useOutputWalkers']
+        );
     }
 
     /**

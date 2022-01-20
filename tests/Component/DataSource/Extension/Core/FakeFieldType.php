@@ -12,10 +12,11 @@ declare(strict_types=1);
 namespace Tests\FSi\Component\DataSource\Extension\Core;
 
 use FSi\Component\DataSource\Field\FieldAbstractType;
+use FSi\Component\DataSource\Field\Type\NumberTypeInterface;
 
-class FakeFieldType extends FieldAbstractType
+final class FakeFieldType extends FieldAbstractType implements NumberTypeInterface
 {
-    public function getType(): string
+    public function getId(): string
     {
         return 'fake';
     }

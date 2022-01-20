@@ -13,23 +13,22 @@ namespace FSi\Component\DataSource;
 
 interface DataSourceFactoryInterface
 {
+    /**
+     * @param string $driverName
+     * @param array<string,mixed> $driverOptions
+     * @param string $name
+     * @return DataSourceInterface
+     */
     public function createDataSource(
         string $driverName,
         array $driverOptions = [],
         string $name = 'datasource'
     ): DataSourceInterface;
 
-    public function addExtension(DataSourceExtensionInterface $extension): void;
-
-    /**
-     * @return array<DataSourceExtensionInterface>
-     */
-    public function getExtensions(): array;
-
     /**
      * Return array of all parameters from all datasources.
      *
-     * @return array
+     * @return array<string, array<string, array<string, mixed>>>
      */
     public function getAllParameters(): array;
 
@@ -37,17 +36,7 @@ interface DataSourceFactoryInterface
      * Return array of all parameters form all datasources except given.
      *
      * @param DataSourceInterface $datasource
-     * @return array
+     * @return array<string, array<string, array<string, mixed>>>
      */
     public function getOtherParameters(DataSourceInterface $datasource): array;
-
-    /**
-     * Adds given datasource to list of known datasources, so its data will be fetched
-     * during getAllParameters and getOtherParameters.
-     *
-     * Factory also automatically sets its (datasource) factory to itself.
-     *
-     * @param DataSourceInterface $datasource
-     */
-    public function addDataSource(DataSourceInterface $datasource): void;
 }

@@ -68,8 +68,9 @@ class News
 
     /**
      * @ORM\ManyToMany(targetEntity="Tests\FSi\Bundle\DataSourceBundle\Fixtures\Group")
+     * @var Collection<int,Group>
      */
-    private ?Collection $groups;
+    private Collection $groups;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -171,6 +172,9 @@ class News
         return $this->category2;
     }
 
+    /**
+     * @return Collection<int,Group>
+     */
     public function getGroups(): Collection
     {
         return $this->groups;

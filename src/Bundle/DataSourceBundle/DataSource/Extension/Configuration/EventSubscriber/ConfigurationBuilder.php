@@ -12,35 +12,33 @@ declare(strict_types=1);
 namespace FSi\Bundle\DataSourceBundle\DataSource\Extension\Configuration\EventSubscriber;
 
 use FSi\Component\DataSource\DataSourceInterface;
-use FSi\Component\DataSource\Event\DataSourceEvent\ParametersEventArgs;
-use FSi\Component\DataSource\Event\DataSourceEvents;
+use FSi\Component\DataSource\Event\DataSourceEvent\PreBindParameters;
+use FSi\Component\DataSource\Event\DataSourceEventSubscriberInterface;
 use RuntimeException;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Yaml\Yaml;
 
-class ConfigurationBuilder implements EventSubscriberInterface
+use function is_string;
+
+class ConfigurationBuilder implements DataSourceEventSubscriberInterface
 {
     private const BUNDLE_CONFIG_PATH = '%s/Resources/config/datasource/%s.yml';
     private const MAIN_CONFIG_DIRECTORY = 'datasource.yaml.main_config';
 
-    /**
-     * @var KernelInterface
-     */
-    private $kernel;
+    private KernelInterface $kernel;
+
+    public static function getPriority(): int
+    {
+        return 1024;
+    }
 
     public function __construct(KernelInterface $kernel)
     {
         $this->kernel = $kernel;
     }
 
-    public static function getSubscribedEvents(): array
-    {
-        return [DataSourceEvents::PRE_BIND_PARAMETERS => ['readConfiguration', 1024]];
-    }
-
-    public function readConfiguration(ParametersEventArgs $event)
+    public function __invoke(PreBindParameters $event): void
     {
         $dataSource = $event->getDataSource();
         $mainConfiguration = $this->getMainConfiguration($dataSource->getName());
@@ -51,10 +49,14 @@ class ConfigurationBuilder implements EventSubscriberInterface
         }
     }
 
+    /**
+     * @param string $dataSourceName
+     * @return array<string,mixed>|null
+     */
     private function getMainConfiguration(string $dataSourceName): ?array
     {
         $directory = $this->kernel->getContainer()->getParameter(self::MAIN_CONFIG_DIRECTORY);
-        if (null === $directory) {
+        if (false === is_string($directory)) {
             return null;
         }
 
@@ -88,6 +90,11 @@ class ConfigurationBuilder implements EventSubscriberInterface
         }
     }
 
+    /**
+     * @param string $dataSourceName
+     * @param array<BundleInterface> $eligibleBundles
+     * @return array<string,mixed>
+     */
     private function findLastBundleConfiguration(string $dataSourceName, array $eligibleBundles): array
     {
         return array_reduce(
@@ -106,20 +113,28 @@ class ConfigurationBuilder implements EventSubscriberInterface
         );
     }
 
+    /**
+     * @param DataSourceInterface $dataSource
+     * @param array<string,mixed> $configuration
+     */
     private function buildConfiguration(DataSourceInterface $dataSource, array $configuration): void
     {
         foreach ($configuration['fields'] as $name => $field) {
-            $dataSource->addField(
-                $name,
-                $field['type'] ?? null,
-                $field['comparison'] ?? null,
-                $field['options'] ?? []
-            );
+            $dataSource->addField($name, $field['type'] ?? null, $field['options'] ?? []);
         }
     }
 
+    /**
+     * @param string $path
+     * @return array<string,mixed>
+     */
     private function parseYamlFile(string $path): array
     {
-        return Yaml::parse(file_get_contents($path));
+        $yamlContents = file_get_contents($path);
+        if (false === is_string($yamlContents)) {
+            throw new RuntimeException("Unable to read file '{$path}' contents");
+        }
+
+        return Yaml::parse($yamlContents);
     }
 }

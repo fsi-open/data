@@ -30,6 +30,9 @@ interface AttributesContainerInterface
      */
     public function getAttribute(string $name);
 
+    /**
+     * @return array<string,mixed>
+     */
     public function getAttributes(): array;
 
     public function removeAttribute(string $name): void;

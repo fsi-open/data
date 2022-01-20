@@ -12,11 +12,10 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource;
 
 use ArrayIterator;
-use Countable;
 use FSi\Component\DataSource\Exception\DataSourceViewException;
+use FSi\Component\DataSource\Field\FieldInterface;
 use FSi\Component\DataSource\Field\FieldViewInterface;
 use FSi\Component\DataSource\Util\AttributesContainer;
-use IteratorAggregate;
 
 use function array_key_exists;
 use function array_walk;
@@ -25,42 +24,42 @@ use function sprintf;
 
 class DataSourceView extends AttributesContainer implements DataSourceViewInterface
 {
-    /**
-     * @var string
-     */
-    private $name;
+    private string $name;
 
     /**
-     * @var array
+     * @var array<string, array<string, array<string, mixed>>>
      */
-    private $parameters;
+    private array $parameters;
 
     /**
-     * @var array
+     * @var array<string, array<string, array<string, mixed>>>
      */
-    private $otherParameters;
+    private array $otherParameters;
 
     /**
-     * @var array
+     * @var array<string,FieldViewInterface>
      */
-    private $fields = [];
+    private array $fields = [];
 
     /**
-     * @var ArrayIterator|null
+     * @var ArrayIterator<string,FieldViewInterface>|null
      */
-    private $iterator;
+    private ?ArrayIterator $iterator = null;
 
     /**
-     * @var Countable&IteratorAggregate
+     * @param string $name
+     * @param array<FieldInterface> $fields
+     * @param array<string, array<string, array<string, mixed>>> $parameters
+     * @param array<string, array<string, array<string, mixed>>> $otherParameters
      */
-    private $result;
-
-    public function __construct(DataSourceInterface $datasource)
+    public function __construct(string $name, array $fields, array $parameters, array $otherParameters)
     {
-        $this->name = $datasource->getName();
-        $this->parameters = $datasource->getParameters();
-        $this->otherParameters = $datasource->getOtherParameters();
-        $this->result = $datasource->getResult();
+        $this->name = $name;
+        $this->parameters = $parameters;
+        $this->otherParameters = $otherParameters;
+        array_walk($fields, function (FieldInterface $field): void {
+            $this->addField($field->getType()->createView($field));
+        });
     }
 
     public function getName(): string
@@ -83,66 +82,8 @@ class DataSourceView extends AttributesContainer implements DataSourceViewInterf
         return $this->otherParameters;
     }
 
-    public function hasField(string $name): bool
-    {
-        return array_key_exists($name, $this->fields);
-    }
-
-    public function removeField(string $name): void
-    {
-        if (false === array_key_exists($name, $this->fields)) {
-            return;
-        }
-
-        $this->fields[$name]->setDataSourceView(null);
-        unset($this->fields[$name]);
-        $this->iterator = null;
-    }
-
-    public function getField(string $name): FieldViewInterface
-    {
-        if (false === $this->hasField($name)) {
-            throw new DataSourceViewException("There's no field with name \"{$name}\"");
-        }
-
-        return $this->fields[$name];
-    }
-
-    public function getFields(): array
-    {
-        return $this->fields;
-    }
-
-    public function clearFields(): void
-    {
-        $this->fields = [];
-    }
-
-    public function addField(FieldViewInterface $fieldView): void
-    {
-        $name = $fieldView->getName();
-        if (true === $this->hasField($name)) {
-            throw new DataSourceViewException(
-                "There's already field with name \"{$name}\" in datasourc \"{$this->name}\""
-            );
-        }
-
-        $this->fields[$name] = $fieldView;
-        $fieldView->setDataSourceView($this);
-        $this->iterator = null;
-    }
-
-    public function setFields(array $fields): void
-    {
-        $this->clearFields();
-
-        array_walk($fields, function (FieldViewInterface $field): void {
-            $this->addField($field);
-        });
-    }
-
     /**
-     * @param mixed $offset
+     * @param string $offset
      * @return bool
      */
     public function offsetExists($offset): bool
@@ -151,17 +92,21 @@ class DataSourceView extends AttributesContainer implements DataSourceViewInterf
     }
 
     /**
-     * @param mixed $offset
-     * @return mixed
+     * @param string $offset
+     * @return FieldViewInterface
      */
-    public function offsetGet($offset)
+    public function offsetGet($offset): FieldViewInterface
     {
+        if (false === $this->offsetExists($offset)) {
+            throw new DataSourceViewException("There's no field with name \"{$offset}\"");
+        }
+
         return $this->fields[$offset];
     }
 
     /**
-     * @param mixed $offset
-     * @param mixed $value
+     * @param string $offset
+     * @param FieldViewInterface $value
      */
     public function offsetSet($offset, $value): void
     {
@@ -171,7 +116,7 @@ class DataSourceView extends AttributesContainer implements DataSourceViewInterf
     }
 
     /**
-     * @param mixed $offset
+     * @param string $offset
      */
     public function offsetUnset($offset): void
     {
@@ -193,28 +138,22 @@ class DataSourceView extends AttributesContainer implements DataSourceViewInterf
         $this->getIterator()->seek($position);
     }
 
-    /**
-     * @return mixed
-     */
-    public function current()
+    public function current(): FieldViewInterface
     {
         return $this->getIterator()->current();
     }
 
-    /**
-     * @return mixed
-     */
-    public function key()
+    public function key(): string
     {
         return $this->getIterator()->key();
     }
 
-    public function next()
+    public function next(): void
     {
         $this->getIterator()->next();
     }
 
-    public function rewind()
+    public function rewind(): void
     {
         $this->getIterator()->rewind();
     }
@@ -224,11 +163,21 @@ class DataSourceView extends AttributesContainer implements DataSourceViewInterf
         return $this->getIterator()->valid();
     }
 
-    public function getResult(): IteratorAggregate
+    private function addField(FieldViewInterface $fieldView): void
     {
-        return $this->result;
+        $name = $fieldView->getName();
+        if (true === $this->offsetExists($name)) {
+            throw new DataSourceViewException(
+                "There's already field with name \"{$name}\" in datasource \"{$this->name}\""
+            );
+        }
+
+        $this->fields[$name] = $fieldView;
     }
 
+    /**
+     * @return ArrayIterator<string,FieldViewInterface>
+     */
     private function getIterator(): ArrayIterator
     {
         if (null === $this->iterator) {

@@ -9,6 +9,7 @@
 
 namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -31,8 +32,14 @@ class Category
 
     /**
      * @ORM\OneToMany(targetEntity="Tests\FSi\Bundle\DataSourceBundle\Fixtures\News", mappedBy="category")
+     * @var Collection<int,News>
      */
     private Collection $news;
+
+    public function __construct()
+    {
+        $this->news = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -51,6 +58,14 @@ class Category
 
     public function __toString(): string
     {
-        return $this->getName();
+        return $this->getName() ?? '';
+    }
+
+    /**
+     * @return array<News>
+     */
+    public function getNews(): array
+    {
+        return $this->news->toArray();
     }
 }

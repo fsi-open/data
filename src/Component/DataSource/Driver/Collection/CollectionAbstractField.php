@@ -14,34 +14,56 @@ namespace FSi\Component\DataSource\Driver\Collection;
 use Doctrine\Common\Collections\Criteria;
 use FSi\Component\DataSource\Driver\Collection\Exception\CollectionDriverException;
 use FSi\Component\DataSource\Field\FieldAbstractType;
+use FSi\Component\DataSource\Field\FieldInterface;
 use Symfony\Component\OptionsResolver\Options;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
-use function count;
+use function array_shift;
+use function in_array;
+use function is_array;
+use function settype;
 
 abstract class CollectionAbstractField extends FieldAbstractType implements CollectionFieldInterface
 {
-    public function initOptions(): void
+    public function initOptions(OptionsResolver $optionsResolver): void
     {
-        $this->getOptionsResolver()
+        parent::initOptions($optionsResolver);
+
+        $optionsResolver
             ->setDefault('field', null)
             ->setAllowedTypes('field', ['string', 'null'])
             ->setNormalizer('field', function (Options $options, ?string $value): ?string {
-                return $value ?? $this->getName();
+                return $value ?? $options['name'];
             })
         ;
     }
 
-    public function buildCriteria(Criteria $c): void
+    public function getPHPType(): ?string
     {
-        $data = $this->getCleanParameter();
+        return null;
+    }
 
+    public function buildCriteria(Criteria $c, FieldInterface $field): void
+    {
+        if (false === $field->getType() instanceof self) {
+            throw new CollectionDriverException(
+                sprintf(
+                    'Field\'s "%s" type "%s" is not compatible with type "%s"',
+                    $field->getName(),
+                    $field->getType()->getId(),
+                    $this->getId()
+                )
+            );
+        }
+
+        $data = $field->getParameter();
         if (true === $this->isEmpty($data)) {
             return;
         }
 
         $type = $this->getPHPType();
-        $field = $this->getOption('field');
-        $comparison = $this->getComparison();
+        $fieldName = $field->getOption('field');
+        $comparison = $field->getOption('comparison');
         $expr = Criteria::expr();
 
         if ('between' === $comparison) {
@@ -73,7 +95,7 @@ abstract class CollectionAbstractField extends FieldAbstractType implements Coll
                     settype($from, $type);
                     settype($to, $type);
                 }
-                $c->andWhere($expr->andX($expr->lte($field, $to), $expr->gte($field, $from)));
+                $c->andWhere($expr->andX($expr->lte($fieldName, $to), $expr->gte($fieldName, $from)));
                 return;
             }
         }
@@ -87,11 +109,6 @@ abstract class CollectionAbstractField extends FieldAbstractType implements Coll
         if (null !== $type) {
             settype($data, $type);
         }
-        $c->andWhere($expr->$comparison($field, $data));
-    }
-
-    public function getPHPType(): ?string
-    {
-        return null;
+        $c->andWhere($expr->$comparison($fieldName, $data));
     }
 }

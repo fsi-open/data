@@ -9,7 +9,6 @@
 
 namespace Tests\FSi\Bundle\DataSourceBundle\Extension\Symfony;
 
-use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Core\CoreExtension;
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Core\EventSubscriber\BindParameters;
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Event\DataSourceEvent;
@@ -20,23 +19,20 @@ class CoreExtensionTest extends TestCase
 {
     public function testBindParameters(): void
     {
-        $extension = new CoreExtension();
         $datasource = $this->createMock(DataSourceInterface::class);
         $data1 = ['key1' => 'value1', 'key2' => 'value2'];
         $data2 = $data1;
 
-        $subscribers = $extension->loadSubscribers();
-        $subscriber = array_shift($subscribers);
-        self::assertInstanceOf(BindParameters::class, $subscriber);
+        $subscriber = new BindParameters();
 
-        $args = new DataSourceEvent\ParametersEventArgs($datasource, $data2);
-        $subscriber->preBindParameters($args);
+        $args = new DataSourceEvent\PreBindParameters($datasource, $data2);
+        ($subscriber)($args);
         $data2 = $args->getParameters();
         self::assertEquals($data1, $data2);
 
         $request = new Request($data2);
-        $args = new DataSourceEvent\ParametersEventArgs($datasource, $request);
-        $subscriber->preBindParameters($args);
+        $args = new DataSourceEvent\PreBindParameters($datasource, $request);
+        ($subscriber)($args);
         $request = $args->getParameters();
         self::assertIsArray($request);
         self::assertEquals($data1, $request);

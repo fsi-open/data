@@ -1,9 +1,10 @@
 includes:
+    - vendor/phpstan/phpstan-doctrine/extension.neon
     - vendor/phpstan/phpstan-phpunit/extension.neon
 parameters:
     treatPhpDocTypesAsCertain: false
     reportUnmatchedIgnoredErrors: false
-    level: 5
+    level: 8
     paths:
         - src
         - tests
@@ -16,3 +17,5 @@ parameters:
           path: tests/Bundle/DataGridBundle/DataGrid/Extension/Symfony/EventSubscriber/BindRequestTest.php
         - message: '#PHPDoc tag @var for variable \$metadata contains generic type Doctrine\\ORM\\Mapping\\ClassMetadataInfo\<Tests\\FSi\\Component\\DataGrid\\Fixtures\\EntityTree\> but class Doctrine\\ORM\\Mapping\\ClassMetadataInfo is not generic\.#'
           path: tests/Component/DataGrid/Extension/Gedmo/ColumnType/TreeTest.php
+        - message: '#Strict comparison using === between false and array\<string, string\> will always evaluate to false\.#'
+          path: src/Component/DataIndexer/DoctrineDataIndexer.php

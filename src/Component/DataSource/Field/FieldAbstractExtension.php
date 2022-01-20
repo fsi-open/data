@@ -11,19 +11,15 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource\Field;
 
-class FieldAbstractExtension implements FieldExtensionInterface
+use Symfony\Component\OptionsResolver\OptionsResolver;
+
+abstract class FieldAbstractExtension implements FieldExtensionInterface
 {
-    public static function getSubscribedEvents(): array
+    public function initOptions(OptionsResolver $optionsResolver, FieldTypeInterface $fieldType): void
     {
-        return [];
     }
 
-    public function getExtendedFieldTypes(): array
-    {
-        return [];
-    }
-
-    public function initOptions(FieldTypeInterface $field): void
+    public function buildView(FieldInterface $field, FieldViewInterface $view): void
     {
     }
 }

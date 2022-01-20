@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension;
 
+use ArgumentCountError;
 use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Exception\DataGridException;
 use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\EntityValueFormatColumnOptionsExtension;
@@ -18,6 +19,8 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 use function array_key_exists;
+
+use const PHP_VERSION_ID;
 
 class EntityValueFormatColumnOptionsExtensionTest extends TestCase
 {
@@ -117,7 +120,11 @@ class EntityValueFormatColumnOptionsExtensionTest extends TestCase
             'value_glue' => '<br />',
         ];
 
-        $this->expectError();
+        if (PHP_VERSION_ID < 80000) {
+            $this->expectError();
+        } else {
+            $this->expectException(ArgumentCountError::class);
+        }
         $this->assertFilteredValue($options, [0 => ['id' => 1, 'name' => 'Foo']], 'unreachable');
     }
 

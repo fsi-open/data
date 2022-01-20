@@ -82,8 +82,8 @@ class DataGridTest extends TestCase
         self::assertSameSize($gridData, $this->datagrid->createView());
 
         $gridData = [
-            ['some', 'data'],
-            ['next', 'data']
+            ['a' => 'some', 'b' => 'data'],
+            ['a' => 'next', 'b' => 'data'],
         ];
 
         $this->datagrid->setData($gridData);
@@ -107,12 +107,12 @@ class DataGridTest extends TestCase
     public function testSetDataForArray(): void
     {
         $gridData = [
-            ['one'],
-            ['two'],
-            ['three'],
-            ['four'],
-            ['bazinga!'],
-            ['five'],
+            ['field' => 'one'],
+            ['field' => 'two'],
+            ['field' => 'three'],
+            ['field' => 'four'],
+            ['field' => 'bazinga!'],
+            ['field' => 'five'],
         ];
 
         $this->datagrid->setData($gridData);

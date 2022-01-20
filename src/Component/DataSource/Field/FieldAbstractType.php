@@ -12,275 +12,78 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Field;
 
 use FSi\Component\DataSource\DataSourceInterface;
-use FSi\Component\DataSource\Event\FieldEvent;
-use FSi\Component\DataSource\Event\FieldEvents;
-use FSi\Component\DataSource\Exception\FieldException;
-use Symfony\Component\EventDispatcher\EventDispatcher;
+use FSi\Component\DataSource\Exception\DataSourceException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-
-use function array_key_exists;
 
 abstract class FieldAbstractType implements FieldTypeInterface
 {
     /**
-     * @var array<string>
+     * @var array<FieldExtensionInterface>
      */
-    protected $comparisons = [];
+    private array $extensions;
 
     /**
-     * @var string|null
+     * @param array<FieldExtensionInterface> $extensions
      */
-    protected $name;
-
-    /**
-     * @var string|null
-     */
-    protected $comparison;
-
-    /**
-     * @var mixed
-     */
-    protected $parameter;
-
-    /**
-     * @var bool
-     */
-    private $dirty = true;
-
-    /**
-     * @var DataSourceInterface|null
-     */
-    private $datasource;
-
-    /**
-     * @var array<string, mixed>
-     */
-    private $options = [];
-
-    /**
-     * @var EventDispatcher|null
-     */
-    private $eventDispatcher;
-
-    /**
-     * @var OptionsResolver|null
-     */
-    private $optionsResolver;
-
-    /**
-     * @var array
-     */
-    private $extensions = [];
-
-    public function setName(string $name): void
+    public function __construct(array $extensions)
     {
-        $this->name = $name;
-    }
+        array_walk($extensions, static function (FieldExtensionInterface $fieldTypeExtension): void {
+            $found = array_reduce(
+                $fieldTypeExtension::getExtendedFieldTypes(),
+                static fn(bool $found, string $extendedFieldType): bool
+                    => $found || true === is_a(static::class, $extendedFieldType, true),
+                false
+            );
 
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
-
-    public function __clone()
-    {
-        $this->eventDispatcher = null;
-        $this->optionsResolver = null;
-    }
-
-    public function setComparison(string $comparison): void
-    {
-        if (false === in_array($comparison, $this->getAvailableComparisons(), true)) {
-            throw new FieldException(sprintf(
-                'Comparison "%s" not allowed for this type of field ("%s").',
-                $comparison,
-                $this->getType()
-            ));
-        }
-
-        $this->comparison = $comparison;
-    }
-
-    public function getComparison(): ?string
-    {
-        return $this->comparison;
-    }
-
-    /**
-     * @return array<string>
-     */
-    public function getAvailableComparisons(): array
-    {
-        return $this->comparisons;
-    }
-
-    /**
-     * @param array<string, mixed> $options
-     */
-    public function setOptions(array $options): void
-    {
-        $this->options = $this->getOptionsResolver()->resolve($options);
-    }
-
-    public function hasOption(string $name): bool
-    {
-        return array_key_exists($name, $this->options) && null !== $this->options[$name];
-    }
-
-    /**
-     * @param string $name
-     * @return mixed
-     */
-    public function getOption(string $name)
-    {
-        if (false === $this->hasOption($name)) {
-            throw new FieldException(sprintf('There\'s no option named "%s"', $name));
-        }
-
-        return $this->options[$name];
-    }
-
-    public function getOptions(): array
-    {
-        return $this->options;
-    }
-
-    public function bindParameter($parameter): void
-    {
-        $this->setDirty();
-
-        // PreBindParameter event.
-        $event = new FieldEvent\ParameterEventArgs($this, $parameter);
-        $this->getEventDispatcher()->dispatch($event, FieldEvents::PRE_BIND_PARAMETER);
-        $parameter = $event->getParameter();
-
-        $datasourceName = null !== $this->getDataSource() ? $this->getDataSource()->getName() : null;
-        if (null !== $datasourceName) {
-            $parameter = $parameter[$datasourceName][DataSourceInterface::PARAMETER_FIELDS][$this->getName()] ?? null;
-        } else {
-            $parameter = null;
-        }
-
-        $this->parameter = $parameter;
-
-        // PreBindParameter event.
-        $event = new FieldEvent\FieldEventArgs($this);
-        $this->getEventDispatcher()->dispatch($event, FieldEvents::POST_BIND_PARAMETER);
-    }
-
-    public function getParameter(array &$parameters): void
-    {
-        $datasourceName = null !== $this->getDataSource() ? $this->getDataSource()->getName() : null;
-        if (null !== $datasourceName) {
-            $parameter = [
-                $datasourceName => [
-                    DataSourceInterface::PARAMETER_FIELDS => [
-                        $this->getName() => $this->getCleanParameter(),
-                    ],
-                ],
-            ];
-        } else {
-            $parameter = [];
-        }
-
-        //PostGetParameter event.
-        $event = new FieldEvent\ParameterEventArgs($this, $parameter);
-        $this->getEventDispatcher()->dispatch($event, FieldEvents::POST_GET_PARAMETER);
-        $parameter = $event->getParameter();
-
-        $parameters = array_merge_recursive($parameters, $parameter);
-    }
-
-    public function getCleanParameter()
-    {
-        return $this->parameter;
-    }
-
-    public function addExtension(FieldExtensionInterface $extension): void
-    {
-        if (true === in_array($extension, $this->extensions, true)) {
-            return;
-        }
-
-        $this->getEventDispatcher()->addSubscriber($extension);
-        $extension->initOptions($this);
-        $this->extensions[] = $extension;
-
-        $this->options = $this->getOptionsResolver()->resolve($this->options);
-    }
-
-    public function setExtensions(array $extensions): void
-    {
-        foreach ($extensions as $extension) {
-            if (false === $extension instanceof FieldExtensionInterface) {
-                throw new FieldException(
-                    sprintf('Expected instance of %s, %s given', FieldExtensionInterface::class, get_class($extension))
+            if (false === $found) {
+                throw new DataSourceException(
+                    sprintf(
+                        'DataSource field extension of class %s does not extend field type %s',
+                        get_class($fieldTypeExtension),
+                        static::class
+                    )
                 );
             }
+        });
 
-            $this->getEventDispatcher()->addSubscriber($extension);
-            $extension->initOptions($this);
-        }
-        $this->options = $this->getOptionsResolver()->resolve($this->options);
         $this->extensions = $extensions;
     }
 
-    public function getExtensions(): array
+    public function initOptions(OptionsResolver $optionsResolver): void
     {
-        return $this->extensions;
+        $optionsResolver->setRequired('name');
+        $optionsResolver->setAllowedTypes('name', 'string');
+        $optionsResolver->setRequired('comparison');
+        $optionsResolver->setAllowedTypes('comparison', 'string');
     }
 
-    public function createView(): FieldViewInterface
+    public function createField(DataSourceInterface $dataSource, string $name, array $options): FieldInterface
     {
-        $view = new FieldView($this);
+        $optionsResolver = new OptionsResolver();
 
-        // PostBuildView event.
-        $event = new FieldEvent\ViewEventArgs($this, $view);
-        $this->getEventDispatcher()->dispatch($event, FieldEvents::POST_BUILD_VIEW);
+        $this->initOptions($optionsResolver);
+        $optionsResolver->setDefault('name', $name);
+        foreach ($this->extensions as $extension) {
+            $extension->initOptions($optionsResolver, $this);
+        }
+
+        return new Field($dataSource, $this, $name, $optionsResolver->resolve($options));
+    }
+
+    public function createView(FieldInterface $field): FieldViewInterface
+    {
+        $view = new FieldView($field);
+
+        $this->buildView($field, $view);
+        foreach ($this->extensions as $extension) {
+            $extension->buildView($field, $view);
+        }
 
         return $view;
     }
 
-    public function isDirty(): bool
+    protected function buildView(FieldInterface $field, FieldViewInterface $view): void
     {
-        return $this->dirty;
-    }
-
-    public function setDirty(bool $dirty = true): void
-    {
-        $this->dirty = $dirty;
-    }
-
-    public function setDataSource(DataSourceInterface $datasource): void
-    {
-        $this->datasource = $datasource;
-    }
-
-    public function getDataSource(): ?DataSourceInterface
-    {
-        return $this->datasource;
-    }
-
-    public function initOptions(): void
-    {
-    }
-
-    public function getOptionsResolver(): OptionsResolver
-    {
-        if (null === $this->optionsResolver) {
-            $this->optionsResolver = new OptionsResolver();
-        }
-
-        return $this->optionsResolver;
-    }
-
-    protected function getEventDispatcher(): EventDispatcher
-    {
-        if (null === $this->eventDispatcher) {
-            $this->eventDispatcher = new EventDispatcher();
-        }
-
-        return $this->eventDispatcher;
     }
 
     /**

@@ -17,19 +17,29 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\Tools\Setup;
-use FSi\Component\DataSource\DataSource;
 use FSi\Component\DataSource\DataSourceFactory;
 use FSi\Component\DataSource\DataSourceInterface;
-use FSi\Component\DataSource\Driver\Collection\CollectionDriver;
 use FSi\Component\DataSource\Driver\Collection\CollectionFactory;
 use FSi\Component\DataSource\Driver\Collection\CollectionResult;
+use FSi\Component\DataSource\Driver\Collection\Event\PreGetResult;
 use FSi\Component\DataSource\Driver\Collection\Exception\CollectionDriverException;
-use FSi\Component\DataSource\Driver\Collection\Extension\Core\CoreExtension;
+use FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\Boolean;
+use FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\Date;
+use FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\DateTime;
+use FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\Number;
+use FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\Text;
+use FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\Time;
 use FSi\Component\DataSource\Driver\DriverFactoryManager;
+use FSi\Component\DataSource\Event\DataSourceEvent\PostGetParameters;
+use FSi\Component\DataSource\Event\DataSourceEvent\PreBindParameters;
 use FSi\Component\DataSource\Extension\Core;
 use FSi\Component\DataSource\Extension\Core\Ordering\OrderingExtension;
 use FSi\Component\DataSource\Extension\Core\Pagination\PaginationExtension;
+use FSi\Component\DataSource\Field\FieldInterface;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
+use PHPUnit\Framework\MockObject\MockObject;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Tests\FSi\Component\DataSource\Fixtures\Category;
 use Tests\FSi\Component\DataSource\Fixtures\Group;
 use Tests\FSi\Component\DataSource\Fixtures\News;
@@ -37,10 +47,9 @@ use PHPUnit\Framework\TestCase;
 
 class CollectionDriverTest extends TestCase
 {
-    /**
-     * @var EntityManager
-     */
-    private $em;
+    private EntityManager $em;
+    private ?EventDispatcherInterface $eventDispatcher = null;
+    private ?Core\Ordering\Storage $orderingStorage = null;
 
     protected function setUp(): void
     {
@@ -64,7 +73,7 @@ class CollectionDriverTest extends TestCase
 
     public function testComparingWithZero(): void
     {
-        $datasource = $this->prepareArrayDataSource()->addField('id', 'number', 'eq');
+        $datasource = $this->prepareArrayDataSource()->addField('id', 'number', ['comparison' => 'eq']);
 
         $parameters = [
             $datasource->getName() => [
@@ -91,11 +100,9 @@ class CollectionDriverTest extends TestCase
     private function driverTests(DataSourceInterface $datasource): void
     {
         $datasource
-            ->addField('title', 'text', 'contains')
-            ->addField('author', 'text', 'contains')
-            ->addField('created', 'datetime', 'between', [
-                'field' => 'create_date',
-            ])
+            ->addField('title', 'text', ['comparison' => 'contains'])
+            ->addField('author', 'text', ['comparison' => 'contains'])
+            ->addField('created', 'datetime', ['comparison' => 'between', 'field' => 'create_date'])
         ;
 
         $result1 = $datasource->getResult();
@@ -211,7 +218,7 @@ class CollectionDriverTest extends TestCase
 
         // Test boolean field
         $datasource
-            ->addField('active', 'boolean', 'eq')
+            ->addField('active', 'boolean', ['comparison' => 'eq'])
         ;
         $datasource->setMaxResults(null);
         $parameters = [
@@ -305,9 +312,9 @@ class CollectionDriverTest extends TestCase
         self::assertInstanceOf(CollectionResult::class, $result);
         self::assertFalse($result[0]->isActive());
 
-
         // test 'notIn' comparison
-        $datasource->addField('title_is_not', 'text', 'notIn', [
+        $datasource->addField('title_is_not', 'text', [
+            'comparison' => 'notIn',
             'field' => 'title',
         ]);
 
@@ -325,30 +332,6 @@ class CollectionDriverTest extends TestCase
         self::assertCount(97, $result);
     }
 
-    public function testExceptions(): void
-    {
-        $datasource = $this->prepareArrayDataSource();
-
-        $field = $this->createMock(FieldTypeInterface::class);
-        $field->method('getName')->willReturn('example');
-        $field->method('getExtensions')->willReturn([]);
-
-        $datasource->addField($field);
-
-        $this->expectException(CollectionDriverException::class);
-        $datasource->getResult();
-    }
-
-    public function testExceptions2(): void
-    {
-        $driverFactory = $this->getCollectionFactory();
-        $driver = $driverFactory->createDriver();
-        self::assertInstanceOf(CollectionDriver::class, $driver);
-
-        $this->expectException(CollectionDriverException::class);
-        $driver->getCriteria();
-    }
-
     protected function tearDown(): void
     {
         unset($this->em);
@@ -356,11 +339,17 @@ class CollectionDriverTest extends TestCase
 
     private function getCollectionFactory(): CollectionFactory
     {
-        $extensions = [
-            new CoreExtension(),
-        ];
-
-        return new CollectionFactory($extensions);
+        return new CollectionFactory(
+            $this->getEventDispatcher(),
+            [
+                new Boolean([]),
+                new Date([]),
+                new DateTime([]),
+                new Number([]),
+                new Text([]),
+                new Time([]),
+            ]
+        );
     }
 
     private function getDataSourceFactory(): DataSourceFactory
@@ -369,12 +358,7 @@ class CollectionDriverTest extends TestCase
             $this->getCollectionFactory()
         ]);
 
-        $extensions = [
-            new Core\Pagination\PaginationExtension(),
-            new OrderingExtension(),
-        ];
-
-        return new DataSourceFactory($driverFactoryManager, $extensions);
+        return new DataSourceFactory($this->getEventDispatcher(), $driverFactoryManager);
     }
 
     private function prepareSelectableDataSource(): DataSourceInterface
@@ -402,12 +386,42 @@ class CollectionDriverTest extends TestCase
         return $this->getDataSourceFactory()->createDataSource('collection', $driverOptions, 'datasource2');
     }
 
+    protected function getEventDispatcher(): EventDispatcherInterface
+    {
+        if (null === $this->eventDispatcher) {
+            $this->eventDispatcher = new EventDispatcher();
+            $this->eventDispatcher->addListener(
+                PreGetResult::class,
+                new Core\Ordering\EventSubscriber\CollectionPreGetResult($this->getOrderingStorage())
+            );
+            $this->eventDispatcher->addListener(
+                PreBindParameters::class,
+                new Core\Ordering\EventSubscriber\OrderingPreBindParameters($this->getOrderingStorage())
+            );
+            $this->eventDispatcher->addListener(
+                PostGetParameters::class,
+                new Core\Ordering\EventSubscriber\OrderingPostGetParameters($this->getOrderingStorage())
+            );
+        }
+
+        return $this->eventDispatcher;
+    }
+
+    private function getOrderingStorage(): Core\Ordering\Storage
+    {
+        if (null === $this->orderingStorage) {
+            $this->orderingStorage = new Core\Ordering\Storage();
+        }
+
+        return $this->orderingStorage;
+    }
+
     private function load(EntityManagerInterface $em): void
     {
         //Injects 5 categories.
         $categories = [];
         for ($i = 0; $i < 5; $i++) {
-            $category = new Category();
+            $category = new Category($i);
             $category->setName('category' . $i);
             $em->persist($category);
             $categories[] = $category;
@@ -416,7 +430,7 @@ class CollectionDriverTest extends TestCase
         // Injects 4 groups.
         $groups = [];
         for ($i = 0; $i < 4; $i++) {
-            $group = new Group();
+            $group = new Group($i);
             $group->setName('group' . $i);
             $em->persist($group);
             $groups[] = $group;
@@ -424,7 +438,7 @@ class CollectionDriverTest extends TestCase
 
         // Injects 100 newses.
         for ($i = 0; $i < 100; $i++) {
-            $news = new News();
+            $news = new News($i);
             $news->setTitle('title' . $i);
 
             // Half of entities will have different author and content.
