@@ -4,12 +4,8 @@
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
-    <parameters>
-        <parameter key="datasource.subscriber.configuration.configuration_builder.class">FSi\Bundle\DataSourceBundle\DataSource\Extension\Configuration\EventSubscriber\ConfigurationBuilder</parameter>
-    </parameters>
-
     <services>
-        <service id="datasource.subscriber.configuration.configuration_builder" class="%datasource.subscriber.configuration.configuration_builder.class%">
+        <service id="FSi\Bundle\DataSourceBundle\DataSource\Extension\Configuration\EventSubscriber\ConfigurationBuilder">
             <tag name="datasource.subscriber" alias="configuration.configuration_builder"/>
             <argument type="service" id="kernel" />
         </service>
