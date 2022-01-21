@@ -17,9 +17,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 interface FieldTypeInterface
 {
     public function getId(): string;
-
     public function initOptions(OptionsResolver $optionsResolver): void;
-
     /**
      * @param DataSourceInterface $dataSource
      * @param string $name
@@ -27,6 +25,5 @@ interface FieldTypeInterface
      * @return FieldInterface
      */
     public function createField(DataSourceInterface $dataSource, string $name, array $options): FieldInterface;
-
     public function createView(FieldInterface $field): FieldViewInterface;
 }

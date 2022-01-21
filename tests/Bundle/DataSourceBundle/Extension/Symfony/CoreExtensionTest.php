@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace Tests\FSi\Bundle\DataSourceBundle\Extension\Symfony;
 
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Core\EventSubscriber\BindParameters;
@@ -15,7 +17,7 @@ use FSi\Component\DataSource\Event\DataSourceEvent;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 
-class CoreExtensionTest extends TestCase
+final class CoreExtensionTest extends TestCase
 {
     public function testBindParameters(): void
     {

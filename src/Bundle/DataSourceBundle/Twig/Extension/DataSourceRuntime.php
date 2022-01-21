@@ -7,31 +7,34 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Bundle\DataSourceBundle\Twig\Extension;
 
 use FSi\Component\DataSource\DataSourceViewInterface;
 use FSi\Component\DataSource\Extension\Core\Pagination\PaginationExtension;
 use FSi\Component\DataSource\Field\FieldViewInterface;
 use RuntimeException;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Twig\Environment;
 use Twig\Extension\RuntimeExtensionInterface;
 use Twig\TemplateWrapper;
 
 use function array_key_exists;
-use function spl_object_id;
 
-class DataSourceRuntime implements RuntimeExtensionInterface
+final class DataSourceRuntime implements RuntimeExtensionInterface
 {
     /**
      * Default theme key in themes array.
      */
     public const DEFAULT_THEME = '_default_theme';
 
+    private RequestStack $requestStack;
+    private Environment $environment;
+    private RouterInterface $router;
+    private string $baseTemplate;
     /**
      * @var array<string,TemplateWrapper>
      */
@@ -48,10 +51,6 @@ class DataSourceRuntime implements RuntimeExtensionInterface
      * @var array<string,array<string,mixed>>
      */
     private array $additionalParameters;
-    private RequestStack $requestStack;
-    private Environment $environment;
-    private RouterInterface $router;
-    private string $baseTemplate;
 
     public function __construct(
         RequestStack $requestStack,

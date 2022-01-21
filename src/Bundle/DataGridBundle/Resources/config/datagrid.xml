@@ -11,12 +11,10 @@
             <argument key="$columnTypes" type="tagged_iterator" tag="datagrid.column" />
         </service>
 
-        <service id="FSi\Component\DataGrid\DataMapper\ReflectionMapper" />
         <service id="FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper" />
         <service id="FSi\Component\DataGrid\DataMapper\ChainMapper">
             <argument key="$mappers" type="collection">
                 <argument type="service" id="FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper" />
-                <argument type="service" id="FSi\Component\DataGrid\DataMapper\ReflectionMapper" />
             </argument>
         </service>
 

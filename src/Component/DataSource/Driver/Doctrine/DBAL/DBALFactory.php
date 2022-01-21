@@ -32,14 +32,11 @@ use function sprintf;
 class DBALFactory implements DriverFactoryInterface
 {
     private ConnectionRegistry $registry;
-
     private EventDispatcherInterface $eventDispatcher;
-
     /**
      * @var array<FieldTypeInterface>
      */
     private array $fieldTypes;
-
     private OptionsResolver $optionsResolver;
 
     public static function getDriverType(): string

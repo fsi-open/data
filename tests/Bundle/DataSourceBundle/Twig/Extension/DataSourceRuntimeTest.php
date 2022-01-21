@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace Tests\FSi\Bundle\DataSourceBundle\Twig\Extension;
 
 use FSi\Bundle\DataSourceBundle\Twig\Extension\DataSourceRuntime;
@@ -34,7 +36,7 @@ use Twig\TemplateWrapper;
 /**
  * @author Stanislav Prokopov <stanislav.prokopov@gmail.com>
  */
-class DataSourceRuntimeTest extends TestCase
+final class DataSourceRuntimeTest extends TestCase
 {
     private Environment $twig;
     private DataSourceExtension $extension;
@@ -163,7 +165,7 @@ class DataSourceRuntimeTest extends TestCase
     /**
      * @return RouterInterface&MockObject
      */
-    private function getRouter(): RouterInterface
+    private function getRouter(): MockObject
     {
         $router = $this->createMock(RouterInterface::class);
         $router->method('generate')->willReturn('some_route');
@@ -175,7 +177,7 @@ class DataSourceRuntimeTest extends TestCase
      * @param string $name
      * @return DataSourceViewInterface<FieldViewInterface>&MockObject
      */
-    private function getDataSourceView(string $name): DataSourceViewInterface
+    private function getDataSourceView(string $name): MockObject
     {
         $datasourceView = $this->createMock(DataSourceViewInterface::class);
         $datasourceView->method('getName')->willReturn($name);
@@ -186,7 +188,7 @@ class DataSourceRuntimeTest extends TestCase
     /**
      * @return Template&MockObject
      */
-    private function getTemplateMock(): Template
+    private function getTemplateMock(): MockObject
     {
         return $this->createMock(Template::class);
     }

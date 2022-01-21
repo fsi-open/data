@@ -12,9 +12,10 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Driver\Collection\Extension\Core\Field;
 
 use FSi\Component\DataSource\Driver\Collection\CollectionAbstractField;
+use FSi\Component\DataSource\Field\Type\BooleanTypeInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class Boolean extends CollectionAbstractField
+class Boolean extends CollectionAbstractField implements BooleanTypeInterface
 {
     public function getId(): string
     {

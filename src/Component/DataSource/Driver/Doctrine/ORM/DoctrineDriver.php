@@ -28,11 +28,8 @@ use function strpos;
 class DoctrineDriver extends DriverAbstract
 {
     private ManagerRegistry $managerRegistry;
-
-    private string $alias;
-
     private QueryBuilder $query;
-
+    private string $alias;
     private ?bool $useOutputWalkers;
 
     /**
@@ -46,7 +43,7 @@ class DoctrineDriver extends DriverAbstract
         EventDispatcherInterface $eventDispatcher,
         array $fieldTypes,
         QueryBuilder $queryBuilder,
-        ?bool $useOutputWalkers = null
+        ?bool $useOutputWalkers
     ) {
         parent::__construct($eventDispatcher, $fieldTypes);
 
@@ -57,9 +54,8 @@ class DoctrineDriver extends DriverAbstract
             throw new DoctrineDriverException("Doctrine ORM initial query does not have any root aliases");
         }
 
-        $this->alias = $alias;
         $this->query = $queryBuilder;
-
+        $this->alias = $alias;
         $this->useOutputWalkers = $useOutputWalkers;
     }
 

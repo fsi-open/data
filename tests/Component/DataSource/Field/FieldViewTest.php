@@ -17,16 +17,10 @@ use FSi\Component\DataSource\Field\FieldView;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
-use FSi\Component\DataSource\Driver\DriverInterface;
-use FSi\Component\DataSource\DataSource;
-use FSi\Component\DataSource\DataSourceView;
 
 class FieldViewTest extends TestCase
 {
-    /**
-     * Checks creation.
-     */
-    public function testCreate(): void
+    public function testFieldViewCreation(): void
     {
         /** @var FieldTypeInterface&MockObject $fieldType */
         $fieldType = $this->createMock(FieldTypeInterface::class);
@@ -45,10 +39,7 @@ class FieldViewTest extends TestCase
         self::assertEquals($field->getParameter(), $fieldView->getParameter());
     }
 
-    /**
-     * Checks correctness of reference to DataSourceView.
-     */
-    public function testSetDataSourceView(): void
+    public function testCorrectReferenceToDataSourceView(): void
     {
         $dataSource = $this->createMock(DataSourceInterface::class);
         $dataSource->method('getName')->willReturn('datasource');
@@ -59,10 +50,7 @@ class FieldViewTest extends TestCase
         self::assertEquals($fieldView->getDataSourceName(), 'datasource');
     }
 
-    /**
-     * Checks the correctness of attribute related methods.
-     */
-    public function testOptionsManipulation(): void
+    public function testFieldViewAttributesMethods(): void
     {
         $field = $this->createMock(FieldInterface::class);
         $view = new FieldView($field);

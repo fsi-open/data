@@ -24,8 +24,7 @@ class ConfigurationBuilderTest extends TestCase
     /**
      * @var Kernel&MockObject
      */
-    private Kernel $kernel;
-
+    private MockObject $kernel;
     private ConfigurationBuilder $subscriber;
 
     public function testReadConfigurationFromOneBundle(): void

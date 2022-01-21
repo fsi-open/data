@@ -13,7 +13,7 @@ namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures;
 
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-class StubTranslator implements TranslatorInterface
+final class StubTranslator implements TranslatorInterface
 {
     private string $locale = 'en';
 
@@ -26,7 +26,7 @@ class StubTranslator implements TranslatorInterface
      */
     public function trans($id, array $parameters = [], $domain = null, $locale = null): string
     {
-        return '[trans]' . $id . '[/trans]';
+        return "[trans]{$id}[/trans]";
     }
 
     public function setLocale(string $locale): void

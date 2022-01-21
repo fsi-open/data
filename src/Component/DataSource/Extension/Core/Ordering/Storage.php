@@ -24,7 +24,6 @@ final class Storage
      * @var array<string, array<string, string>>
      */
     private array $dataSourceSortingParameters = [];
-
     /**
      * @var array<string, array{priority: int, ascending: bool}>
      */

@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace Tests\FSi\Bundle\DataSourceBundle\Extension\Symfony;
 
 use DateTimeImmutable;
@@ -16,7 +18,6 @@ use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Extension\Data
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Field\FormFieldExtension;
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\FormStorage;
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Type\BetweenType;
-use FSi\Component\DataSource\Event\DataSourceEvent\PostBuildView;
 use FSi\Component\DataSource\Event\DataSourceEvent\PreBuildView;
 use FSi\Component\DataSource\Field\Field;
 use FSi\Component\DataSource\Field\FieldInterface;
@@ -29,7 +30,6 @@ use FSi\Component\DataSource\Field\Type\TimeTypeInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Tests\FSi\Bundle\DataSourceBundle\Fixtures\Form as TestForm;
 use FSi\Component\DataSource\DataSourceInterface;
-use FSi\Component\DataSource\DataSourceViewInterface;
 use FSi\Component\DataSource\Event\FieldEvent;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
 use FSi\Component\DataSource\Field\FieldView;
@@ -49,7 +49,7 @@ use function date;
 use function in_array;
 use function range;
 
-class FormExtensionTest extends TestCase
+final class FormExtensionTest extends TestCase
 {
     /**
      * @return array<array{class-string<FieldTypeInterface>}>
@@ -429,14 +429,14 @@ class FormExtensionTest extends TestCase
     /**
      * @return TranslatorInterface&MockObject
      */
-    private function getTranslator(): TranslatorInterface
+    private function getTranslator(): MockObject
     {
         $translator = $this->createMock(TranslatorInterface::class);
         $translator->method('trans')
             ->willReturnCallback(
-                static function ($id, array $params, $translation_domain): string {
-                    if ($translation_domain !== 'DataSourceBundle') {
-                        throw new RuntimeException(sprintf('Unknown translation domain %s', $translation_domain));
+                static function (string $id, array $params, $translationDomain): string {
+                    if ($translationDomain !== 'DataSourceBundle') {
+                        throw new RuntimeException("Unknown translation domain {$translationDomain}");
                     }
 
                     switch ($id) {
@@ -449,7 +449,7 @@ class FormExtensionTest extends TestCase
                         case 'datasource.form.choices.no':
                             return 'no_translated';
                         default:
-                            throw new RuntimeException(sprintf('Unknown translation id %s', $id));
+                            throw new RuntimeException("Unknown translation id {$id}");
                     }
                 }
             );

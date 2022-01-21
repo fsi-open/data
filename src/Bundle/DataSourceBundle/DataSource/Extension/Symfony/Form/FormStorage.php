@@ -25,12 +25,10 @@ use function array_merge;
 final class FormStorage
 {
     private FormFactoryInterface $formFactory;
-
     /**
      * @var array<string,FormInterface<FormInterface>>
      */
     private array $forms = [];
-
     /**
      * @var array<string,mixed>
      */

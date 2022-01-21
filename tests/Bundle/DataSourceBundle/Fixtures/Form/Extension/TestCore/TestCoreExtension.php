@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures\Form\Extension\TestCore;
 
 use Tests\FSi\Bundle\DataSourceBundle\Fixtures\Form\Extension\TestCore\Type;

@@ -25,13 +25,13 @@ use Traversable;
 
 use function get_class;
 use function gettype;
+use function is_array;
 use function is_object;
 use function iterator_to_array;
 
 class CollectionFactory implements DriverFactoryInterface
 {
     private EventDispatcherInterface $eventDispatcher;
-
     /**
      * @var array<FieldTypeInterface>
      */

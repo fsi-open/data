@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace Tests\FSi\Bundle\DataSourceBundle\Extension\Symfony;
 
 use Doctrine\ORM\EntityManager;
@@ -34,7 +36,7 @@ use Symfony\Component\Form\ResolvedFormTypeFactory;
 use Symfony\Component\Security\Csrf\CsrfTokenManager;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-class FormExtensionEntityTest extends TestCase
+final class FormExtensionEntityTest extends TestCase
 {
     public function testEntityField(): void
     {

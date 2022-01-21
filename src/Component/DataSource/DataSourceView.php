@@ -25,26 +25,22 @@ use function sprintf;
 class DataSourceView extends AttributesContainer implements DataSourceViewInterface
 {
     private string $name;
-
     /**
      * @var array<string, array<string, array<string, mixed>>>
      */
     private array $parameters;
-
     /**
      * @var array<string, array<string, array<string, mixed>>>
      */
     private array $otherParameters;
-
     /**
      * @var array<string,FieldViewInterface>
      */
-    private array $fields = [];
-
+    private array $fields;
     /**
      * @var ArrayIterator<string,FieldViewInterface>|null
      */
-    private ?ArrayIterator $iterator = null;
+    private ?ArrayIterator $iterator;
 
     /**
      * @param string $name
@@ -57,6 +53,8 @@ class DataSourceView extends AttributesContainer implements DataSourceViewInterf
         $this->name = $name;
         $this->parameters = $parameters;
         $this->otherParameters = $otherParameters;
+        $this->fields = [];
+        $this->iterator = null;
         array_walk($fields, function (FieldInterface $field): void {
             $this->addField($field->getType()->createView($field));
         });

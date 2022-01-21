@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Bundle\DataSourceBundle\Twig\Extension;
 
 use FSi\Bundle\DataSourceBundle\Twig\TokenParser\DataSourceRouteTokenParser;
@@ -14,7 +16,7 @@ use FSi\Bundle\DataSourceBundle\Twig\TokenParser\DataSourceThemeTokenParser;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
-class DataSourceExtension extends AbstractExtension
+final class DataSourceExtension extends AbstractExtension
 {
     public function getFunctions(): array
     {

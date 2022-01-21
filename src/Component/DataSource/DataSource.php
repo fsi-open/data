@@ -28,22 +28,15 @@ use function sprintf;
 class DataSource implements DataSourceInterface
 {
     private DriverInterface $driver;
-
+    private EventDispatcherInterface $eventDispatcher;
+    private ?DataSourceFactoryInterface $factory;
     private string $name;
-
     /**
      * @var array<FieldInterface>
      */
-    private array $fields = [];
-
-    private ?DataSourceFactoryInterface $factory;
-
-    private EventDispatcherInterface $eventDispatcher;
-
-    private ?int $maxResults = null;
-
-    private ?int $firstResult = null;
-
+    private array $fields;
+    private ?int $maxResults;
+    private ?int $firstResult;
     /**
      * Cache for methods that depends on fields data (cache is dropped whenever
      * any of fields is dirty, or fields have changed).
@@ -53,15 +46,14 @@ class DataSource implements DataSourceInterface
      *   result?: array{max_results: int|null, first_result: int|null, result: Result}
      * }
      */
-    private array $cache = [];
-
+    private array $cache;
     /**
      * Flag set as true when fields or their data is modifying, or even new
      * extension is added.
      *
      * @var bool
      */
-    private bool $dirty = true;
+    private bool $dirty;
 
     public function __construct(
         string $name,
@@ -77,6 +69,11 @@ class DataSource implements DataSourceInterface
         $this->factory = $factory;
         $this->eventDispatcher = $eventDispatcher;
         $this->driver = $driver;
+        $this->fields = [];
+        $this->maxResults = null;
+        $this->firstResult = null;
+        $this->cache = [];
+        $this->dirty = true;
     }
 
     public function hasField(string $name): bool

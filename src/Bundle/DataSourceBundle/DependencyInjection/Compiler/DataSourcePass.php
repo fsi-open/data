@@ -22,6 +22,7 @@ use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\Reference;
 
 use function array_map;
+use function array_keys;
 use function is_a;
 use function sprintf;
 
@@ -39,7 +40,7 @@ final class DataSourcePass implements CompilerPassInterface
             $driverFactoryClass = $driverFactoryDefinition->getClass();
             if (null === $driverFactoryClass) {
                 throw new DataSourceException(
-                    sprintf('DataSource driver factory service %s has no class', $serviceId)
+                    "DataSource driver factory service {$serviceId} has no class"
                 );
             }
             if (false === is_a($driverFactoryClass, DriverFactoryInterface::class, true)) {
@@ -80,6 +81,7 @@ final class DataSourcePass implements CompilerPassInterface
                     sprintf('DataSource field type service %s has no class', (string) $fieldTypeReference)
                 );
             }
+
             $fieldTypeExtensionsReferences = [];
             foreach ($allFieldTypeExtensions as $fieldTypeExtensionReference) {
                 $fieldTypeExtensionDefinition = $container->getDefinition((string) $fieldTypeExtensionReference);
@@ -102,8 +104,8 @@ final class DataSourcePass implements CompilerPassInterface
                     );
                 }
                 foreach ($fieldTypeExtensionClass::getExtendedFieldTypes() as $extendedFieldType) {
-                    if (is_a($columnClass, $extendedFieldType, true)) {
-                        $fieldTypeExtensionsReferences[] = $fieldTypeExtensionReference;
+                    if (true === is_a($columnClass, $extendedFieldType, true)) {
+                        $fieldTypeExtensionsReferences[] = $fieldTypeExtensionDefinition;
                     }
                 }
             }

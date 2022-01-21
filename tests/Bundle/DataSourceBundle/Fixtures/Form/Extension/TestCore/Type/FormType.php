@@ -7,13 +7,15 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures\Form\Extension\TestCore\Type;
 
 use Symfony\Component\Form\Extension\Core\Type\FormType as BaseFormType;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 
-class FormType extends BaseFormType
+final class FormType extends BaseFormType
 {
     /**
      * @param FormView $view

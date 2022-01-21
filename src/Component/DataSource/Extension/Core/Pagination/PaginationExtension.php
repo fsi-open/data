@@ -20,7 +20,6 @@ class PaginationExtension
      * Key for page info.
      */
     public const PARAMETER_PAGE = 'page';
-
     /**
      * Key for results per page.
      */

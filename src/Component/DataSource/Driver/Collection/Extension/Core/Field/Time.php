@@ -12,9 +12,10 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Driver\Collection\Extension\Core\Field;
 
 use FSi\Component\DataSource\Driver\Collection\CollectionAbstractField;
+use FSi\Component\DataSource\Field\Type\TimeTypeInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class Time extends CollectionAbstractField
+class Time extends CollectionAbstractField implements TimeTypeInterface
 {
     public function getId(): string
     {

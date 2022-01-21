@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures;
 
 use Doctrine\ORM\Mapping as ORM;
@@ -46,6 +48,6 @@ class Group
 
     public function __toString(): string
     {
-        return $this->getName() ?? '';
+        return $this->name ?? '';
     }
 }

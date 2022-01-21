@@ -13,7 +13,6 @@ namespace FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
 use Closure;
 use Doctrine\DBAL\Query\QueryBuilder;
-use FSi\Component\DataSource\Driver\Collection\Exception\CollectionDriverException;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Event\PostGetResult;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Event\PreGetResult;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Exception\DBALDriverException;
@@ -29,9 +28,7 @@ use function strpos;
 class DBALDriver extends DriverAbstract
 {
     private QueryBuilder $initialQuery;
-
     private string $alias;
-
     /**
      * @var string|Closure|null
      */

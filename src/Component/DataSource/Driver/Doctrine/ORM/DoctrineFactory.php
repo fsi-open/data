@@ -31,15 +31,12 @@ use function sprintf;
 class DoctrineFactory implements DriverFactoryInterface
 {
     private ManagerRegistry $registry;
-
     private EventDispatcherInterface $eventDispatcher;
-
+    private OptionsResolver $optionsResolver;
     /**
      * @var array<FieldTypeInterface>
      */
     private array $fieldTypes;
-
-    private OptionsResolver $optionsResolver;
 
     public static function getDriverType(): string
     {
@@ -106,6 +103,7 @@ class DoctrineFactory implements DriverFactoryInterface
             } elseif (null === $em || true === is_string($em)) {
                 $objectManager = $this->registry->getManager($em);
             }
+
             if (null === $objectManager) {
                 throw new DoctrineDriverException(
                     sprintf(
@@ -128,6 +126,7 @@ class DoctrineFactory implements DriverFactoryInterface
                 )
             );
         });
+
         $this->optionsResolver->setNormalizer(
             'qb',
             function (Options $options, ?QueryBuilder $queryBuilder): QueryBuilder {

@@ -17,7 +17,6 @@ use FSi\Component\DataSource\Field\FieldInterface;
 abstract class DriverEventArgs
 {
     private DriverInterface $driver;
-
     /**
      * @var array<FieldInterface>
      */

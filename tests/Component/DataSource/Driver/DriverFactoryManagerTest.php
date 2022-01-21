@@ -11,20 +11,15 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataSource\Driver;
 
-use DateTimeImmutable;
 use Doctrine\Persistence\ConnectionRegistry;
 use Doctrine\Persistence\ManagerRegistry;
 use FSi\Component\DataSource\Driver\Collection\CollectionFactory;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALFactory;
 use FSi\Component\DataSource\Driver\Doctrine\ORM;
 use FSi\Component\DataSource\Driver\DriverFactoryManager;
-use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
-/**
- * Basic tests for Doctrine driver.
- */
 class DriverFactoryManagerTest extends TestCase
 {
     public function testBasicManagerOperations(): void

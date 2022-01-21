@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Bundle\DataSourceBundle\Twig\Node;
 
 use FSi\Bundle\DataSourceBundle\Twig\Extension\DataSourceRuntime;
@@ -14,7 +16,7 @@ use Twig\Compiler;
 use Twig\Node\Expression\AbstractExpression;
 use Twig\Node\Node;
 
-class DataSourceRouteNode extends Node
+final class DataSourceRouteNode extends Node
 {
     /**
      * @param Node<Node> $dataGrid
