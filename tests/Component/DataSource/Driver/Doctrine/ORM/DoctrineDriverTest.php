@@ -47,19 +47,13 @@ use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 class DoctrineDriverTest extends TestCase
 {
-    private ?EventDispatcherInterface $eventDispatcher = null;
-    private ?Core\Ordering\Storage $orderingStorage = null;
     private DoctrineQueryLogger $queryLogger;
     private EntityManager $em;
+    private ?EventDispatcherInterface $eventDispatcher = null;
+    private ?Core\Ordering\Storage $orderingStorage = null;
 
     protected function setUp(): void
     {
-        // The connection configuration.
-        $dbParams = [
-            'driver' => 'pdo_sqlite',
-            'memory' => true,
-        ];
-
         $config = Setup::createAnnotationMetadataConfiguration(
             [__DIR__ . '/../../../Fixtures'],
             true,
@@ -67,30 +61,23 @@ class DoctrineDriverTest extends TestCase
             null,
             false
         );
-        $em = EntityManager::create($dbParams, $config);
+        $em = EntityManager::create(['driver' => 'pdo_sqlite', 'memory' => true], $config);
         $tool = new SchemaTool($em);
-        $classes = [
+        $tool->createSchema([
             $em->getClassMetadata(News::class),
             $em->getClassMetadata(Category::class),
             $em->getClassMetadata(Group::class),
-        ];
-        $tool->createSchema($classes);
+        ]);
         $this->load($em);
         $this->em = $em;
     }
 
-    /**
-     * Test number field when comparing with 0 value.
-     */
-    public function testComparingWithZero(): void
+    public function testNumberFieldComparingWithZero(): void
     {
         $datasourceFactory = $this->getDataSourceFactory();
-        $driverOptions = [
-            'entity' => News::class,
-        ];
 
         $datasource = $datasourceFactory
-            ->createDataSource('doctrine-orm', $driverOptions, 'datasource')
+            ->createDataSource('doctrine-orm', ['entity' => News::class], 'datasource')
             ->addField('id', 'number', ['comparison' => 'eq']);
 
         $parameters = [
@@ -105,27 +92,24 @@ class DoctrineDriverTest extends TestCase
         self::assertCount(0, $result);
     }
 
-    /**
-     * General test for DataSource wtih DoctrineDriver in basic configuration.
-     */
-    public function testGeneral(): void
+    public function testGeneralDoctrineDriverConfiguration(): void
     {
         $datasourceFactory = $this->getDataSourceFactory();
         $datasources = [];
-        $driverOptions = [
-            'entity' => News::class,
-        ];
 
-        $datasources[] = $datasourceFactory->createDataSource('doctrine-orm', $driverOptions, 'datasource');
-        $qb = $this->em->createQueryBuilder()
-            ->select('n')
-            ->from(News::class, 'n');
+        $datasources[] = $datasourceFactory->createDataSource(
+            'doctrine-orm',
+            ['entity' => News::class],
+            'datasource'
+        );
 
-        $driverOptions = [
-            'qb' => $qb,
-            'alias' => 'n'
-        ];
-        $datasources[] = $datasourceFactory->createDataSource('doctrine-orm', $driverOptions, 'datasource2');
+        $qb = $this->em->createQueryBuilder()->select('n')->from(News::class, 'n');
+
+        $datasources[] = $datasourceFactory->createDataSource(
+            'doctrine-orm',
+            ['qb' => $qb, 'alias' => 'n'],
+            'datasource2'
+        );
 
         foreach ($datasources as $datasource) {
             $datasource
@@ -557,10 +541,7 @@ class DoctrineDriverTest extends TestCase
         self::assertCount(5, $datasource->getResult());
     }
 
-    /**
-     * Checks DataSource with DoctrineDriver using more sophisticated QueryBuilder.
-     */
-    public function testQueryWithAggregates(): void
+    public function testDoctrineDriverWithQueryWithAggregates(): void
     {
         $dataSourceFactory = $this->getDataSourceFactory();
 
@@ -663,9 +644,6 @@ class DoctrineDriverTest extends TestCase
         );
     }
 
-    /**
-     * Tests if 'having' value of 'clause' option works properly in 'entity' field
-     */
     public function testHavingClauseInEntityField(): void
     {
         $dataSourceFactory = $this->getDataSourceFactory();

@@ -16,30 +16,22 @@ use FSi\Component\DataSource\DataSourceInterface;
 interface FieldInterface
 {
     public function getType(): FieldTypeInterface;
-
     public function getName(): string;
-
     public function getDataSource(): DataSourceInterface;
-
     /**
      * @param string $name
      * @return mixed
      */
     public function getOption(string $name);
-
     public function hasOption(string $name): bool;
-
     /**
      * @param mixed $parameter
      */
     public function bindParameter($parameter): void;
-
     /**
      * @return mixed
      */
     public function getParameter();
-
     public function isDirty(): bool;
-
     public function setDirty(bool $dirty = true): void;
 }

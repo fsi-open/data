@@ -19,8 +19,6 @@ interface FieldExtensionInterface
      * @return array<class-string<FieldTypeInterface>>
      */
     public static function getExtendedFieldTypes(): array;
-
     public function initOptions(OptionsResolver $optionsResolver, FieldTypeInterface $fieldType): void;
-
     public function buildView(FieldInterface $field, FieldViewInterface $view): void;
 }

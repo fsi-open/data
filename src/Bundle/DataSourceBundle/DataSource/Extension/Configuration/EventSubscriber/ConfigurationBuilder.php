@@ -21,7 +21,7 @@ use Symfony\Component\Yaml\Yaml;
 
 use function is_string;
 
-class ConfigurationBuilder implements DataSourceEventSubscriberInterface
+final class ConfigurationBuilder implements DataSourceEventSubscriberInterface
 {
     private const BUNDLE_CONFIG_PATH = '%s/Resources/config/datasource/%s.yml';
     private const MAIN_CONFIG_DIRECTORY = 'datasource.yaml.main_config';
@@ -78,9 +78,8 @@ class ConfigurationBuilder implements DataSourceEventSubscriberInterface
         $bundles = $this->kernel->getBundles();
         $eligibleBundles = array_filter(
             $bundles,
-            static function (BundleInterface $bundle) use ($dataSourceName): bool {
-                return file_exists(sprintf(self::BUNDLE_CONFIG_PATH, $bundle->getPath(), $dataSourceName));
-            }
+            static fn(BundleInterface $bundle): bool
+                => file_exists(sprintf(self::BUNDLE_CONFIG_PATH, $bundle->getPath(), $dataSourceName))
         );
 
         // The idea here is that the last found configuration should be used

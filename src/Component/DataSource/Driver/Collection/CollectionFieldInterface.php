@@ -18,6 +18,5 @@ use FSi\Component\DataSource\Field\FieldTypeInterface;
 interface CollectionFieldInterface extends FieldTypeInterface
 {
     public function buildCriteria(Criteria $c, FieldInterface $field): void;
-
     public function getPHPType(): ?string;
 }

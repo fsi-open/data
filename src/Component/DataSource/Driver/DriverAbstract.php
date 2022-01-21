@@ -23,7 +23,6 @@ use function sprintf;
 abstract class DriverAbstract implements DriverInterface
 {
     private EventDispatcherInterface $eventDispatcher;
-
     /**
      * @var array<FieldTypeInterface>
      */

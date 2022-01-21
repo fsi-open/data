@@ -41,12 +41,14 @@ abstract class DBALAbstractField extends FieldAbstractType implements DBALFieldI
             ->setAllowedValues('clause', ['where', 'having'])
             ->setAllowedTypes('field', ['string', 'null'])
             ->setAllowedTypes('auto_alias', 'bool')
-            ->setNormalizer('field', function (Options $options, ?string $value): ?string {
-                return $value ?? $options['name'];
-            })
-            ->setNormalizer('clause', function (Options $options, string $value): string {
-                return strtolower($value);
-            })
+            ->setNormalizer(
+                'field',
+                static fn(Options $options, ?string $value): ?string => $value ?? $options['name']
+            )
+            ->setNormalizer(
+                'clause',
+                static fn(Options $options, string $value): string => strtolower($value)
+            )
         ;
     }
 

@@ -16,7 +16,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use FSi\Bundle\DataSourceBundle\DependencyInjection\Compiler\DataSourcePass;
 use FSi\Bundle\DataSourceBundle\DependencyInjection\FSIDataSourceExtension;
 
-class DataSourceBundle extends Bundle
+final class DataSourceBundle extends Bundle
 {
     public function build(ContainerBuilder $container): void
     {

@@ -22,6 +22,7 @@ use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\Reference;
 
 use function array_map;
+use function array_keys;
 use function is_a;
 use function sprintf;
 

@@ -21,7 +21,6 @@ interface DriverFactoryInterface
      * For example if you are using Doctrine\DriverFactory this method will return 'doctrine' string.
      */
     public static function getDriverType(): string;
-
     /**
      * @param array<string,mixed> $options
      * @return DriverInterface

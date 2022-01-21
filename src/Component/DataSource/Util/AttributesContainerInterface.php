@@ -17,23 +17,19 @@ namespace FSi\Component\DataSource\Util;
 interface AttributesContainerInterface
 {
     public function hasAttribute(string $name): bool;
-
     /**
      * @param string $name
      * @param mixed $value
      */
     public function setAttribute(string $name, $value): void;
-
     /**
      * @param string $name
      * @return mixed
      */
     public function getAttribute(string $name);
-
     /**
      * @return array<string,mixed>
      */
     public function getAttributes(): array;
-
     public function removeAttribute(string $name): void;
 }

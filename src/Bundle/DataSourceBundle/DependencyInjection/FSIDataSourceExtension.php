@@ -24,7 +24,10 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
-class FSIDataSourceExtension extends Extension
+use function array_key_exists;
+use function method_exists;
+
+final class FSIDataSourceExtension extends Extension
 {
     /**
      * @param array<string,mixed> $configs
@@ -40,7 +43,10 @@ class FSIDataSourceExtension extends Extension
 
         $this->registerDrivers($loader);
 
-        if (isset($config['yaml_configuration']) && $config['yaml_configuration']) {
+        if (
+            true === array_key_exists('yaml_configuration', $config)
+            && true === is_array($config['yaml_configuration'])
+        ) {
             $loader->load('datasource_yaml_configuration.xml');
             $container->setParameter(
                 'datasource.yaml.main_config',
@@ -48,12 +54,12 @@ class FSIDataSourceExtension extends Extension
             );
         }
 
-        if (isset($config['twig']['enabled']) && $config['twig']['enabled']) {
+        if (isset($config['twig']['enabled']) && true === $config['twig']['enabled']) {
             $loader->load('twig.xml');
             $container->setParameter('datasource.twig.template', $config['twig']['template']);
         }
 
-        if (method_exists($container, 'registerForAutoconfiguration')) {
+        if (true === method_exists($container, 'registerForAutoconfiguration')) {
             $this->registerForAutoconfiguration($container);
         }
     }
@@ -71,12 +77,16 @@ class FSIDataSourceExtension extends Extension
         $container->registerForAutoconfiguration(FieldExtensionInterface::class)->addTag('datasource.field_extension');
         $container->registerForAutoconfiguration(DriverFactoryInterface::class)->addTag('datasource.driver.factory');
         $container->registerForAutoconfiguration(CollectionFieldInterface::class)
-            ->addTag('datasource.driver.collection.field');
+            ->addTag('datasource.driver.collection.field')
+        ;
         $container->registerForAutoconfiguration(DoctrineFieldInterface::class)
-            ->addTag('datasource.driver.doctrine-orm.field');
+            ->addTag('datasource.driver.doctrine-orm.field')
+        ;
         $container->registerForAutoconfiguration(DBALFieldInterface::class)
-            ->addTag('datasource.driver.doctrine-dbal.field');
+            ->addTag('datasource.driver.doctrine-dbal.field')
+        ;
         $container->registerForAutoconfiguration(DataSourceEventSubscriberInterface::class)
-            ->addTag('datasource.event_subscriber', ['default_priority_method' => 'getPriority']);
+            ->addTag('datasource.event_subscriber', ['default_priority_method' => 'getPriority'])
+        ;
     }
 }

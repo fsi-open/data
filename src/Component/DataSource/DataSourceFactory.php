@@ -20,9 +20,7 @@ use function array_key_exists;
 class DataSourceFactory implements DataSourceFactoryInterface
 {
     private EventDispatcherInterface $eventDispatcher;
-
     private DriverFactoryManagerInterface $driverFactoryManager;
-
     /**
      * @var array<DataSourceInterface>
      */
@@ -84,15 +82,17 @@ class DataSourceFactory implements DataSourceFactoryInterface
     private function checkDataSourceName(string $name, ?DataSourceInterface $datasource = null): void
     {
         if ('' === $name) {
-            throw new DataSourceException('Name of data source can\'t be empty.');
+            throw new DataSourceException('Name of data source cannot be empty.');
         }
 
         if (true === array_key_exists($name, $this->dataSources) && ($this->dataSources[$name] !== $datasource)) {
-            throw new DataSourceException('Name of data source must be unique.');
+            throw new DataSourceException("Name of data source \"{$name}\" must be unique.");
         }
 
         if (1 !== preg_match('/^[\w]+$/', $name)) {
-            throw new DataSourceException('Name of data source may contain only word characters and digits.');
+            throw new DataSourceException(
+                "Name of data source \"{$name}\" may contain only word characters and digits."
+            );
         }
     }
 }

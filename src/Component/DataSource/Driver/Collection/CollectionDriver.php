@@ -28,7 +28,6 @@ class CollectionDriver extends DriverAbstract
      * @var Selectable<int|string,mixed>
      */
     private Selectable $collection;
-
     private Criteria $baseCriteria;
 
     /**

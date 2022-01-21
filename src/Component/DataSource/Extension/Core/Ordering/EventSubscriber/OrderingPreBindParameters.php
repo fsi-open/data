@@ -16,6 +16,7 @@ use FSi\Component\DataSource\Event\DataSourceEventSubscriberInterface;
 use FSi\Component\DataSource\Exception\DataSourceException;
 use FSi\Component\DataSource\Extension\Core\Ordering\OrderingExtension;
 use FSi\Component\DataSource\Extension\Core\Ordering\Storage;
+
 use function array_key_exists;
 use function in_array;
 use function is_array;

@@ -31,9 +31,7 @@ use function sprintf;
 class DoctrineFactory implements DriverFactoryInterface
 {
     private ManagerRegistry $registry;
-
     private EventDispatcherInterface $eventDispatcher;
-
     /**
      * @var array<FieldTypeInterface>
      */

@@ -15,21 +15,10 @@ use FSi\Component\DataSource\Field\FieldInterface;
 use FSi\Component\DataSource\Field\FieldTypeInterface;
 use FSi\Component\DataSource\Result;
 
-/**
- * Driver is responsible for fetching data based on passed fields and data.
- */
 interface DriverInterface
 {
-    /**
-     * Checks if driver has field for given type.
-     */
     public function hasFieldType(string $type): bool;
-
-    /**
-     * Return field for given type.
-     */
     public function getFieldType(string $type): FieldTypeInterface;
-
     /**
      * Returns collection with result.
      *
