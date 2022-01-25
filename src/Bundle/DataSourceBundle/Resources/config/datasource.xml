@@ -4,54 +4,46 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
-    <parameters>
-        <parameter key="datasource.factory.class">FSi\Component\DataSource\DataSourceFactory</parameter>
-        <parameter key="datasource.extension.class">FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\DependencyInjection\DependencyInjectionExtension</parameter>
-        <parameter key="datasource.driver.factory.manager.class">FSi\Component\DataSource\Driver\DriverFactoryManager</parameter>
-        <parameter key="datasource.extension.form.type.between.class">FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Type\BetweenType</parameter>
-    </parameters>
-
     <services>
-        <!-- Form types -->
-        <service id="datasource.extension.form.type.between" class="%datasource.extension.form.type.between.class%">
-            <tag name="form.type" alias="datasource_between" />
-        </service>
-
         <!-- DriverFactoryManager -->
-        <service id="datasource.driver.factory.manager" class="%datasource.driver.factory.manager.class%">
-            <argument type="collection">
-            </argument>
+        <service id="FSi\Component\DataSource\Driver\DriverFactoryManagerInterface"
+                 alias="FSi\Component\DataSource\Driver\DriverFactoryManager"
+        />
+
+        <service id="FSi\Component\DataSource\Driver\DriverFactoryManager">
+            <argument type="collection" />
         </service>
 
         <!-- DataSourceFactory -->
-        <service id="datasource.factory" class="%datasource.factory.class%" lazy="true" public="true">
-            <argument type="service" id="datasource.driver.factory.manager"></argument>
-            <argument type="collection">
-                <!--
-                We don't need to be able to add more extensions.
-                 * more driver extensions can be registered with the datasource.driver.extension tag
-                 * more listeners can be registered with the datasource.subscriber tag
-                -->
-                <argument type="service" id="datasource.extension" />
-            </argument>
-        </service>
-
         <service id="FSi\Component\DataSource\DataSourceFactoryInterface"
-                 alias="datasource.factory" public="true" />
+                 alias="FSi\Component\DataSource\DataSourceFactory"
+                 public="true"
+        />
 
-        <!-- PaginationExtension -->
-        <service id="datasource.subscriber.pagination" class="FSi\Component\DataSource\Extension\Core\Pagination\EventSubscriber\Events">
-            <tag name="datasource.subscriber" alias="pagination" />
+        <service id="FSi\Component\DataSource\DataSourceFactory" lazy="true">
+            <argument type="service" id="event_dispatcher" />
+            <argument type="service" id="FSi\Component\DataSource\Driver\DriverFactoryManagerInterface"></argument>
         </service>
 
-        <!-- OrderingExtension -->
-        <service id="datasource.subscriber.ordering" class="FSi\Component\DataSource\Extension\Core\Ordering\EventSubscriber\Events">
-            <tag name="datasource.subscriber" alias="ordering" />
-        </service>
+        <!-- Core/Extensions -->
+        <prototype namespace="FSi\Component\DataSource\Extension\Core\Ordering\"
+                   resource="../../../../Component/DataSource/Extension/Core/Ordering"
+                   autoconfigure="true"
+                   autowire="true"
+        />
 
-        <!-- Symfony/CoreExtension -->
-        <service id="datasource.subscriber.symfonyrequest" class="FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Core\EventSubscriber\BindParameters">
-            <tag name="datasource.subscriber" alias="symfonyrequest" />
-        </service>
+        <prototype namespace="FSi\Component\DataSource\Extension\Core\Pagination\"
+                   resource="../../../../Component/DataSource/Extension/Core/Pagination"
+                   autoconfigure="true"
+                   autowire="true"
+        />
+
+        <!-- Symfony/Extensions -->
+        <prototype namespace="FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\"
+                   resource="../../DataSource/Extension/Symfony/{Core,Form}"
+                   autoconfigure="true"
+                   autowire="true"
+        />
+
     </services>
 </container>

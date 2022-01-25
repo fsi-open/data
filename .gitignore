@@ -1,4 +1,5 @@
 /tests/Bundle/DataGridBundle/Fixtures/var
+/tests/Bundle/DataSourceBundle/Fixtures/var
 /vendor
 /web
 /.phpcs-cache

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="{{ app.request.locale }}">
+<head>
+    <meta charset="UTF-8" />
+    <title>Test</title>
+</head>
+<body>
+    {% datasource_route datasource_view 'datasource_test' with { driver: driver } %}
+    <span class="total">Total: {{ datasource_results|length }}</span>
+    <form method="GET" action="{{ path('datasource_test', { driver: driver }) }}">
+        {{ datasource_filter_widget(datasource_view) }}
+        <button type="submit">Filter</button>
+    </form>
+    {{ datasource_pagination_widget(datasource_view, { max_pages: 10 }) }}
+
+    <table>
+        {% for row in datasource_results %}
+            <tr>
+                <td>{{ row.title }}</td>
+                <td>{{ row.author }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

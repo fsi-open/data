@@ -12,19 +12,19 @@ declare(strict_types=1);
 namespace Tests\FSi\Bundle\DataSourceBundle\Extension\Symfony;
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Mapping\Driver\XmlDriver;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\Tools\Setup;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Persistence\Mapping\Driver\SymfonyFileLocator;
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\EventSubscriber\FieldPreBindParameter;
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Field\FormFieldExtension;
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\FormStorage;
+use FSi\Component\DataSource\DataSourceInterface;
+use FSi\Component\DataSource\Event\FieldEvent;
 use FSi\Component\DataSource\Field\Field;
 use FSi\Component\DataSource\Field\FieldView;
 use FSi\Component\DataSource\Field\Type\EntityTypeInterface;
-use Symfony\Component\OptionsResolver\OptionsResolver;
-use Tests\FSi\Bundle\DataSourceBundle\Fixtures\News;
-use FSi\Component\DataSource\DataSourceInterface;
-use FSi\Component\DataSource\Event\FieldEvent;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Doctrine\Form\DoctrineOrmExtension;
 use Symfony\Component\Form\Extension\Core\CoreExtension;
@@ -33,8 +33,10 @@ use Symfony\Component\Form\FormFactory;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormRegistry;
 use Symfony\Component\Form\ResolvedFormTypeFactory;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Security\Csrf\CsrfTokenManager;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Tests\FSi\Bundle\DataSourceBundle\Fixtures\Entity\News;
 
 final class FormExtensionEntityTest extends TestCase
 {
@@ -96,7 +98,16 @@ final class FormExtensionEntityTest extends TestCase
 
     private function getEntityManager(): EntityManager
     {
-        $config = Setup::createAnnotationMetadataConfiguration([__DIR__ . '/../../Fixtures'], true, null, null, false);
+        $config = Setup::createConfiguration(true, null, null);
+        $config->setMetadataDriverImpl(
+            new XmlDriver(
+                new SymfonyFileLocator(
+                    [__DIR__ . '/../../Fixtures/doctrine' => 'Tests\FSi\Bundle\DataSourceBundle\Fixtures\Entity'],
+                    '.orm.xml'
+                )
+            )
+        );
+
         $em = EntityManager::create(['driver' => 'pdo_sqlite', 'memory' => true], $config);
         $tool = new SchemaTool($em);
         $tool->createSchema([$em->getClassMetadata(News::class)]);

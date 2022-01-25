@@ -24,4 +24,6 @@ before_script:
 script:
     - composer sniffer
     - composer stan
+    - rm -rf /tests/Bundle/DataGridBundle/Fixtures/var/test
+    - rm -rf /tests/Bundle/DataSourceBundle/Fixtures/var/test
     - composer unit

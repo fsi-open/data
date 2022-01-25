@@ -11,9 +11,6 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource\Util;
 
-/**
- * Attributes container helps to handle attributes.
- */
 interface AttributesContainerInterface
 {
     public function hasAttribute(string $name): bool;

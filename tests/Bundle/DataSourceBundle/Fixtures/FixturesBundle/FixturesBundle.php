@@ -9,10 +9,10 @@
 
 declare(strict_types=1);
 
-namespace FSi\Component\DataSource\Extension\Core\Pagination;
+namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures\FixturesBundle;
 
-final class PaginationExtension
+use Symfony\Component\HttpKernel\Bundle\Bundle;
+
+final class FixturesBundle extends Bundle
 {
-    public const PARAMETER_PAGE = 'page';
-    public const PARAMETER_MAX_RESULTS = 'max_results';
 }

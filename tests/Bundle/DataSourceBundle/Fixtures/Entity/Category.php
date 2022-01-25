@@ -9,27 +9,25 @@
 
 declare(strict_types=1);
 
-namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures;
+namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
-/**
- * @ORM\Table(name="groups")
- * @ORM\Entity
- */
-class Group
+class Category
 {
-    /**
-     * @ORM\Column(type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
     private ?int $id = null;
+    private ?string $name;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @var Collection<int,News>
      */
-    private ?string $name = null;
+    private Collection $news;
+
+    public function __construct()
+    {
+        $this->news = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -49,5 +47,13 @@ class Group
     public function __toString(): string
     {
         return $this->name ?? '';
+    }
+
+    /**
+     * @return array<News>
+     */
+    public function getNews(): array
+    {
+        return $this->news->toArray();
     }
 }

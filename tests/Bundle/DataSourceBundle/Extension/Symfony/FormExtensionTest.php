@@ -417,8 +417,7 @@ final class FormExtensionTest extends TestCase
             [
                 new TestForm\Extension\TestCore\TestCoreExtension(),
                 new Form\Extension\Core\CoreExtension(),
-                new Form\Extension\Csrf\CsrfExtension(new CsrfTokenManager()),
-                new DatasourceExtension()
+                new Form\Extension\Csrf\CsrfExtension(new CsrfTokenManager())
             ],
             $typeFactory
         );
