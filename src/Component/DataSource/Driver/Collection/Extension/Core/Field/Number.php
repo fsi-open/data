@@ -12,9 +12,10 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Driver\Collection\Extension\Core\Field;
 
 use FSi\Component\DataSource\Driver\Collection\CollectionAbstractField;
+use FSi\Component\DataSource\Field\Type\NumberTypeInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class Number extends CollectionAbstractField
+class Number extends CollectionAbstractField implements NumberTypeInterface
 {
     public function getId(): string
     {

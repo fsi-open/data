@@ -27,10 +27,10 @@ use FSi\Component\DataSource\DataSourceViewInterface;
 
 use function array_key_exists;
 
-class PaginationExtensionTest extends TestCase
+final class PaginationExtensionTest extends TestCase
 {
     /**
-     * @return array<int,array{first_result:int,max_results:int,page:int|null,current_page:int}>
+     * @return array<int,array{first_result: int, max_results: int, page:int|null, current_page: int}>
      */
     public function paginationCases(): array
     {
@@ -57,11 +57,14 @@ class PaginationExtensionTest extends TestCase
     }
 
     /**
-     * First case of event (when page is not 1).
      * @dataProvider paginationCases
      */
-    public function testPaginationExtension(int $firstResult, int $maxResults, ?int $page, int $currentPage): void
-    {
+    public function testPaginationExtensionWhenPageIsNotFirst(
+        int $firstResult,
+        int $maxResults,
+        ?int $page,
+        int $currentPage
+    ): void {
         $datasource = $this->createMock(DataSourceInterface::class);
         $datasource->method('getName')->willReturn('datasource');
         $datasource->method('getResult')->willReturn(new TestResult());

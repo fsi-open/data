@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Bundle\DataGridBundle\Fixtures;
 
-use Symfony\Component\HttpFoundation\Request as BaseRequest;
+use Symfony\Component\HttpFoundation;
 
-class Request extends BaseRequest
+class Request extends HttpFoundation\Request
 {
     public const ABSOLUTE_URI = 'http://example.com/?test=1&test=2';
     public const RELATIVE_URI = '/?test=1&test=2';

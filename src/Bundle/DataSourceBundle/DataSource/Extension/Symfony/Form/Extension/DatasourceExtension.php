@@ -7,12 +7,14 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Extension;
 
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\Form\Type\BetweenType;
 use Symfony\Component\Form\AbstractExtension;
 
-class DatasourceExtension extends AbstractExtension
+final class DatasourceExtension extends AbstractExtension
 {
     protected function loadTypes(): array
     {

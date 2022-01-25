@@ -49,6 +49,11 @@ final class TestController
             $this->dataGridFormHandler->submit($dataGrid, $request);
         }
 
-        return new Response($this->twig->render('@Fixtures/test.html.twig', ['datagrid' => $dataGrid->createView()]));
+        return new Response(
+            $this->twig->render(
+                '@Fixtures/test.html.twig',
+                ['datagrid' => $dataGrid->createView()]
+            )
+        );
     }
 }

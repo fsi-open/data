@@ -11,31 +11,18 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource\Field;
 
-use FSi\Component\DataSource\DataSourceViewInterface;
 use FSi\Component\DataSource\Util\AttributesContainer;
 
 class FieldView extends AttributesContainer implements FieldViewInterface
 {
     private string $dataSourceName;
-
+    private string $name;
+    private string $type;
     /**
-     * @var string
-     */
-    private $name;
-
-    /**
-     * @var string
-     */
-    private $type;
-
-    /**
-     * @var string
+     * @var string|int|array<mixed>|null
      */
     private $parameter;
 
-    /**
-     * {@inheritdoc}
-     */
     public function __construct(FieldInterface $field)
     {
         $this->dataSourceName = $field->getDataSource()->getName();
@@ -54,7 +41,7 @@ class FieldView extends AttributesContainer implements FieldViewInterface
         return $this->type;
     }
 
-    public function getParameter(): string
+    public function getParameter()
     {
         return $this->parameter;
     }

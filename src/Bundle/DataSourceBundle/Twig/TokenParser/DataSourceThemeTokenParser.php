@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace FSi\Bundle\DataSourceBundle\Twig\TokenParser;
 
 use FSi\Bundle\DataSourceBundle\Twig\Node\DataSourceThemeNode;
@@ -15,7 +17,7 @@ use Twig\Node\Node;
 use Twig\Token;
 use Twig\TokenParser\AbstractTokenParser;
 
-class DataSourceThemeTokenParser extends AbstractTokenParser
+final class DataSourceThemeTokenParser extends AbstractTokenParser
 {
     /**
      * @param Token $token

@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource\Extension\Core\Ordering\EventSubscriber;
 
-use FSi\Component\DataSource\Driver\Collection\CollectionDriver;
 use FSi\Component\DataSource\Driver\Collection\Event\PreGetResult;
 use FSi\Component\DataSource\Event\DataSourceEventSubscriberInterface;
 use FSi\Component\DataSource\Extension\Core\Ordering\Storage;
@@ -37,13 +36,13 @@ final class CollectionPreGetResult implements DataSourceEventSubscriberInterface
         $fields = $event->getFields();
         $sortedFields = $this->storage->sortFields($fields);
 
-        $c = $event->getCriteria();
-        $orderings = $c->getOrderings();
+        $criteria = $event->getCriteria();
+        $orderings = $criteria->getOrderings();
         foreach ($sortedFields as $fieldName => $direction) {
             $field = $fields[$fieldName];
             $fieldName = true === $field->hasOption('field') ? $field->getOption('field') : $field->getName();
             $orderings[$fieldName] = strtoupper($direction);
         }
-        $c->orderBy($orderings);
+        $criteria->orderBy($orderings);
     }
 }

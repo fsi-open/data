@@ -47,9 +47,6 @@ class DataSourceTest extends TestCase
         );
     }
 
-    /**
-     * Checking assignation of names.
-     */
     public function testDataSourceName(): void
     {
         $driver = $this->createDriverMock();
@@ -73,10 +70,7 @@ class DataSourceTest extends TestCase
         self::assertEquals('name2', $dataSource->getName());
     }
 
-    /**
-     * Testing exception thrown when creating DataSource with wrong name.
-     */
-    public function testDataSourceCreateException2(): void
+    public function testDataSourceExceptionOnWrongName(): void
     {
         $this->expectException(DataSourceException::class);
         new DataSource(
@@ -87,10 +81,7 @@ class DataSourceTest extends TestCase
         );
     }
 
-    /**
-     * Checks creating, adding, getting and deleting fields.
-     */
-    public function testFieldManipulation(): void
+    public function testDataSourceCreatingAddingGettingDeletingFields(): void
     {
         $driver = $this->createDriverMock();
         $dataSource = new DataSource(
@@ -133,10 +124,7 @@ class DataSourceTest extends TestCase
         $dataSource->getField('wrong');
     }
 
-    /**
-     * Checks behaviour when binding arrays and scalars.
-     */
-    public function testBindParametersException(): void
+    public function testParametersBindingException(): void
     {
         $dataSource = new DataSource(
             'datasource',
@@ -149,9 +137,6 @@ class DataSourceTest extends TestCase
         $dataSource->bindParameters('nonarray');
     }
 
-    /**
-     * Checks behaviour at bind and get data.
-     */
     public function testBindAndGetResult(): void
     {
         $field = $this->createMock(FieldInterface::class);
@@ -175,16 +160,16 @@ class DataSourceTest extends TestCase
         $testResult = new TestResult();
 
         $firstData = [
-            $dataSource->getName() => [
-                DataSourceInterface::PARAMETER_FIELDS => [
+            'datasource' => [
+                'fields' => [
                     'field' => 'value',
                     'other' => 'notimportant'
                 ],
             ],
         ];
         $secondData = [
-            $dataSource->getName() => [
-                DataSourceInterface::PARAMETER_FIELDS => ['somefield' => 'somevalue'],
+            'datasource' => [
+                'fields' => ['somefield' => 'somevalue'],
             ],
         ];
 
@@ -198,10 +183,7 @@ class DataSourceTest extends TestCase
         $dataSource->getResult();
     }
 
-    /**
-     * Checks if parameters for pagination are forwarded to driver.
-     */
-    public function testPagination(): void
+    public function testPaginationParametersForwardingToDriver(): void
     {
         $datasource = new DataSource(
             'datasource',
@@ -220,10 +202,7 @@ class DataSourceTest extends TestCase
         self::assertEquals($first, $datasource->getFirstResult());
     }
 
-    /**
-     * Checks preGetParameters and postGetParameters calls.
-     */
-    public function testGetParameters(): void
+    public function testPreAndPostGetParametersCalls(): void
     {
         $field = $this->createMock(FieldInterface::class);
         $field2 = $this->createMock(FieldInterface::class);
@@ -275,9 +254,6 @@ class DataSourceTest extends TestCase
         self::assertEquals(['datasource' => ['fields' => ['key' => 'a', 'key2' => 'b']]], $dataSource->getParameters());
     }
 
-    /**
-     * Checks view creation.
-     */
     public function testViewCreation(): void
     {
         $driver = $this->createDriverMock();
@@ -302,9 +278,6 @@ class DataSourceTest extends TestCase
         self::assertEquals('datasource', $view->getName());
     }
 
-    /**
-     * Checks fetching parameters of all and others datasources.
-     */
     public function testGetAllAndOthersParameters(): void
     {
         $factory = $this->createMock(DataSourceFactoryInterface::class);
@@ -323,10 +296,7 @@ class DataSourceTest extends TestCase
         self::assertEquals(['c' => 'd'], $datasource->getAllParameters());
     }
 
-    /**
-     * Checks dispatched events during bindParameters()
-     */
-    public function testExtensionsCalls(): void
+    public function testExtensionsCallsDuringBindParameters(): void
     {
         $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
         $driver = $this->createDriverMock();
@@ -357,7 +327,7 @@ class DataSourceTest extends TestCase
     /**
      * @return DriverInterface&MockObject
      */
-    private function createDriverMock(): DriverInterface
+    private function createDriverMock(): MockObject
     {
         return $this->createMock(DriverInterface::class);
     }

@@ -12,9 +12,10 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Driver\Collection\Extension\Core\Field;
 
 use FSi\Component\DataSource\Driver\Collection\CollectionAbstractField;
+use FSi\Component\DataSource\Field\Type\TextTypeInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class Text extends CollectionAbstractField
+class Text extends CollectionAbstractField implements TextTypeInterface
 {
     public function getId(): string
     {

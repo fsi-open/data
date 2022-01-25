@@ -9,8 +9,6 @@ matrix:
               - COMPOSER_FLAGS='--prefer-lowest'
         - php: 8.0
 
-sudo: false
-
 cache:
     directories:
         - $HOME/.composer/cache
@@ -24,6 +22,6 @@ before_script:
     - composer update $COMPOSER_FLAGS
 
 script:
-    - vendor/bin/phpcs
-    - vendor/bin/phpstan analyze -c phpstan.neon
-    - vendor/bin/phpunit
+    - composer sniffer
+    - composer stan
+    - composer unit

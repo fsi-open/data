@@ -19,9 +19,15 @@ use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Yaml\Yaml;
 
+use function array_filter;
+use function count;
+use function file_exists;
+use function is_dir;
 use function is_string;
+use function rtrim;
+use function sprintf;
 
-class ConfigurationBuilder implements DataSourceEventSubscriberInterface
+final class ConfigurationBuilder implements DataSourceEventSubscriberInterface
 {
     private const BUNDLE_CONFIG_PATH = '%s/Resources/config/datasource/%s.yml';
     private const MAIN_CONFIG_DIRECTORY = 'datasource.yaml.main_config';
@@ -61,7 +67,7 @@ class ConfigurationBuilder implements DataSourceEventSubscriberInterface
         }
 
         if (false === is_dir($directory)) {
-            throw new RuntimeException(sprintf('"%s" is not a directory!', $directory));
+            throw new RuntimeException("\"{$directory}\" is not a directory!");
         }
 
         $configurationFile = sprintf('%s/%s.yml', rtrim($directory, '/'), $dataSourceName);
@@ -78,9 +84,8 @@ class ConfigurationBuilder implements DataSourceEventSubscriberInterface
         $bundles = $this->kernel->getBundles();
         $eligibleBundles = array_filter(
             $bundles,
-            static function (BundleInterface $bundle) use ($dataSourceName): bool {
-                return file_exists(sprintf(self::BUNDLE_CONFIG_PATH, $bundle->getPath(), $dataSourceName));
-            }
+            static fn(BundleInterface $bundle): bool
+                => file_exists(sprintf(self::BUNDLE_CONFIG_PATH, $bundle->getPath(), $dataSourceName))
         );
 
         // The idea here is that the last found configuration should be used

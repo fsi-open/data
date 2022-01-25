@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace Tests\FSi\Component\DataIndexer\Fixtures;
 
 use Doctrine\ORM\Mapping as ORM;

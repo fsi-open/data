@@ -1,6 +1,6 @@
 {% block datasource_filter %}
 {% apply spaceless %}
-    {% for field in datasource.fields %}
+    {% for field in datasource %}
         {{ datasource_field_widget(field, vars) }}
     {% endfor %}
 {% endapply %}

@@ -21,14 +21,13 @@ use FSi\Component\DataSource\Result;
 /**
  * @template-implements ArrayAccess<int|string,mixed>
  */
-class CollectionResult implements Result, ArrayAccess
+class CollectionResult implements ArrayAccess, Result
 {
-    private int $count;
-
     /**
      * @var Collection<int|string,mixed>
      */
     private Collection $collection;
+    private int $count;
 
     /**
      * @param Selectable<int|string,mixed> $collection
@@ -69,7 +68,7 @@ class CollectionResult implements Result, ArrayAccess
 
     public function offsetSet($offset, $value): void
     {
-        if ($offset === null) {
+        if (null === $offset) {
             $this->collection->add($value);
             return;
         }

@@ -13,7 +13,6 @@ namespace Tests\FSi\Component\DataSource\Extension\Core;
 
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Event\DataSourceEvent;
-use FSi\Component\DataSource\Extension\Core\Ordering\EventSubscriber\Events;
 use FSi\Component\DataSource\Extension\Core\Ordering\EventSubscriber\OrderingPostGetParameters;
 use FSi\Component\DataSource\Extension\Core\Ordering\EventSubscriber\OrderingPreBindParameters;
 use FSi\Component\DataSource\Extension\Core\Ordering\Field\FieldExtension;
@@ -27,9 +26,6 @@ use function array_merge;
 
 final class OrderingExtensionTest extends TestCase
 {
-    /**
-     * Checks DataSource subscriber and storing of passed parameters.
-     */
     public function testStoringParameters(): void
     {
         $datasource = $this->createMock(DataSourceInterface::class);
@@ -62,10 +58,10 @@ final class OrderingExtensionTest extends TestCase
      * Expected array contain sorting passed in parameters first and then default sorting passed in options.
      *
      * @return array<int,array{
-     *     fields:array<int,array<string,mixed>>,
-     *     parameters:array<string,string>,
-     *     expected_ordering:array<string,string>,
-     *     expected_parameters:array<string,mixed>
+     *     fields: array<int,array<string,mixed>>,
+     *     parameters: array<string,string>,
+     *     expected_ordering: array<string,string>,
+     *     expected_parameters: array<string,mixed>
      * }>
      */
     public function orderingDataProvider(): array
@@ -270,7 +266,9 @@ final class OrderingExtensionTest extends TestCase
     }
 
     /**
-     * Checks if sort order is properly calculated from default sorting options and parameters passed from user request.
+     * Checks if sort order is properly calculated from default sorting options
+     * and parameters passed from user request.
+     *
      * @dataProvider orderingDataProvider
      * @param array<int,array<string,mixed>> $fields
      * @param array<string,string> $parameters
@@ -306,11 +304,7 @@ final class OrderingExtensionTest extends TestCase
 
         $dataSource
             ->method('getField')
-            ->willReturnCallback(
-                static function () use ($dataSourceFields) {
-                    return $dataSourceFields[func_get_arg(0)];
-                }
-            )
+            ->willReturnCallback(fn() => $dataSourceFields[func_get_arg(0)])
         ;
 
         $dataSource

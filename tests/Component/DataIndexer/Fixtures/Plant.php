@@ -12,7 +12,7 @@ namespace Tests\FSi\Component\DataIndexer\Fixtures;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\MappedSuperClass()
+ * @ORM\MappedSuperclass
  */
 abstract class Plant
 {

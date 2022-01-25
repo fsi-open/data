@@ -15,7 +15,7 @@ use FSi\Component\DataSource\Event\DataSourceEventSubscriberInterface;
 use FSi\Component\DataSource\Event\DataSourceEvent;
 use Symfony\Component\HttpFoundation\Request;
 
-class BindParameters implements DataSourceEventSubscriberInterface
+final class BindParameters implements DataSourceEventSubscriberInterface
 {
     public static function getPriority(): int
     {

@@ -16,7 +16,7 @@ use InvalidArgumentException;
 
 use function array_key_exists;
 
-class DriverFactoryManager implements DriverFactoryManagerInterface
+final class DriverFactoryManager implements DriverFactoryManagerInterface
 {
     /**
      * @var array<DriverFactoryInterface>

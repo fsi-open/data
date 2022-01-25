@@ -7,12 +7,14 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures;
 
-use DateTime;
+use DateTimeImmutable;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * @ORM\Entity
@@ -27,19 +29,19 @@ class News
     private ?int $id = null;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string")
      */
     private ?string $title = null;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string")
      */
     private ?string $author = null;
 
     /**
      * @ORM\Column(type="string", length=500, nullable=true)
      */
-    private ?string $short_content = null;
+    private ?string $shortContent = null;
 
     /**
      * @ORM\Column(type="text", nullable=true)
@@ -47,33 +49,34 @@ class News
     private ?string $content = null;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime_immutable")
      */
-    private ?DateTime $create_date = null;
+    private ?DateTimeImmutable $createDate = null;
 
     /**
-     * @ORM\Column(type="time")
+     * @ORM\Column(type="time_immutable")
      */
-    private ?DateTime $create_time = null;
+    private ?DateTimeImmutable $createTime = null;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Tests\FSi\Bundle\DataSourceBundle\Fixtures\Category", inversedBy="news")
+     * @ORM\ManyToOne(targetEntity="Category", inversedBy="news")
      */
     private ?Category $category = null;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Tests\FSi\Bundle\DataSourceBundle\Fixtures\Category")
+     * @ORM\ManyToOne(targetEntity="Category")
      */
     private ?Category $category2 = null;
 
     /**
-     * @ORM\ManyToMany(targetEntity="Tests\FSi\Bundle\DataSourceBundle\Fixtures\Group")
+     * @ORM\ManyToMany(targetEntity="Group")
+     *
      * @var Collection<int,Group>
      */
     private Collection $groups;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     private ?string $tags = null;
 
@@ -114,12 +117,12 @@ class News
 
     public function setShortContent(?string $shortContent): void
     {
-        $this->short_content = $shortContent;
+        $this->shortContent = $shortContent;
     }
 
     public function getShortContent(): ?string
     {
-        return $this->short_content;
+        return $this->shortContent;
     }
 
     public function setContent(?string $content): void
@@ -132,24 +135,24 @@ class News
         return $this->content;
     }
 
-    public function setCreateDate(?DateTime $createDate): void
+    public function setCreateDate(?DateTimeImmutable $createDate): void
     {
-        $this->create_date = $createDate;
+        $this->createDate = $createDate;
     }
 
-    public function getCreateDate(): ?DateTime
+    public function getCreateDate(): ?DateTimeImmutable
     {
-        return $this->create_date;
+        return $this->createDate;
     }
 
-    public function setCreateTime(?DateTime $createTime): void
+    public function setCreateTime(?DateTimeImmutable $createTime): void
     {
-        $this->create_time = $createTime;
+        $this->createTime = $createTime;
     }
 
-    public function getCreateTime(): ?DateTime
+    public function getCreateTime(): ?DateTimeImmutable
     {
-        return $this->create_time;
+        return $this->createTime;
     }
 
     public function setCategory(Category $category): void

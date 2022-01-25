@@ -13,18 +13,14 @@ namespace FSi\Component\DataSource\Field;
 
 use FSi\Component\DataSource\Util\AttributesContainerInterface;
 
-/**
- * View of field, responsible for keeping some options needed during view rendering.
- */
 interface FieldViewInterface extends AttributesContainerInterface
 {
     public function __construct(FieldInterface $field);
-
     public function getName(): string;
-
     public function getType(): string;
-
-    public function getParameter(): string;
-
+    /**
+     * @return string|int|array<mixed>|null
+     */
+    public function getParameter();
     public function getDataSourceName(): string;
 }

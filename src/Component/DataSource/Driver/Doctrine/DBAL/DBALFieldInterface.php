@@ -18,6 +18,5 @@ use FSi\Component\DataSource\Field\FieldTypeInterface;
 interface DBALFieldInterface extends FieldTypeInterface
 {
     public function buildQuery(QueryBuilder $qb, string $alias, FieldInterface $field): void;
-
     public function getDBALType(): ?string;
 }
