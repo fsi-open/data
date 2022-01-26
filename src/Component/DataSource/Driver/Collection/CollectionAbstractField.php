@@ -43,7 +43,7 @@ abstract class CollectionAbstractField extends FieldAbstractType implements Coll
         return null;
     }
 
-    public function buildCriteria(Criteria $c, FieldInterface $field): void
+    public function buildCriteria(Criteria $criteria, FieldInterface $field): void
     {
         if (false === $field->getType() instanceof self) {
             throw new CollectionDriverException(
@@ -95,7 +95,7 @@ abstract class CollectionAbstractField extends FieldAbstractType implements Coll
                     settype($from, $type);
                     settype($to, $type);
                 }
-                $c->andWhere($expr->andX($expr->lte($fieldName, $to), $expr->gte($fieldName, $from)));
+                $criteria->andWhere($expr->andX($expr->lte($fieldName, $to), $expr->gte($fieldName, $from)));
                 return;
             }
         }
@@ -109,6 +109,6 @@ abstract class CollectionAbstractField extends FieldAbstractType implements Coll
         if (null !== $type) {
             settype($data, $type);
         }
-        $c->andWhere($expr->$comparison($fieldName, $data));
+        $criteria->andWhere($expr->$comparison($fieldName, $data));
     }
 }

@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace Tests\FSi\Bundle\DataSourceBundle\DataSource\Extension\Configuration\EventSubscriber;
 
 use FSi\Bundle\DataSourceBundle\DataSource\Extension\Configuration\EventSubscriber\ConfigurationBuilder;
@@ -15,7 +17,6 @@ use FSi\Component\DataSource\Event\DataSourceEvent\PreBindParameters;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel;
 
@@ -25,17 +26,9 @@ class ConfigurationBuilderTest extends TestCase
      * @var Kernel&MockObject
      */
     private MockObject $kernel;
-    private ConfigurationBuilder $subscriber;
 
     public function testReadConfigurationFromOneBundle(): void
     {
-        $container = $this->createMock(ContainerInterface::class);
-        $container->expects(self::once())
-            ->method('getParameter')
-            ->with('datasource.yaml.main_config')
-            ->willReturn(null)
-        ;
-        $this->kernel->expects(self::once())->method('getContainer')->willReturn($container);
         $this->kernel->expects(self::once())
             ->method('getBundles')
             ->willReturnCallback(
@@ -54,19 +47,11 @@ class ConfigurationBuilderTest extends TestCase
             ->with('title', 'text', ['comparison' => 'like', 'label' => 'Title'])
         ;
 
-        ($this->subscriber)(new PreBindParameters($dataSource, []));
+        $this->createConfigurationBuilder(null)(new PreBindParameters($dataSource, []));
     }
 
     public function testReadConfigurationFromManyBundles(): void
     {
-        $container = $this->createMock(ContainerInterface::class);
-        $container->expects(self::once())
-            ->method('getParameter')
-            ->with('datasource.yaml.main_config')
-            ->willReturn(null)
-        ;
-
-        $this->kernel->expects(self::once())->method('getContainer')->willReturn($container);
         $this->kernel->expects(self::once())
             ->method('getBundles')
             ->willReturnCallback(
@@ -91,19 +76,11 @@ class ConfigurationBuilderTest extends TestCase
                 ['author', 'text', ['comparison' => 'like']]
             );
 
-        ($this->subscriber)(new PreBindParameters($dataSource, []));
+        $this->createConfigurationBuilder(null)(new PreBindParameters($dataSource, []));
     }
 
     public function testMainConfigurationOverridesBundles(): void
     {
-        $container = $this->createMock(ContainerInterface::class);
-        $container->expects(self::once())
-            ->method('getParameter')
-            ->with('datasource.yaml.main_config')
-            ->willReturn(sprintf('%s/../../../../Resources/config/main_directory', __DIR__))
-        ;
-
-        $this->kernel->expects(self::once())->method('getContainer')->willReturn($container);
         $this->kernel->expects(self::never())->method('getBundles');
 
         $dataSource = $this->createMock(DataSourceInterface::class);
@@ -117,19 +94,12 @@ class ConfigurationBuilderTest extends TestCase
             )
         ;
 
-        ($this->subscriber)(new PreBindParameters($dataSource, []));
+        $mainDirectory = sprintf('%s/../../../../Resources/config/main_directory', __DIR__);
+        $this->createConfigurationBuilder($mainDirectory)(new PreBindParameters($dataSource, []));
     }
 
     public function testBundleConfigUsedWhenNoFileFoundInMainDirectory(): void
     {
-        $container = $this->createMock(ContainerInterface::class);
-        $container->expects(self::once())
-            ->method('getParameter')
-            ->with('datasource.yaml.main_config')
-            ->willReturn(sprintf('%s/../../../../Resources/config/main_directory', __DIR__))
-        ;
-
-        $this->kernel->expects(self::once())->method('getContainer')->willReturn($container);
         $this->kernel->expects(self::once())
             ->method('getBundles')
             ->willReturnCallback(
@@ -145,7 +115,8 @@ class ConfigurationBuilderTest extends TestCase
         $dataSource->method('getName')->willReturn('user');
         $dataSource->expects(self::once())->method('addField')->with('username', 'text', []);
 
-        ($this->subscriber)(new PreBindParameters($dataSource, []));
+        $mainDirectory = sprintf('%s/../../../../Resources/config/main_directory', __DIR__);
+        $this->createConfigurationBuilder($mainDirectory)(new PreBindParameters($dataSource, []));
     }
 
     public function testExceptionThrownWhenMainConfigPathIsNotADirectory(): void
@@ -153,19 +124,10 @@ class ConfigurationBuilderTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('"non existent directory" is not a directory!');
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->expects(self::once())
-            ->method('getParameter')
-            ->with('datasource.yaml.main_config')
-            ->willReturn('non existent directory')
-        ;
-
-        $this->kernel->expects(self::once())->method('getContainer')->willReturn($container);
-
         $dataSource = $this->createMock(DataSourceInterface::class);
         $dataSource->method('getName')->willReturn('news');
 
-        ($this->subscriber)(new PreBindParameters($dataSource, []));
+        $this->createConfigurationBuilder('non existent directory')(new PreBindParameters($dataSource, []));
     }
 
     protected function setUp(): void
@@ -176,6 +138,14 @@ class ConfigurationBuilderTest extends TestCase
         );
 
         $this->kernel = $kernelMockBuilder->getMock();
-        $this->subscriber = new ConfigurationBuilder($this->kernel);
+    }
+
+    private function createConfigurationBuilder(?string $mainConfigDirectory): ConfigurationBuilder
+    {
+        return new ConfigurationBuilder(
+            $this->kernel,
+            'Resources/config/datasource',
+            $mainConfigDirectory
+        );
     }
 }

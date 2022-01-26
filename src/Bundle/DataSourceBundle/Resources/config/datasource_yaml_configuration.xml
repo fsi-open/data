@@ -7,6 +7,8 @@
     <services>
         <service id="FSi\Bundle\DataSourceBundle\DataSource\Extension\Configuration\EventSubscriber\ConfigurationBuilder">
             <argument type="service" id="kernel" />
+            <argument>Resources/config/datasource</argument>
+            <argument>%datasource.yaml.main_config%</argument>
             <tag name="datasource.event_subscriber" />
         </service>
     </services>

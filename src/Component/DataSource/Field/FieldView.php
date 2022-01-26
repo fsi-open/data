@@ -13,8 +13,10 @@ namespace FSi\Component\DataSource\Field;
 
 use FSi\Component\DataSource\Util\AttributesContainer;
 
-class FieldView extends AttributesContainer implements FieldViewInterface
+final class FieldView implements FieldViewInterface
 {
+    use AttributesContainer;
+
     private string $dataSourceName;
     private string $name;
     private string $type;
@@ -29,6 +31,7 @@ class FieldView extends AttributesContainer implements FieldViewInterface
         $this->name = $field->getName();
         $this->type = $field->getType()->getId();
         $this->parameter = $field->getParameter();
+        $this->attributes = [];
     }
 
     public function getName(): string

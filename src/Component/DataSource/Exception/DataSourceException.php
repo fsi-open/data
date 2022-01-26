@@ -11,9 +11,8 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource\Exception;
 
-/**
- * General exception for DataSource related problems.
- */
-class DataSourceException extends \Exception
+use Exception;
+
+class DataSourceException extends Exception implements DataSourceExceptionInterface
 {
 }

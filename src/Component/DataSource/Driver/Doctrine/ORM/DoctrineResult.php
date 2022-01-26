@@ -16,6 +16,8 @@ use Doctrine\Persistence\ManagerRegistry;
 use FSi\Component\DataIndexer\DoctrineDataIndexer;
 use FSi\Component\DataSource\Result;
 
+use function count;
+
 /**
  * @template-extends ArrayCollection<int|string,mixed>
  */
@@ -30,7 +32,7 @@ class DoctrineResult extends ArrayCollection implements Result
         $data->rewind();
 
         $result = [];
-        if (0 !== $data->count()) {
+        if (0 !== count($data)) {
             $firstElement = $data->current();
             $dataIndexer = is_object($firstElement)
                 ? new DoctrineDataIndexer($registry, get_class($firstElement))

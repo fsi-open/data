@@ -28,21 +28,25 @@ use function is_dir;
 use function is_string;
 use function sprintf;
 
-class ConfigurationBuilder implements DataGridEventSubscriberInterface
+final class ConfigurationBuilder implements DataGridEventSubscriberInterface
 {
-    private const BUNDLE_CONFIG_PATH = '%s/Resources/config/datagrid/%s.yml';
-    private const MAIN_CONFIG_DIRECTORY = 'datagrid.yaml.main_config';
-
     private KernelInterface $kernel;
-
-    public function __construct(KernelInterface $kernel)
-    {
-        $this->kernel = $kernel;
-    }
+    private string $bundleConfigPath;
+    private ?string $mainConfigDirectoryParameter;
 
     public static function getPriority(): int
     {
         return 128;
+    }
+
+    public function __construct(
+        KernelInterface $kernel,
+        string $bundleConfigPath,
+        ?string $mainConfigDirectoryParameter
+    ) {
+        $this->kernel = $kernel;
+        $this->bundleConfigPath = $bundleConfigPath;
+        $this->mainConfigDirectoryParameter = $mainConfigDirectoryParameter;
     }
 
     public function __invoke(PreSetDataEvent $event): void
@@ -73,21 +77,15 @@ class ConfigurationBuilder implements DataGridEventSubscriberInterface
      */
     private function getMainConfiguration(string $dataGridName): ?array
     {
-        $directory = $this->kernel->getContainer()->getParameter(self::MAIN_CONFIG_DIRECTORY);
-        if (null === $directory) {
+        if (null === $this->mainConfigDirectoryParameter) {
             return null;
         }
-        if (false === is_string($directory)) {
-            throw new RuntimeException(
-                sprintf('"%s" parameter must be a string but is %s', self::MAIN_CONFIG_DIRECTORY, gettype($directory))
-            );
+
+        if (false === is_dir($this->mainConfigDirectoryParameter)) {
+            throw new RuntimeException("\"{$this->mainConfigDirectoryParameter}\" is not a directory!");
         }
 
-        if (false === is_dir($directory)) {
-            throw new RuntimeException("\"{$directory}\" is not a directory!");
-        }
-
-        $configurationFile = sprintf('%s/%s.yml', rtrim($directory, '/'), $dataGridName);
+        $configurationFile = sprintf('%s/%s.yml', rtrim($this->mainConfigDirectoryParameter, '/'), $dataGridName);
         if (false === file_exists($configurationFile)) {
             return null;
         }
@@ -100,9 +98,9 @@ class ConfigurationBuilder implements DataGridEventSubscriberInterface
         $dataGridName = $dataGrid->getName();
         $eligibleBundles = array_filter(
             $this->kernel->getBundles(),
-            static function (BundleInterface $bundle) use ($dataGridName): bool {
-                return file_exists(sprintf(self::BUNDLE_CONFIG_PATH, $bundle->getPath(), $dataGridName));
-            }
+            fn(BundleInterface $bundle): bool
+                => true === file_exists($this->createBundlePathForFile($bundle, $dataGridName, 'yml'))
+                    || true === file_exists($this->createBundlePathForFile($bundle, $dataGridName, 'yaml'))
         );
 
         // The idea here is that the last found configuration should be used
@@ -122,9 +120,7 @@ class ConfigurationBuilder implements DataGridEventSubscriberInterface
         return array_reduce(
             $eligibleBundles,
             function (array $configuration, BundleInterface $bundle) use ($dataGridName): array {
-                $overridingConfiguration = $this->parseYamlFile(
-                    sprintf(self::BUNDLE_CONFIG_PATH, $bundle->getPath(), $dataGridName)
-                );
+                $overridingConfiguration = $this->getOverwritingConfiguration($bundle, $dataGridName);
                 if (true === is_array($overridingConfiguration)) {
                     $configuration = $overridingConfiguration;
                 }
@@ -133,6 +129,29 @@ class ConfigurationBuilder implements DataGridEventSubscriberInterface
             },
             []
         );
+    }
+    /**
+     * @param BundleInterface $bundle
+     * @param string $dataGridName
+     * @return array<string, mixed>|null
+     */
+    private function getOverwritingConfiguration(BundleInterface $bundle, string $dataGridName): ?array
+    {
+        $ymlFile = $this->createBundlePathForFile($bundle, $dataGridName, 'yml');
+        $yamlFile = $this->createBundlePathForFile($bundle, $dataGridName, 'yaml');
+        if (true === file_exists($ymlFile)) {
+            $file = $ymlFile;
+        } elseif (true === file_exists($yamlFile)) {
+            $file = $yamlFile;
+        } else {
+            $file = null;
+        }
+
+        if (null === $file) {
+            return null;
+        }
+
+        return $this->parseYamlFile($file);
     }
 
     /**
@@ -143,9 +162,20 @@ class ConfigurationBuilder implements DataGridEventSubscriberInterface
     {
         $contents = file_get_contents($path);
         if (false === is_string($contents)) {
-            throw new RuntimeException("Unable to read contentes of file {$path}");
+            throw new RuntimeException("Unable to read contents of file {$path}");
         }
 
         return Yaml::parse($contents);
+    }
+
+    private function createBundlePathForFile(BundleInterface $bundle, string $dataSourceName, string $extension): string
+    {
+        return sprintf(
+            '%s/%s/%s.%s',
+            $bundle->getPath(),
+            $this->bundleConfigPath,
+            $dataSourceName,
+            $extension
+        );
     }
 }

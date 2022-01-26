@@ -29,19 +29,23 @@ use function sprintf;
 
 final class ConfigurationBuilder implements DataSourceEventSubscriberInterface
 {
-    private const BUNDLE_CONFIG_PATH = '%s/Resources/config/datasource/%s.yml';
-    private const MAIN_CONFIG_DIRECTORY = 'datasource.yaml.main_config';
-
     private KernelInterface $kernel;
+    private string $bundleConfigPath;
+    private ?string $mainConfigDirectoryParameter;
 
     public static function getPriority(): int
     {
         return 1024;
     }
 
-    public function __construct(KernelInterface $kernel)
-    {
+    public function __construct(
+        KernelInterface $kernel,
+        string $bundleConfigPath,
+        ?string $mainConfigDirectoryParameter
+    ) {
         $this->kernel = $kernel;
+        $this->bundleConfigPath = $bundleConfigPath;
+        $this->mainConfigDirectoryParameter = $mainConfigDirectoryParameter;
     }
 
     public function __invoke(PreBindParameters $event): void
@@ -61,16 +65,20 @@ final class ConfigurationBuilder implements DataSourceEventSubscriberInterface
      */
     private function getMainConfiguration(string $dataSourceName): ?array
     {
-        $directory = $this->kernel->getContainer()->getParameter(self::MAIN_CONFIG_DIRECTORY);
-        if (false === is_string($directory)) {
+        if (null === $this->mainConfigDirectoryParameter) {
             return null;
         }
 
-        if (false === is_dir($directory)) {
-            throw new RuntimeException("\"{$directory}\" is not a directory!");
+        if (false === is_dir($this->mainConfigDirectoryParameter)) {
+            throw new RuntimeException("\"{$this->mainConfigDirectoryParameter}\" is not a directory!");
         }
 
-        $configurationFile = sprintf('%s/%s.yml', rtrim($directory, '/'), $dataSourceName);
+        $configurationFile = sprintf(
+            '%s/%s.yml',
+            rtrim($this->mainConfigDirectoryParameter, '/'),
+            $dataSourceName
+        );
+
         if (false === file_exists($configurationFile)) {
             return null;
         }
@@ -84,8 +92,9 @@ final class ConfigurationBuilder implements DataSourceEventSubscriberInterface
         $bundles = $this->kernel->getBundles();
         $eligibleBundles = array_filter(
             $bundles,
-            static fn(BundleInterface $bundle): bool
-                => file_exists(sprintf(self::BUNDLE_CONFIG_PATH, $bundle->getPath(), $dataSourceName))
+            fn(BundleInterface $bundle): bool
+                => true === file_exists($this->createBundlePathForFile($bundle, $dataSourceName, 'yml'))
+                    || true === file_exists($this->createBundlePathForFile($bundle, $dataSourceName, 'yaml'))
         );
 
         // The idea here is that the last found configuration should be used
@@ -105,9 +114,7 @@ final class ConfigurationBuilder implements DataSourceEventSubscriberInterface
         return array_reduce(
             $eligibleBundles,
             function (array $configuration, BundleInterface $bundle) use ($dataSourceName): array {
-                $overridingConfiguration = $this->parseYamlFile(
-                    sprintf(self::BUNDLE_CONFIG_PATH, $bundle->getPath(), $dataSourceName)
-                );
+                $overridingConfiguration = $this->getOverwritingConfiguration($bundle, $dataSourceName);
                 if (true === is_array($overridingConfiguration)) {
                     $configuration = $overridingConfiguration;
                 }
@@ -116,6 +123,30 @@ final class ConfigurationBuilder implements DataSourceEventSubscriberInterface
             },
             []
         );
+    }
+
+    /**
+     * @param BundleInterface $bundle
+     * @param string $dataSourceName
+     * @return array<string, mixed>|null
+     */
+    private function getOverwritingConfiguration(BundleInterface $bundle, string $dataSourceName): ?array
+    {
+        $ymlFile = $this->createBundlePathForFile($bundle, $dataSourceName, 'yml');
+        $yamlFile = $this->createBundlePathForFile($bundle, $dataSourceName, 'yaml');
+        if (true === file_exists($ymlFile)) {
+            $file = $ymlFile;
+        } elseif (true === file_exists($yamlFile)) {
+            $file = $yamlFile;
+        } else {
+            $file = null;
+        }
+
+        if (null === $file) {
+            return null;
+        }
+
+        return $this->parseYamlFile($file);
     }
 
     /**
@@ -137,9 +168,20 @@ final class ConfigurationBuilder implements DataSourceEventSubscriberInterface
     {
         $yamlContents = file_get_contents($path);
         if (false === is_string($yamlContents)) {
-            throw new RuntimeException("Unable to read file '{$path}' contents");
+            throw new RuntimeException("Unable to read contents of the file '{$path}'");
         }
 
         return Yaml::parse($yamlContents);
+    }
+
+    private function createBundlePathForFile(BundleInterface $bundle, string $dataSourceName, string $extension): string
+    {
+        return sprintf(
+            '%s/%s/%s.%s',
+            $bundle->getPath(),
+            $this->bundleConfigPath,
+            $dataSourceName,
+            $extension
+        );
     }
 }
