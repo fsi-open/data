@@ -9,13 +9,8 @@
 
 declare(strict_types=1);
 
-namespace Tests\FSi\Component\DataIndexer\Fixtures;
+namespace Tests\FSi\Component\DataIndexer\Fixtures\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
-/**
- * @ORM\Entity()
- */
-class Bike extends Vehicle
+class Monocycle extends Bike
 {
 }

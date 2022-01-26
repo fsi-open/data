@@ -9,20 +9,10 @@
 
 declare(strict_types=1);
 
-namespace Tests\FSi\Component\DataIndexer\Fixtures;
+namespace Tests\FSi\Component\DataIndexer\Fixtures\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
-/**
- * @ORM\Entity()
- */
-class Category
+abstract class Plant
 {
-    /**
-     * @ORM\Column(type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
     protected int $id;
 
     public function __construct(int $id)

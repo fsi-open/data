@@ -9,13 +9,8 @@
 
 declare(strict_types=1);
 
-namespace Tests\FSi\Component\DataIndexer\Fixtures;
+namespace Tests\FSi\Component\DataIndexer\Fixtures\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
-/**
- * @ORM\Entity
- */
-class Car extends Vehicle
+class Oak extends DeciduousTree
 {
 }

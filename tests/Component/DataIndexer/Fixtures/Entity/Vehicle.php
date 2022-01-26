@@ -7,19 +7,12 @@
  * file that was distributed with this source code.
  */
 
-namespace Tests\FSi\Component\DataIndexer\Fixtures;
+declare(strict_types=1);
 
-use Doctrine\ORM\Mapping as ORM;
+namespace Tests\FSi\Component\DataIndexer\Fixtures\Entity;
 
-/**
- * @ORM\Entity()
- */
-class News
+abstract class Vehicle
 {
-    /**
-     * @ORM\Column(type="string")
-     * @ORM\Id
-     */
     protected string $id;
 
     public function __construct(string $id)

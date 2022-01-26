@@ -7,13 +7,10 @@
  * file that was distributed with this source code.
  */
 
-namespace Tests\FSi\Component\DataIndexer\Fixtures;
+declare(strict_types=1);
 
-use Doctrine\ORM\Mapping as ORM;
+namespace Tests\FSi\Component\DataIndexer\Fixtures\Entity;
 
-/**
- * @ORM\Entity
- */
-class Oak extends DeciduousTree
+class Bike extends Vehicle
 {
 }
