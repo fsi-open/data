@@ -19,8 +19,8 @@ use FSi\Component\DataSource\DataSourceInterface;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Tests\FSi\Bundle\DataSourceBundle\Fixtures\Entity\Group;
-use Tests\FSi\Bundle\DataSourceBundle\Fixtures\Entity\News;
+use Tests\FSi\Component\DataSource\Fixtures\Entity\Group;
+use Tests\FSi\Component\DataSource\Fixtures\Entity\News;
 use Twig\Environment;
 
 final class TestController

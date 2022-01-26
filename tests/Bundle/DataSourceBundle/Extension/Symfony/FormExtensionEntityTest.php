@@ -36,7 +36,7 @@ use Symfony\Component\Form\ResolvedFormTypeFactory;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Security\Csrf\CsrfTokenManager;
 use Symfony\Contracts\Translation\TranslatorInterface;
-use Tests\FSi\Bundle\DataSourceBundle\Fixtures\Entity\News;
+use Tests\FSi\Component\DataSource\Fixtures\Entity\News;
 
 final class FormExtensionEntityTest extends TestCase
 {
@@ -98,13 +98,13 @@ final class FormExtensionEntityTest extends TestCase
 
     private function getEntityManager(): EntityManager
     {
+        $mappingRootDir = __DIR__ . '/../../../../Component/DataSource/Fixtures/doctrine';
+        $entityNamespace = 'Tests\FSi\Component\DataSource\Fixtures\Entity';
+
         $config = Setup::createConfiguration(true, null, null);
         $config->setMetadataDriverImpl(
             new XmlDriver(
-                new SymfonyFileLocator(
-                    [__DIR__ . '/../../Fixtures/doctrine' => 'Tests\FSi\Bundle\DataSourceBundle\Fixtures\Entity'],
-                    '.orm.xml'
-                )
+                new SymfonyFileLocator([$mappingRootDir => $entityNamespace], '.orm.xml')
             )
         );
 

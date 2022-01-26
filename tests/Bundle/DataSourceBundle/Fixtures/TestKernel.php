@@ -90,8 +90,8 @@ final class TestKernel extends Kernel
                     'datasource_bundle' => [
                         'mapping' => true,
                         'type' => 'xml',
-                        'dir' => '%kernel.project_dir%/doctrine',
-                        'prefix' => 'Tests\FSi\Bundle\DataSourceBundle\Fixtures\Entity',
+                        'dir' => '%kernel.project_dir%/../../../Component/DataSource/Fixtures/doctrine',
+                        'prefix' => 'Tests\FSi\Component\DataSource\Fixtures\Entity',
                         'is_bundle' => false
                     ]
                 ]

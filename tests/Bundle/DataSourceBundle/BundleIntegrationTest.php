@@ -18,9 +18,10 @@ use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
-use Tests\FSi\Bundle\DataSourceBundle\Fixtures\Entity\Group;
-use Tests\FSi\Bundle\DataSourceBundle\Fixtures\Entity\News;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Tests\FSi\Bundle\DataSourceBundle\Fixtures\TestKernel;
+use Tests\FSi\Component\DataSource\Fixtures\Entity\Group;
+use Tests\FSi\Component\DataSource\Fixtures\Entity\News;
 
 final class BundleIntegrationTest extends WebTestCase
 {
@@ -205,8 +206,10 @@ final class BundleIntegrationTest extends WebTestCase
             new NullOutput()
         );
 
+        /** @var ContainerInterface $container */
+        $container = $this->client->getContainer();
         /** @var EntityManagerInterface $manager */
-        $manager = $this->client->getContainer()->get('doctrine.orm.entity_manager');
+        $manager = $container->get('doctrine.orm.entity_manager');
 
         $group = new Group();
         $group->setName('Breaking news');

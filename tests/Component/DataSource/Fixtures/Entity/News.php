@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures\Entity;
+namespace Tests\FSi\Component\DataSource\Fixtures\Entity;
 
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -34,8 +34,9 @@ class News
      */
     private Collection $groups;
 
-    public function __construct()
+    public function __construct(?int $id = null)
     {
+        $this->id = $id;
         $this->groups = new ArrayCollection();
     }
 
@@ -155,11 +156,11 @@ class News
     }
 
     /**
-     * @return array<Group>
+     * @return Collection<int, Group>
      */
-    public function getGroups(): array
+    public function getGroups(): Collection
     {
-        return $this->groups->toArray();
+        return $this->groups;
     }
 
     public function addGroup(Group $group): void

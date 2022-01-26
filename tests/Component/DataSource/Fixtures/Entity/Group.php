@@ -9,12 +9,17 @@
 
 declare(strict_types=1);
 
-namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures\Entity;
+namespace Tests\FSi\Component\DataSource\Fixtures\Entity;
 
 class Group
 {
     private ?int $id = null;
     private ?string $name = null;
+
+    public function __construct(?int $id = null)
+    {
+        $this->id = $id;
+    }
 
     public function getId(): ?int
     {

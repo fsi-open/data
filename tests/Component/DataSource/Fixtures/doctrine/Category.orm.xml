@@ -4,13 +4,15 @@
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
                                       https://raw.github.com/doctrine/doctrine2/master/doctrine-mapping.xsd">
 
-    <entity name="Tests\FSi\Bundle\DataSourceBundle\Fixtures\Entity\Group" table="groups">
+    <entity name="Tests\FSi\Component\DataSource\Fixtures\Entity\Category">
 
         <id name="id" type="integer">
             <generator strategy="AUTO" />
         </id>
 
         <field name="name" nullable="true" />
+
+        <one-to-many field="news" mapped-by="category" target-entity="Tests\FSi\Component\DataSource\Fixtures\Entity\News" />
 
     </entity>
 </doctrine-mapping>

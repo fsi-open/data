@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures\Entity;
+namespace Tests\FSi\Component\DataSource\Fixtures\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -24,8 +24,9 @@ class Category
      */
     private Collection $news;
 
-    public function __construct()
+    public function __construct(?int $id = null)
     {
+        $this->id = $id;
         $this->news = new ArrayCollection();
     }
 
