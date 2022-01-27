@@ -14,6 +14,7 @@ namespace FSi\Bundle\DataSourceBundle\DataSource\Extension\Configuration\EventSu
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Event\DataSourceEvent\PreBindParameters;
 use FSi\Component\DataSource\Event\DataSourceEventSubscriberInterface;
+use FSi\Component\DataSource\Exception\DataSourceException;
 use RuntimeException;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
@@ -31,7 +32,7 @@ final class ConfigurationBuilder implements DataSourceEventSubscriberInterface
 {
     private KernelInterface $kernel;
     private string $bundleConfigPath;
-    private ?string $mainConfigDirectoryParameter;
+    private ?string $mainConfigDirectory;
 
     public static function getPriority(): int
     {
@@ -41,11 +42,11 @@ final class ConfigurationBuilder implements DataSourceEventSubscriberInterface
     public function __construct(
         KernelInterface $kernel,
         string $bundleConfigPath,
-        ?string $mainConfigDirectoryParameter
+        ?string $mainConfigDirectory
     ) {
         $this->kernel = $kernel;
         $this->bundleConfigPath = $bundleConfigPath;
-        $this->mainConfigDirectoryParameter = $mainConfigDirectoryParameter;
+        $this->mainConfigDirectory = $mainConfigDirectory;
     }
 
     public function __invoke(PreBindParameters $event): void
@@ -61,21 +62,21 @@ final class ConfigurationBuilder implements DataSourceEventSubscriberInterface
 
     /**
      * @param string $dataSourceName
-     * @return array<string,mixed>|null
+     * @return array{fields: array<string, array{type?: string, options?: array<string, mixed>}>} $configuration
      */
     private function getMainConfiguration(string $dataSourceName): ?array
     {
-        if (null === $this->mainConfigDirectoryParameter) {
+        if (null === $this->mainConfigDirectory) {
             return null;
         }
 
-        if (false === is_dir($this->mainConfigDirectoryParameter)) {
-            throw new RuntimeException("\"{$this->mainConfigDirectoryParameter}\" is not a directory!");
+        if (false === is_dir($this->mainConfigDirectory)) {
+            throw new RuntimeException("\"{$this->mainConfigDirectory}\" is not a directory!");
         }
 
         $configurationFile = sprintf(
             '%s/%s.yml',
-            rtrim($this->mainConfigDirectoryParameter, '/'),
+            rtrim($this->mainConfigDirectory, '/'),
             $dataSourceName
         );
 
@@ -107,14 +108,15 @@ final class ConfigurationBuilder implements DataSourceEventSubscriberInterface
     /**
      * @param string $dataSourceName
      * @param array<BundleInterface> $eligibleBundles
-     * @return array<string,mixed>
+     * @return array{fields: array<string, array{type?: string, options?: array<string, mixed>}>} $configuration
      */
     private function findLastBundleConfiguration(string $dataSourceName, array $eligibleBundles): array
     {
-        return array_reduce(
+        /** @var array{fields: array<string, array{type?: string, options?: array<string, mixed>}>} $configuration */
+        $configuration = array_reduce(
             $eligibleBundles,
             function (array $configuration, BundleInterface $bundle) use ($dataSourceName): array {
-                $overridingConfiguration = $this->getOverwritingConfiguration($bundle, $dataSourceName);
+                $overridingConfiguration = $this->getOverridingConfiguration($bundle, $dataSourceName);
                 if (true === is_array($overridingConfiguration)) {
                     $configuration = $overridingConfiguration;
                 }
@@ -123,14 +125,16 @@ final class ConfigurationBuilder implements DataSourceEventSubscriberInterface
             },
             []
         );
+
+        return $configuration;
     }
 
     /**
      * @param BundleInterface $bundle
      * @param string $dataSourceName
-     * @return array<string, mixed>|null
+     * @return array{fields: array<string, array{type?: string, options?: array<string, mixed>}>} $configuration|null
      */
-    private function getOverwritingConfiguration(BundleInterface $bundle, string $dataSourceName): ?array
+    private function getOverridingConfiguration(BundleInterface $bundle, string $dataSourceName): ?array
     {
         $ymlFile = $this->createBundlePathForFile($bundle, $dataSourceName, 'yml');
         $yamlFile = $this->createBundlePathForFile($bundle, $dataSourceName, 'yaml');
@@ -151,18 +155,23 @@ final class ConfigurationBuilder implements DataSourceEventSubscriberInterface
 
     /**
      * @param DataSourceInterface $dataSource
-     * @param array<string,mixed> $configuration
+     * @param array{fields: array<string, array{type?: string, options?: array<string, mixed>}>} $configuration
      */
     private function buildConfiguration(DataSourceInterface $dataSource, array $configuration): void
     {
         foreach ($configuration['fields'] as $name => $field) {
-            $dataSource->addField($name, $field['type'] ?? null, $field['options'] ?? []);
+            $type = $field['type'] ?? null;
+            if (null === $type) {
+                throw new DataSourceException("No type for field \"{$name}\".");
+            }
+
+            $dataSource->addField($name, $type, $field['options'] ?? []);
         }
     }
 
     /**
      * @param string $path
-     * @return array<string,mixed>
+     * @return array{fields: array<string, array{type?: string, options?: array<string, mixed>}>} $configuration
      */
     private function parseYamlFile(string $path): array
     {
