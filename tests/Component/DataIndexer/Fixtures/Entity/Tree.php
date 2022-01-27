@@ -9,10 +9,8 @@
 
 declare(strict_types=1);
 
-namespace FSi\Component\DataSource\Extension\Core\Pagination;
+namespace Tests\FSi\Component\DataIndexer\Fixtures\Entity;
 
-final class PaginationExtension
+class Tree extends Plant
 {
-    public const PARAMETER_PAGE = 'page';
-    public const PARAMETER_MAX_RESULTS = 'max_results';
 }

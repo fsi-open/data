@@ -7,14 +7,13 @@
  * file that was distributed with this source code.
  */
 
-namespace Tests\FSi\Component\DataIndexer\Fixtures;
+declare(strict_types=1);
+
+namespace Tests\FSi\Component\DataIndexer\Fixtures\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\MappedSuperclass
- */
-abstract class Plant
+class Category
 {
     /**
      * @ORM\Column(type="integer")

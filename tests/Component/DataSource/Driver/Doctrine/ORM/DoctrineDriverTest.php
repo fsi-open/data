@@ -13,9 +13,11 @@ namespace Tests\FSi\Component\DataSource\Driver\Doctrine\ORM;
 
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Mapping\Driver\XmlDriver;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\Tools\Setup;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Persistence\Mapping\Driver\SymfonyFileLocator;
 use FSi\Component\DataSource\DataSourceFactory;
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineFactory;
@@ -35,15 +37,15 @@ use FSi\Component\DataSource\Extension\Core;
 use FSi\Component\DataSource\Extension\Core\Ordering\Field\FieldExtension;
 use FSi\Component\DataSource\Extension\Core\Ordering\OrderingExtension;
 use FSi\Component\DataSource\Extension\Core\Pagination\PaginationExtension;
-use Psr\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\EventDispatcher\EventDispatcher;
-use Tests\FSi\Component\DataSource\Fixtures\Category;
-use Tests\FSi\Component\DataSource\Fixtures\DoctrineQueryLogger;
-use Tests\FSi\Component\DataSource\Fixtures\Group;
-use Tests\FSi\Component\DataSource\Fixtures\News;
 use Iterator;
 use PHPUnit\Framework\TestCase;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
+use Tests\FSi\Component\DataSource\Fixtures\DoctrineQueryLogger;
+use Tests\FSi\Component\DataSource\Fixtures\Entity\Category;
+use Tests\FSi\Component\DataSource\Fixtures\Entity\Group;
+use Tests\FSi\Component\DataSource\Fixtures\Entity\News;
 
 class DoctrineDriverTest extends TestCase
 {
@@ -54,12 +56,14 @@ class DoctrineDriverTest extends TestCase
 
     protected function setUp(): void
     {
-        $config = Setup::createAnnotationMetadataConfiguration(
-            [__DIR__ . '/../../../Fixtures'],
-            true,
-            null,
-            null,
-            false
+        $config = Setup::createConfiguration(true, null, null);
+        $config->setMetadataDriverImpl(
+            new XmlDriver(
+                new SymfonyFileLocator(
+                    [__DIR__ . '/../../../Fixtures/doctrine' => 'Tests\FSi\Component\DataSource\Fixtures\Entity'],
+                    '.orm.xml'
+                )
+            )
         );
         $em = EntityManager::create(['driver' => 'pdo_sqlite', 'memory' => true], $config);
         $tool = new SchemaTool($em);
@@ -117,11 +121,11 @@ class DoctrineDriverTest extends TestCase
                 ->addField('author', 'text', ['comparison' => 'like'])
                 ->addField('created', 'datetime', [
                     'comparison' => 'between',
-                    'field' => 'create_date',
+                    'field' => 'createDate',
                 ])
                 ->addField('category', 'entity', ['comparison' => 'eq'])
-                ->addField('category2', 'entity', ['comparison' => 'isNull'])
-                ->addField('not_category2', 'entity', ['comparison' => 'neq', 'field' => 'category2'])
+                ->addField('otherCategory', 'entity', ['comparison' => 'isNull'])
+                ->addField('not_otherCategory', 'entity', ['comparison' => 'neq', 'field' => 'otherCategory'])
                 ->addField('group', 'entity', ['comparison' => 'memberOf', 'field' => 'groups'])
                 ->addField('not_group', 'entity', ['comparison' => 'notMemberOf', 'field' => 'groups'])
                 ->addField('tags', 'text', ['comparison' => 'isNull', 'field' => 'tags'])
@@ -222,7 +226,7 @@ class DoctrineDriverTest extends TestCase
             $parameters = [
                 $datasource->getName() => [
                     DataSourceInterface::PARAMETER_FIELDS => [
-                        'not_category2' => 1,
+                        'not_otherCategory' => 1,
                     ],
                 ],
             ];
@@ -316,7 +320,7 @@ class DoctrineDriverTest extends TestCase
             $parameters = [
                 $datasource->getName() => [
                     DataSourceInterface::PARAMETER_FIELDS => [
-                        'category2' => 'null'
+                        'otherCategory' => 'null'
                     ],
                 ],
             ];
@@ -334,7 +338,7 @@ class DoctrineDriverTest extends TestCase
             $parameters = [
                 $datasource->getName() => [
                     DataSourceInterface::PARAMETER_FIELDS => [
-                        'category2' => 'notnull'
+                        'otherCategory' => 'notnull'
                     ],
                 ],
             ];
@@ -794,7 +798,7 @@ class DoctrineDriverTest extends TestCase
                 $news->setShortContent('Lorem ipsum.');
                 $news->setContent('Content lorem ipsum.');
                 $news->setTags('lorem ipsum');
-                $news->setCategory2($categories[($i + 1) % 5]);
+                $news->setOtherCategory($categories[($i + 1) % 5]);
             } else {
                 $news->setAuthor('author' . $i . '@domain2.com');
                 $news->setShortContent('Dolor sit amet.');

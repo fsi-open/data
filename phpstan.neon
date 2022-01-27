@@ -12,6 +12,7 @@ parameters:
         - src/Bundle/DataGridBundle/DependencyInjection/Configuration.php
         - src/Bundle/DataSourceBundle/DependencyInjection/Configuration.php
         - tests/Bundle/DataGridBundle/Fixtures/var
+        - tests/Bundle/DataSourceBundle/Fixtures/var
     ignoreErrors:
         - message: '#Property Symfony\\Component\\HttpFoundation\\Request::\$request \(Symfony\\Component\\HttpFoundation\\InputBag\) does not accept Symfony\\Component\\HttpFoundation\\ParameterBag\.#'
           path: tests/Bundle/DataGridBundle/DataGrid/Extension/Symfony/EventSubscriber/BindRequestTest.php

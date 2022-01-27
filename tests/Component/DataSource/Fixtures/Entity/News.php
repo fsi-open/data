@@ -9,84 +9,34 @@
 
 declare(strict_types=1);
 
-namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures;
+namespace Tests\FSi\Component\DataSource\Fixtures\Entity;
 
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity
- */
 class News
 {
-    /**
-     * @ORM\Column(type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
     private ?int $id = null;
-
-    /**
-     * @ORM\Column(type="string")
-     */
     private ?string $title = null;
-
-    /**
-     * @ORM\Column(type="string")
-     */
     private ?string $author = null;
-
-    /**
-     * @ORM\Column(type="string", length=500, nullable=true)
-     */
     private ?string $shortContent = null;
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
     private ?string $content = null;
-
-    /**
-     * @ORM\Column(type="datetime_immutable")
-     */
     private ?DateTimeImmutable $createDate = null;
-
-    /**
-     * @ORM\Column(type="time_immutable")
-     */
     private ?DateTimeImmutable $createTime = null;
-
-    /**
-     * @ORM\ManyToOne(targetEntity="Category", inversedBy="news")
-     */
+    private ?string $tags = null;
+    private ?int $views = null;
+    private bool $active = false;
     private ?Category $category = null;
-
+    private ?Category $otherCategory = null;
     /**
-     * @ORM\ManyToOne(targetEntity="Category")
-     */
-    private ?Category $category2 = null;
-
-    /**
-     * @ORM\ManyToMany(targetEntity="Group")
-     *
      * @var Collection<int,Group>
      */
     private Collection $groups;
 
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     */
-    private ?string $tags = null;
-
-    /**
-     * @ORM\Column(type="boolean")
-     */
-    private bool $active = false;
-
-    public function __construct()
+    public function __construct(?int $id = null)
     {
+        $this->id = $id;
         $this->groups = new ArrayCollection();
     }
 
@@ -155,34 +105,6 @@ class News
         return $this->createTime;
     }
 
-    public function setCategory(Category $category): void
-    {
-        $this->category = $category;
-    }
-
-    public function getCategory(): ?Category
-    {
-        return $this->category;
-    }
-
-    public function setCategory2(Category $category2): void
-    {
-        $this->category2 = $category2;
-    }
-
-    public function getCategory2(): ?Category
-    {
-        return $this->category2;
-    }
-
-    /**
-     * @return Collection<int,Group>
-     */
-    public function getGroups(): Collection
-    {
-        return $this->groups;
-    }
-
     public function setTags(string $tags): void
     {
         $this->tags = $tags;
@@ -193,6 +115,16 @@ class News
         return $this->tags;
     }
 
+    public function getViews(): ?int
+    {
+        return $this->views;
+    }
+
+    public function setViews(?int $views): void
+    {
+        $this->views = $views;
+    }
+
     public function setActive(bool $active = true): void
     {
         $this->active = $active;
@@ -201,5 +133,42 @@ class News
     public function isActive(): bool
     {
         return $this->active;
+    }
+
+    public function setCategory(Category $category): void
+    {
+        $this->category = $category;
+    }
+
+    public function getCategory(): ?Category
+    {
+        return $this->category;
+    }
+
+    public function setOtherCategory(Category $otherCategory): void
+    {
+        $this->otherCategory = $otherCategory;
+    }
+
+    public function getOtherCategory(): ?Category
+    {
+        return $this->otherCategory;
+    }
+
+    /**
+     * @return Collection<int, Group>
+     */
+    public function getGroups(): Collection
+    {
+        return $this->groups;
+    }
+
+    public function addGroup(Group $group): void
+    {
+        if (true === $this->groups->contains($group)) {
+            return;
+        }
+
+        $this->groups->add($group);
     }
 }

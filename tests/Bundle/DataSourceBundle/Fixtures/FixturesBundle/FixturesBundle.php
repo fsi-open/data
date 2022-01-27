@@ -7,13 +7,12 @@
  * file that was distributed with this source code.
  */
 
-namespace Tests\FSi\Component\DataIndexer\Fixtures;
+declare(strict_types=1);
 
-use Doctrine\ORM\Mapping as ORM;
+namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures\FixturesBundle;
 
-/**
- * @ORM\Entity
- */
-class Oak extends DeciduousTree
+use Symfony\Component\HttpKernel\Bundle\Bundle;
+
+final class FixturesBundle extends Bundle
 {
 }

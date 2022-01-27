@@ -14,10 +14,12 @@ namespace Tests\FSi\Component\DataSource\Driver\Doctrine\ORM;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Mapping\Driver\XmlDriver;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\Tools\Setup;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Persistence\Mapping\Driver\SymfonyFileLocator;
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineAbstractField;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineDriver;
@@ -38,9 +40,9 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
-use Tests\FSi\Component\DataSource\Fixtures\Category;
-use Tests\FSi\Component\DataSource\Fixtures\Group;
-use Tests\FSi\Component\DataSource\Fixtures\News;
+use Tests\FSi\Component\DataSource\Fixtures\Entity\Category;
+use Tests\FSi\Component\DataSource\Fixtures\Entity\Group;
+use Tests\FSi\Component\DataSource\Fixtures\Entity\News;
 
 class DoctrineDriverBasicTest extends TestCase
 {
@@ -245,12 +247,14 @@ class DoctrineDriverBasicTest extends TestCase
 
     private function createEntityManager(): EntityManager
     {
-        $config = Setup::createAnnotationMetadataConfiguration(
-            [__DIR__ . '/../../../Fixtures'],
-            true,
-            null,
-            null,
-            false
+        $config = Setup::createConfiguration(true, null, null);
+        $config->setMetadataDriverImpl(
+            new XmlDriver(
+                new SymfonyFileLocator(
+                    [__DIR__ . '/../../../Fixtures/doctrine' => 'Tests\FSi\Component\DataSource\Fixtures\Entity'],
+                    '.orm.xml'
+                )
+            )
         );
         $em = EntityManager::create(['driver' => 'pdo_sqlite', 'memory' => true], $config);
         $tool = new SchemaTool($em);

@@ -11,93 +11,62 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataIndexer;
 
-use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\Common\Annotations\CachedReader;
-use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\Common\EventManager;
 use Doctrine\DBAL\DriverManager;
-use Doctrine\ORM\Mapping\DefaultQuoteStrategy;
-use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
+use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Mapping\ClassMetadataFactory;
+use Doctrine\ORM\Mapping\DefaultQuoteStrategy;
+use Doctrine\ORM\Mapping\Driver\XmlDriver;
 use Doctrine\ORM\Repository\DefaultRepositoryFactory;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Persistence\Mapping\Driver\SymfonyFileLocator;
 use FSi\Component\DataIndexer\DataIndexerInterface;
 use FSi\Component\DataIndexer\DoctrineDataIndexer;
 use FSi\Component\DataIndexer\Exception\InvalidArgumentException;
 use FSi\Component\DataIndexer\Exception\RuntimeException;
-use Tests\FSi\Component\DataIndexer\Fixtures\DeciduousTree;
-use Tests\FSi\Component\DataIndexer\Fixtures\Monocycle;
-use Tests\FSi\Component\DataIndexer\Fixtures\News;
-use Tests\FSi\Component\DataIndexer\Fixtures\Oak;
-use Tests\FSi\Component\DataIndexer\Fixtures\Plant;
-use Tests\FSi\Component\DataIndexer\Fixtures\Post;
-use Tests\FSi\Component\DataIndexer\Fixtures\Car;
-use Tests\FSi\Component\DataIndexer\Fixtures\Bike;
-use Tests\FSi\Component\DataIndexer\Fixtures\Tree;
-use Tests\FSi\Component\DataIndexer\Fixtures\Vehicle;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Doctrine\ORM\Configuration;
-use Doctrine\ORM\Mapping\ClassMetadataFactory;
-use Doctrine\ORM\EntityRepository;
+use Tests\FSi\Component\DataIndexer\Fixtures\Entity\Bike;
+use Tests\FSi\Component\DataIndexer\Fixtures\Entity\Car;
+use Tests\FSi\Component\DataIndexer\Fixtures\Entity\DeciduousTree;
+use Tests\FSi\Component\DataIndexer\Fixtures\Entity\Monocycle;
+use Tests\FSi\Component\DataIndexer\Fixtures\Entity\News;
+use Tests\FSi\Component\DataIndexer\Fixtures\Entity\Oak;
+use Tests\FSi\Component\DataIndexer\Fixtures\Entity\Plant;
+use Tests\FSi\Component\DataIndexer\Fixtures\Entity\Post;
+use Tests\FSi\Component\DataIndexer\Fixtures\Entity\Tree;
+use Tests\FSi\Component\DataIndexer\Fixtures\Entity\Vehicle;
 
 use function sys_get_temp_dir;
 
 final class DoctrineDataIndexerTest extends TestCase
 {
-    /**
-     * @var EntityManager
-     */
-    private $em;
-
-    protected function setUp(): void
-    {
-        $connectionParams = [
-            'driver'    => 'pdo_sqlite',
-            'memory'    => true,
-        ];
-
-        $evm = new EventManager();
-        $config = $this->getMockAnnotatedConfig();
-        $conn = DriverManager::getConnection($connectionParams, $config, $evm);
-        $em = EntityManager::create($conn, $config, $evm);
-        $schema = array_map(static function ($class) use ($em) {
-            return $em->getClassMetadata($class);
-        }, [News::class, Post::class]);
-
-        $schemaTool = new SchemaTool($em);
-        $schemaTool->dropSchema($schema);
-        $schemaTool->updateSchema($schema, true);
-
-        $this->em = $em;
-    }
+    private EntityManager $manager;
 
     public function testDataIndexerWithInvalidClass(): void
     {
         $managerRegistry = $this->createMock(ManagerRegistry::class);
         $managerRegistry->method('getManagerForClass')->willReturn(null);
 
-        $class = DataIndexerInterface::class;
-
         $this->expectException(InvalidArgumentException::class);
-        new DoctrineDataIndexer($managerRegistry, $class);
+        new DoctrineDataIndexer($managerRegistry, DataIndexerInterface::class);
     }
 
     public function testGetIndexWithSimpleKey(): void
     {
         $dataIndexer = new DoctrineDataIndexer($this->getManagerRegistry(), News::class);
 
-        $news = new News("foo");
-
-        self::assertSame($dataIndexer->getIndex($news), "foo");
+        self::assertSame($dataIndexer->getIndex(new News('foo')), 'foo');
     }
 
     public function testGetIndexWithCompositeKey(): void
     {
         $dataIndexer = new DoctrineDataIndexer($this->getManagerRegistry(), Post::class);
 
-        $news = new Post("foo", "bar");
+        $news = new Post('foo', 'bar');
 
         self::assertSame($dataIndexer->getIndex($news), "foo|bar");
     }
@@ -107,14 +76,14 @@ final class DoctrineDataIndexerTest extends TestCase
         $dataIndexer = new DoctrineDataIndexer($this->getManagerRegistry(), News::class);
 
         $news = new News('foo');
-        $this->em->persist($news);
-        $this->em->flush();
-        $this->em->clear();
+        $this->manager->persist($news);
+        $this->manager->flush();
+        $this->manager->clear();
 
-        $news = $dataIndexer->getData("foo");
+        $news = $dataIndexer->getData('foo');
         self::assertInstanceOf(News::class, $news);
 
-        self::assertSame($news->getId(), "foo");
+        self::assertSame($news->getId(), 'foo');
     }
 
     public function testGetDataWithCompositeKey(): void
@@ -122,15 +91,15 @@ final class DoctrineDataIndexerTest extends TestCase
         $dataIndexer = new DoctrineDataIndexer($this->getManagerRegistry(), Post::class);
 
         $post = new Post('foo', 'bar');
-        $this->em->persist($post);
-        $this->em->flush();
-        $this->em->clear();
+        $this->manager->persist($post);
+        $this->manager->flush();
+        $this->manager->clear();
 
         $post = $dataIndexer->getData("foo|bar");
         self::assertInstanceOf(Post::class, $post);
 
-        self::assertSame($post->getIdFirstPart(), "foo");
-        self::assertSame($post->getIdSecondPart(), "bar");
+        self::assertSame($post->getIdFirstPart(), 'foo');
+        self::assertSame($post->getIdSecondPart(), 'bar');
     }
 
     public function testGetDataWithCompositeKeyAndSeparatorInID(): void
@@ -147,15 +116,15 @@ final class DoctrineDataIndexerTest extends TestCase
 
         $news1 = new News('foo');
         $news2 = new News('bar');
-        $this->em->persist($news1);
-        $this->em->persist($news2);
-        $this->em->flush();
-        $this->em->clear();
+        $this->manager->persist($news1);
+        $this->manager->persist($news2);
+        $this->manager->flush();
+        $this->manager->clear();
 
         /** @var array<int,News> $news */
-        $news = $dataIndexer->getDataSlice(array("foo", "bar"));
+        $news = $dataIndexer->getDataSlice(['foo', 'bar']);
 
-        self::assertSame([$news[0]->getId(), $news[1]->getId()], ["bar", "foo"]);
+        self::assertSame([$news[0]->getId(), $news[1]->getId()], ['bar', 'foo']);
     }
 
     public function testGetDataSliceWithCompositeKey(): void
@@ -164,10 +133,10 @@ final class DoctrineDataIndexerTest extends TestCase
 
         $post1 = new Post('foo', 'foo1');
         $post2 = new Post('bar', 'bar1');
-        $this->em->persist($post1);
-        $this->em->persist($post2);
-        $this->em->flush();
-        $this->em->clear();
+        $this->manager->persist($post1);
+        $this->manager->persist($post2);
+        $this->manager->flush();
+        $this->manager->clear();
 
         /** @var array<int,Post> $news */
         $news = $dataIndexer->getDataSlice(["foo|foo1", "bar|bar1"]);
@@ -255,13 +224,36 @@ final class DoctrineDataIndexerTest extends TestCase
         self::assertSame(Tree::class, $dataIndexer->getClass());
     }
 
+    protected function setUp(): void
+    {
+        $eventManager = new EventManager();
+        $config = $this->getMockEntityManagerConfiguration();
+        $connection = DriverManager::getConnection(
+            ['driver' => 'pdo_sqlite', 'memory' => true,],
+            $config,
+            $eventManager
+        );
+
+        $manager = EntityManager::create($connection, $config, $eventManager);
+        $schema = array_map(
+            fn(string $class) => $manager->getClassMetadata($class),
+            [News::class, Post::class]
+        );
+
+        $schemaTool = new SchemaTool($manager);
+        $schemaTool->dropSchema($schema);
+        $schemaTool->updateSchema($schema, true);
+
+        $this->manager = $manager;
+    }
+
     /**
      * @return ManagerRegistry&MockObject
      */
-    protected function getManagerRegistry(): ManagerRegistry
+    private function getManagerRegistry(): MockObject
     {
         $managerRegistry = $this->createMock(ManagerRegistry::class);
-        $managerRegistry->method('getManagerForClass')->willReturn($this->em);
+        $managerRegistry->method('getManagerForClass')->willReturn($this->manager);
 
         return $managerRegistry;
     }
@@ -269,7 +261,7 @@ final class DoctrineDataIndexerTest extends TestCase
     /**
      * @return Configuration&MockObject
      */
-    protected function getMockAnnotatedConfig(): Configuration
+    private function getMockEntityManagerConfiguration(): MockObject
     {
         $config = $this->createMock(Configuration::class);
         $config->method('getProxyDir')->willReturn(sys_get_temp_dir());
@@ -279,9 +271,14 @@ final class DoctrineDataIndexerTest extends TestCase
         $config->expects(self::once())->method('getClassMetadataFactoryName')->willReturn(ClassMetadataFactory::class);
         $config->method('getQuoteStrategy')->willReturn(new DefaultQuoteStrategy());
 
-        $reader = new AnnotationReader();
-
-        $config->method('getMetadataDriverImpl')->willReturn(new AnnotationDriver($reader, __DIR__));
+        $config->method('getMetadataDriverImpl')->willReturn(
+            new XmlDriver(
+                new SymfonyFileLocator(
+                    [__DIR__ . '/Fixtures/doctrine' => 'Tests\FSi\Component\DataIndexer\Fixtures\Entity'],
+                    '.orm.xml'
+                )
+            )
+        );
         $config->method('getDefaultRepositoryClassName')->willReturn(EntityRepository::class);
         $config->method('getRepositoryFactory')->willReturn(new DefaultRepositoryFactory());
 

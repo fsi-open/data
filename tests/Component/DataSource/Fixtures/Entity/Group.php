@@ -9,34 +9,19 @@
 
 declare(strict_types=1);
 
-namespace Tests\FSi\Component\DataSource\Fixtures;
+namespace Tests\FSi\Component\DataSource\Fixtures\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
-/**
- * @ORM\Table(name="groups")
- * @ORM\Entity
- */
 class Group
 {
-    /**
-     * @ORM\Column(type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private int $id;
-
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
+    private ?int $id = null;
     private ?string $name = null;
 
-    public function __construct(int $id)
+    public function __construct(?int $id = null)
     {
         $this->id = $id;
     }
 
-    public function getId(): int
+    public function getId(): ?int
     {
         return $this->id;
     }
@@ -53,6 +38,6 @@ class Group
 
     public function __toString(): string
     {
-        return $this->getName() ?? '';
+        return $this->name ?? '';
     }
 }

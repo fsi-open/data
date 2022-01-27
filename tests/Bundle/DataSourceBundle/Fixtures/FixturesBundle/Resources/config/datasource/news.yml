@@ -1,0 +1,21 @@
+---
+fields:
+    title:
+        type: text
+        options:
+            comparison: contains
+            form_options:
+                label: Title
+    active:
+        type: boolean
+        options:
+            comparison: eq
+            form_options:
+                label: Active
+    views:
+        type: number
+        options:
+            comparison: eq
+            form_type: Symfony\Component\Form\Extension\Core\Type\IntegerType
+            form_options:
+                label: Views

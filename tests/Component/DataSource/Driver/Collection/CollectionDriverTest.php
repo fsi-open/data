@@ -15,14 +15,15 @@ use DateTimeImmutable;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Mapping\Driver\XmlDriver;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\Tools\Setup;
+use Doctrine\Persistence\Mapping\Driver\SymfonyFileLocator;
 use FSi\Component\DataSource\DataSourceFactory;
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Driver\Collection\CollectionFactory;
 use FSi\Component\DataSource\Driver\Collection\CollectionResult;
 use FSi\Component\DataSource\Driver\Collection\Event\PreGetResult;
-use FSi\Component\DataSource\Driver\Collection\Exception\CollectionDriverException;
 use FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\Boolean;
 use FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\Date;
 use FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\DateTime;
@@ -35,41 +36,18 @@ use FSi\Component\DataSource\Event\DataSourceEvent\PreBindParameters;
 use FSi\Component\DataSource\Extension\Core;
 use FSi\Component\DataSource\Extension\Core\Ordering\OrderingExtension;
 use FSi\Component\DataSource\Extension\Core\Pagination\PaginationExtension;
-use FSi\Component\DataSource\Field\FieldInterface;
-use FSi\Component\DataSource\Field\FieldTypeInterface;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
-use Tests\FSi\Component\DataSource\Fixtures\Category;
-use Tests\FSi\Component\DataSource\Fixtures\Group;
-use Tests\FSi\Component\DataSource\Fixtures\News;
-use PHPUnit\Framework\TestCase;
+use Tests\FSi\Component\DataSource\Fixtures\Entity\Category;
+use Tests\FSi\Component\DataSource\Fixtures\Entity\Group;
+use Tests\FSi\Component\DataSource\Fixtures\Entity\News;
 
 class CollectionDriverTest extends TestCase
 {
     private EntityManager $em;
     private ?EventDispatcherInterface $eventDispatcher = null;
     private ?Core\Ordering\Storage $orderingStorage = null;
-
-    protected function setUp(): void
-    {
-        $dbParams = [
-            'driver' => 'pdo_sqlite',
-            'memory' => true,
-        ];
-
-        $config = Setup::createAnnotationMetadataConfiguration([__DIR__ . '/../../Fixtures'], true, null, null, false);
-        $em = EntityManager::create($dbParams, $config);
-        $tool = new SchemaTool($em);
-        $classes = [
-            $em->getClassMetadata(News::class),
-            $em->getClassMetadata(Category::class),
-            $em->getClassMetadata(Group::class),
-        ];
-        $tool->createSchema($classes);
-        $this->load($em);
-        $this->em = $em;
-    }
 
     public function testComparingWithZero(): void
     {
@@ -102,7 +80,7 @@ class CollectionDriverTest extends TestCase
         $datasource
             ->addField('title', 'text', ['comparison' => 'contains'])
             ->addField('author', 'text', ['comparison' => 'contains'])
-            ->addField('created', 'datetime', ['comparison' => 'between', 'field' => 'create_date'])
+            ->addField('created', 'datetime', ['comparison' => 'between', 'field' => 'createDate'])
         ;
 
         $result1 = $datasource->getResult();
@@ -332,6 +310,29 @@ class CollectionDriverTest extends TestCase
         self::assertCount(97, $result);
     }
 
+    protected function setUp(): void
+    {
+        $config = Setup::createConfiguration(true, null, null);
+        $config->setMetadataDriverImpl(
+            new XmlDriver(
+                new SymfonyFileLocator(
+                    [__DIR__ . '/../../Fixtures/doctrine' => 'Tests\FSi\Component\DataSource\Fixtures\Entity'],
+                    '.orm.xml'
+                )
+            )
+        );
+        $em = EntityManager::create(['driver' => 'pdo_sqlite', 'memory' => true], $config);
+        $tool = new SchemaTool($em);
+        $classes = [
+            $em->getClassMetadata(News::class),
+            $em->getClassMetadata(Category::class),
+            $em->getClassMetadata(Group::class),
+        ];
+        $tool->createSchema($classes);
+        $this->load($em);
+        $this->em = $em;
+    }
+
     protected function tearDown(): void
     {
         unset($this->em);
@@ -386,7 +387,7 @@ class CollectionDriverTest extends TestCase
         return $this->getDataSourceFactory()->createDataSource('collection', $driverOptions, 'datasource2');
     }
 
-    protected function getEventDispatcher(): EventDispatcherInterface
+    private function getEventDispatcher(): EventDispatcherInterface
     {
         if (null === $this->eventDispatcher) {
             $this->eventDispatcher = new EventDispatcher();
