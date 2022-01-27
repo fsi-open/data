@@ -9,20 +9,19 @@
 
 declare(strict_types=1);
 
-namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnType;
+namespace Tests\FSi\Component\DataGrid\ColumnType;
 
-use FSi\Component\DataGrid\DataGridFactoryInterface;
+use FSi\Component\DataGrid\ColumnType\Action;
+use FSi\Component\DataGrid\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Action;
-use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use InvalidArgumentException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
-class ActionTest extends TestCase
+final class ActionTest extends TestCase
 {
     private Action $columnType;
 
@@ -99,7 +98,7 @@ class ActionTest extends TestCase
     /**
      * @return DataGridInterface&MockObject
      */
-    private function getDataGridMock(): DataGridInterface
+    private function getDataGridMock(): MockObject
     {
         $dataGrid = $this->createMock(DataGridInterface::class);
         $dataGrid->method('getDataMapper')

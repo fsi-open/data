@@ -12,11 +12,11 @@ declare(strict_types=1);
 namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension;
 
 use FSi\Component\DataGrid\Column\ColumnInterface;
+use FSi\Component\DataGrid\ColumnType\Text;
+use FSi\Component\DataGrid\ColumnTypeExtension\DefaultColumnOptionsExtension;
+use FSi\Component\DataGrid\ColumnTypeExtension\ValueFormatColumnOptionsExtension;
 use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Text;
-use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
-use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\ValueFormatColumnOptionsExtension;
 use InvalidArgumentException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -25,7 +25,7 @@ use ValueError;
 
 use const PHP_VERSION_ID;
 
-class ValueFormatColumnOptionsExtensionTest extends TestCase
+final class ValueFormatColumnOptionsExtensionTest extends TestCase
 {
     private ValueFormatColumnOptionsExtension $extension;
 
@@ -260,7 +260,7 @@ class ValueFormatColumnOptionsExtensionTest extends TestCase
     /**
      * @return DataGridInterface&MockObject
      */
-    private function getDataGridMock(): DataGridInterface
+    private function getDataGridMock(): MockObject
     {
         $dataGrid = $this->createMock(DataGridInterface::class);
         $dataGrid->method('getDataMapper')

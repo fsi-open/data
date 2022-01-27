@@ -20,17 +20,15 @@ use Twig\Extension\RuntimeExtensionInterface;
 use Twig\TemplateWrapper;
 
 use function array_key_exists;
+use function array_merge;
+use function count;
+use function implode;
+use function sprintf;
 
 class DataGridRuntime implements RuntimeExtensionInterface
 {
-    /**
-     * @var array<string,TemplateWrapper>
-     */
-    private array $themes;
-    /**
-     * @var array<string,array<string,mixed>>
-     */
-    private array $themesVars;
+    private Environment $environment;
+    private TranslatorInterface $translator;
     /**
      * @var array<string>
      */
@@ -39,22 +37,28 @@ class DataGridRuntime implements RuntimeExtensionInterface
      * @var array<TemplateWrapper>
      */
     private array $baseThemes;
-    private Environment $environment;
-    private TranslatorInterface $translator;
+    /**
+     * @var array<string,TemplateWrapper>
+     */
+    private array $themes;
+    /**
+     * @var array<string,array<string,mixed>>
+     */
+    private array $themesVars;
 
     /**
-     * @param array<string> $themes
      * @param TranslatorInterface $translator
      * @param Environment $environment
+     * @param array<string> $themes
      */
-    public function __construct(array $themes, TranslatorInterface $translator, Environment $environment)
+    public function __construct(TranslatorInterface $translator, Environment $environment, array $themes)
     {
-        $this->themes = [];
-        $this->themesVars = [];
         $this->baseThemesNames = $themes;
-        $this->baseThemes = [];
         $this->translator = $translator;
         $this->environment = $environment;
+        $this->themes = [];
+        $this->themesVars = [];
+        $this->baseThemes = [];
     }
 
     /**

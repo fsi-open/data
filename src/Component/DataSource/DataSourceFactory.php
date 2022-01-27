@@ -17,14 +17,14 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 
 use function array_key_exists;
 
-class DataSourceFactory implements DataSourceFactoryInterface
+final class DataSourceFactory implements DataSourceFactoryInterface
 {
     private EventDispatcherInterface $eventDispatcher;
     private DriverFactoryManagerInterface $driverFactoryManager;
     /**
      * @var array<DataSourceInterface>
      */
-    private array $dataSources = [];
+    private array $dataSources;
 
     public function __construct(
         EventDispatcherInterface $eventDispatcher,
@@ -32,6 +32,7 @@ class DataSourceFactory implements DataSourceFactoryInterface
     ) {
         $this->eventDispatcher = $eventDispatcher;
         $this->driverFactoryManager = $driverFactoryManager;
+        $this->dataSources = [];
     }
 
     public function createDataSource(

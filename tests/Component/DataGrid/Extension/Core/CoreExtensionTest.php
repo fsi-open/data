@@ -12,18 +12,21 @@ declare(strict_types=1);
 namespace Tests\FSi\Component\DataGrid\Extension\Core;
 
 use FSi\Component\DataGrid\Column\ColumnInterface;
+use FSi\Component\DataGrid\ColumnType\Action;
+use FSi\Component\DataGrid\ColumnType\Batch;
+use FSi\Component\DataGrid\ColumnType\DateTime;
+use FSi\Component\DataGrid\ColumnType\Entity;
+use FSi\Component\DataGrid\ColumnType\Money;
+use FSi\Component\DataGrid\ColumnType\Number;
+use FSi\Component\DataGrid\ColumnType\Text;
 use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\Event\PreBuildViewEvent;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Action;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Batch;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\DateTime;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Money;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Number;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Text;
-use FSi\Component\DataGrid\Extension\Core\CoreExtension;
-use FSi\Component\DataGrid\Extension\Core\EventSubscriber\ColumnOrder;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Entity;
+use FSi\Component\DataGrid\EventSubscriber\ColumnOrder;
+use FSi\Component\DataGrid\Extension\CoreExtension;
 use PHPUnit\Framework\TestCase;
+
+use function array_map;
+use function count;
 
 class CoreExtensionTest extends TestCase
 {

@@ -13,8 +13,8 @@ namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension;
 
 use ArgumentCountError;
 use FSi\Component\DataGrid\Column\ColumnInterface;
+use FSi\Component\DataGrid\ColumnTypeExtension\EntityValueFormatColumnOptionsExtension;
 use FSi\Component\DataGrid\Exception\DataGridException;
-use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\EntityValueFormatColumnOptionsExtension;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -22,7 +22,7 @@ use function array_key_exists;
 
 use const PHP_VERSION_ID;
 
-class EntityValueFormatColumnOptionsExtensionTest extends TestCase
+final class EntityValueFormatColumnOptionsExtensionTest extends TestCase
 {
     private EntityValueFormatColumnOptionsExtension $extension;
 

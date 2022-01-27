@@ -9,18 +9,18 @@
 
 declare(strict_types=1);
 
-namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnType;
+namespace Tests\FSi\Component\DataGrid\ColumnType;
 
 use DateTime;
+use FSi\Component\DataGrid\ColumnType\Boolean;
+use FSi\Component\DataGrid\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
-use FSi\Component\DataGrid\Extension\Core\ColumnType\Boolean;
-use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
-class BooleanTest extends TestCase
+final class BooleanTest extends TestCase
 {
     private Boolean $columnType;
 
@@ -146,7 +146,7 @@ class BooleanTest extends TestCase
     /**
      * @return DataGridInterface&MockObject
      */
-    private function getDataGridMock(): DataGridInterface
+    private function getDataGridMock(): MockObject
     {
         $dataGrid = $this->createMock(DataGridInterface::class);
         $dataGrid->method('getDataMapper')

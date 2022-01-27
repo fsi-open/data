@@ -15,8 +15,6 @@ parameters:
         - tests/Bundle/DataSourceBundle/Fixtures/var
     ignoreErrors:
         - message: '#Property Symfony\\Component\\HttpFoundation\\Request::\$request \(Symfony\\Component\\HttpFoundation\\InputBag\) does not accept Symfony\\Component\\HttpFoundation\\ParameterBag\.#'
-          path: tests/Bundle/DataGridBundle/DataGrid/Extension/Symfony/EventSubscriber/BindRequestTest.php
-        - message: '#PHPDoc tag @var for variable \$metadata contains generic type Doctrine\\ORM\\Mapping\\ClassMetadataInfo\<Tests\\FSi\\Component\\DataGrid\\Fixtures\\EntityTree\> but class Doctrine\\ORM\\Mapping\\ClassMetadataInfo is not generic\.#'
-          path: tests/Component/DataGrid/Extension/Gedmo/ColumnType/TreeTest.php
+          path: tests/Bundle/DataGridBundle/DataGrid/EventSubscriber/BindRequestTest.php
         - message: '#Strict comparison using === between false and array\<string, string\> will always evaluate to false\.#'
           path: src/Component/DataIndexer/DoctrineDataIndexer.php

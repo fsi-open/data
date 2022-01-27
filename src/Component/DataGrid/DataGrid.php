@@ -30,7 +30,7 @@ use function next;
 use function reset;
 use function sprintf;
 
-class DataGrid implements DataGridInterface
+final class DataGrid implements DataGridInterface
 {
     protected DataGridFactoryInterface $dataGridFactory;
     protected EventDispatcherInterface $eventDispatcher;
@@ -240,7 +240,7 @@ class DataGrid implements DataGridInterface
         return $this->dataMapper;
     }
 
-    protected function getRowset(): DataRowsetInterface
+    private function getRowset(): DataRowsetInterface
     {
         if (null === $this->rowset) {
             throw $this->createUninitializedDataException();

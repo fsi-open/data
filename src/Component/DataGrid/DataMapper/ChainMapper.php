@@ -19,7 +19,7 @@ final class ChainMapper implements DataMapperInterface
     /**
      * @var array<DataMapperInterface>
      */
-    private array $mappers = [];
+    private array $mappers;
 
     /**
      * @param array<DataMapperInterface> $mappers
@@ -31,6 +31,7 @@ final class ChainMapper implements DataMapperInterface
             throw new InvalidArgumentException('There must be at least one mapper in chain.');
         }
 
+        $this->mappers = [];
         foreach ($mappers as $mapper) {
             if (false === $mapper instanceof DataMapperInterface) {
                 throw new InvalidArgumentException(
@@ -62,9 +63,9 @@ final class ChainMapper implements DataMapperInterface
             break;
         }
 
-        if (!$dataFound) {
+        if (false === $dataFound) {
             if (null === $lastMsg) {
-                $lastMsg = sprintf('Cant find any data that fit "%s" field.', $field);
+                $lastMsg = "Cant find any data that fit \"{$field}\" field.";
             }
 
             throw new DataMappingException($lastMsg);
@@ -93,9 +94,9 @@ final class ChainMapper implements DataMapperInterface
             break;
         }
 
-        if (!$dataChanged) {
-            if (!isset($lastMsg)) {
-                $lastMsg = sprintf('Cant find any data that fit "%s" field.', $field);
+        if (false === $dataChanged) {
+            if (null === $lastMsg) {
+                $lastMsg = "Cant find any data that fit \"{$field}\" field.";
             }
 
             throw new DataMappingException($lastMsg);

@@ -6,11 +6,10 @@
     <services>
         <defaults autoconfigure="true" autowire="true" public="false" />
 
-        <prototype namespace="FSi\Bundle\DataGridBundle\Twig\Extension\" resource="../../Twig/Extension" />
+        <prototype namespace="FSi\Bundle\DataGridBundle\Twig\Extension\" resource="../../Twig/Extension">
+            <bind key="$themes">%datagrid.twig.themes%</bind>
+        </prototype>
 
-        <service id="FSi\Bundle\DataGridBundle\Twig\Extension\DataGridRuntime">
-            <argument>%datagrid.twig.themes%</argument>
-        </service>
     </services>
 
 </container>

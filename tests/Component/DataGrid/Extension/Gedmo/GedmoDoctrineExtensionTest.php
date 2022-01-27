@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataGrid\Extension\Gedmo;
 
-use FSi\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
-use FSi\Component\DataGrid\Extension\Gedmo\GedmoDoctrineExtension;
 use Doctrine\Persistence\ManagerRegistry;
+use FSi\Component\DataGrid\Gedmo\ColumnType\Tree;
+use FSi\Component\DataGrid\Gedmo\GedmoDoctrineExtension;
 use PHPUnit\Framework\TestCase;
 
 class GedmoDoctrineExtensionTest extends TestCase

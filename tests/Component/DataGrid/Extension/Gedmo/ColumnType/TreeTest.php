@@ -17,18 +17,18 @@ use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\Mapping\ClassMetadataFactory;
 use Doctrine\Persistence\ObjectManager;
-use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
-use InvalidArgumentException;
-use Symfony\Component\PropertyAccess\PropertyAccess;
-use Tests\FSi\Component\DataGrid\Fixtures\EntityTree;
-use FSi\Component\DataGrid\Extension\Gedmo\ColumnType\Tree;
-use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
+use FSi\Component\DataGrid\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\DataGridInterface;
+use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
+use FSi\Component\DataGrid\Gedmo\ColumnType\Tree;
 use Gedmo\Tree\RepositoryInterface;
-use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\TestCase;
 use Gedmo\Tree\Strategy;
 use Gedmo\Tree\TreeListener;
+use InvalidArgumentException;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\PropertyAccess\PropertyAccess;
+use Tests\FSi\Component\DataGrid\Fixtures\EntityTree;
 
 class TreeTest extends TestCase
 {
@@ -37,9 +37,7 @@ class TreeTest extends TestCase
         $registry = $this->createMock(ManagerRegistry::class);
         $columnType = new Tree($registry, [new DefaultColumnOptionsExtension()]);
 
-        $dataGrid = $this->getDataGridMock();
-
-        $column = $columnType->createColumn($dataGrid, 'tree', ['field_mapping' => ['id']]);
+        $column = $columnType->createColumn($this->getDataGridMock(), 'tree', ['field_mapping' => ['id']]);
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Column "gedmo_tree" must read value from object.');
@@ -52,9 +50,7 @@ class TreeTest extends TestCase
         $registry = $this->getManagerRegistry();
         $columnType = new Tree($registry, [new DefaultColumnOptionsExtension()]);
 
-        $dataGrid = $this->getDataGridMock();
-
-        $column = $columnType->createColumn($dataGrid, 'tree', ['field_mapping' => ['id']]);
+        $column = $columnType->createColumn($this->getDataGridMock(), 'tree', ['field_mapping' => ['id']]);
         $view = $columnType->createCellView($column, 1, new EntityTree("foo"));
 
         self::assertSame(
@@ -74,7 +70,7 @@ class TreeTest extends TestCase
     /**
      * @return ManagerRegistry&MockObject
      */
-    protected function getManagerRegistry(): ManagerRegistry
+    private function getManagerRegistry(): MockObject
     {
         $managerRegistry = $this->createMock(ManagerRegistry::class);
 
@@ -168,7 +164,7 @@ class TreeTest extends TestCase
     /**
      * @return DataGridInterface&MockObject
      */
-    private function getDataGridMock(): DataGridInterface
+    private function getDataGridMock(): MockObject
     {
         $dataGrid = $this->createMock(DataGridInterface::class);
         $dataGrid->method('getDataMapper')

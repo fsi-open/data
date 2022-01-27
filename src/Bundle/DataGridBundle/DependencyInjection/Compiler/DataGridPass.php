@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace FSi\Bundle\DataGridBundle\DependencyInjection\Compiler;
 
-use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\DependencyInjectionExtension;
+use FSi\Bundle\DataGridBundle\DataGrid\Extension\DependencyInjectionExtension;
 use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
 use FSi\Component\DataGrid\Exception\DataGridException;
 use ReflectionNamedType;
@@ -78,7 +78,7 @@ final class DataGridPass implements CompilerPassInterface
                         );
                     }
                     foreach ($columnExtensionClass::getExtendedColumnTypes() as $extendedColumnType) {
-                        if (is_a($columnClass, $extendedColumnType, true)) {
+                        if (true === is_a($columnClass, $extendedColumnType, true)) {
                             $columnTypeExtensionsReferences[] = $columnExtensionReference;
                         }
                     }
@@ -112,8 +112,8 @@ final class DataGridPass implements CompilerPassInterface
                         "Unable to reflect class name of the first argument of {$serviceId}::__invoke()"
                     );
                 }
-                $eventClass = $eventTypeReflection->getName();
 
+                $eventClass = $eventTypeReflection->getName();
                 $eventDispatcher->addMethodCall('addListener', [$eventClass, new Reference($serviceId), $priority]);
             }
         }
