@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource;
 
-use FSi\Component\DataSource\Exception\DataSourceException;
+use FSi\Component\DataSource\Exception\DataSourceExceptionInterface;
 use FSi\Component\DataSource\Field\FieldInterface;
 use FSi\Component\DataSource\Field\FieldViewInterface;
 
@@ -25,9 +25,6 @@ use FSi\Component\DataSource\Field\FieldViewInterface;
  */
 interface DataSourceInterface
 {
-    /**
-     * Key for fields data.
-     */
     public const PARAMETER_FIELDS = 'fields';
 
     public function getName(): string;
@@ -39,7 +36,7 @@ interface DataSourceInterface
      * @param string $type
      * @param array<string,mixed> $options
      * @return DataSourceInterface
-     * @throws DataSourceException
+     * @throws DataSourceExceptionInterface
      */
     public function addField(
         string $name,

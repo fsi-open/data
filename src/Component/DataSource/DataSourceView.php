@@ -22,8 +22,10 @@ use function array_walk;
 use function count;
 use function sprintf;
 
-class DataSourceView extends AttributesContainer implements DataSourceViewInterface
+final class DataSourceView implements DataSourceViewInterface
 {
+    use AttributesContainer;
+
     private string $name;
     /**
      * @var array<string, array<string, array<string, mixed>>>
@@ -53,6 +55,7 @@ class DataSourceView extends AttributesContainer implements DataSourceViewInterf
         $this->name = $name;
         $this->parameters = $parameters;
         $this->otherParameters = $otherParameters;
+        $this->attributes = [];
         $this->fields = [];
         $this->iterator = null;
         array_walk($fields, function (FieldInterface $field): void {

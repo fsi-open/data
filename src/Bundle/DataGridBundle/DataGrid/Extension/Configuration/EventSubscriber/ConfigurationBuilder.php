@@ -28,21 +28,25 @@ use function is_dir;
 use function is_string;
 use function sprintf;
 
-class ConfigurationBuilder implements DataGridEventSubscriberInterface
+final class ConfigurationBuilder implements DataGridEventSubscriberInterface
 {
-    private const BUNDLE_CONFIG_PATH = '%s/Resources/config/datagrid/%s.yml';
-    private const MAIN_CONFIG_DIRECTORY = 'datagrid.yaml.main_config';
-
     private KernelInterface $kernel;
-
-    public function __construct(KernelInterface $kernel)
-    {
-        $this->kernel = $kernel;
-    }
+    private string $bundleConfigPath;
+    private ?string $mainConfigDirectory;
 
     public static function getPriority(): int
     {
         return 128;
+    }
+
+    public function __construct(
+        KernelInterface $kernel,
+        string $bundleConfigPath,
+        ?string $mainConfigDirectory
+    ) {
+        $this->kernel = $kernel;
+        $this->bundleConfigPath = $bundleConfigPath;
+        $this->mainConfigDirectory = $mainConfigDirectory;
     }
 
     public function __invoke(PreSetDataEvent $event): void
@@ -58,7 +62,7 @@ class ConfigurationBuilder implements DataGridEventSubscriberInterface
 
     /**
      * @param DataGridInterface $dataGrid
-     * @param array<string,mixed> $configuration
+     * @param array{columns: array<string, array{type?: string, options?: array<string, mixed>}>} $configuration
      */
     private function buildConfiguration(DataGridInterface $dataGrid, array $configuration): void
     {
@@ -69,25 +73,19 @@ class ConfigurationBuilder implements DataGridEventSubscriberInterface
 
     /**
      * @param string $dataGridName
-     * @return array<string,mixed>|null
+     * @return array{columns: array<string, array{type?: string, options?: array<string, mixed>}>}|null
      */
     private function getMainConfiguration(string $dataGridName): ?array
     {
-        $directory = $this->kernel->getContainer()->getParameter(self::MAIN_CONFIG_DIRECTORY);
-        if (null === $directory) {
+        if (null === $this->mainConfigDirectory) {
             return null;
         }
-        if (false === is_string($directory)) {
-            throw new RuntimeException(
-                sprintf('"%s" parameter must be a string but is %s', self::MAIN_CONFIG_DIRECTORY, gettype($directory))
-            );
+
+        if (false === is_dir($this->mainConfigDirectory)) {
+            throw new RuntimeException("\"{$this->mainConfigDirectory}\" is not a directory!");
         }
 
-        if (false === is_dir($directory)) {
-            throw new RuntimeException("\"{$directory}\" is not a directory!");
-        }
-
-        $configurationFile = sprintf('%s/%s.yml', rtrim($directory, '/'), $dataGridName);
+        $configurationFile = sprintf('%s/%s.yml', rtrim($this->mainConfigDirectory, '/'), $dataGridName);
         if (false === file_exists($configurationFile)) {
             return null;
         }
@@ -100,9 +98,9 @@ class ConfigurationBuilder implements DataGridEventSubscriberInterface
         $dataGridName = $dataGrid->getName();
         $eligibleBundles = array_filter(
             $this->kernel->getBundles(),
-            static function (BundleInterface $bundle) use ($dataGridName): bool {
-                return file_exists(sprintf(self::BUNDLE_CONFIG_PATH, $bundle->getPath(), $dataGridName));
-            }
+            fn(BundleInterface $bundle): bool
+                => true === file_exists($this->createBundlePathForFile($bundle, $dataGridName, 'yml'))
+                    || true === file_exists($this->createBundlePathForFile($bundle, $dataGridName, 'yaml'))
         );
 
         // The idea here is that the last found configuration should be used
@@ -115,16 +113,15 @@ class ConfigurationBuilder implements DataGridEventSubscriberInterface
     /**
      * @param string $dataGridName
      * @param array<BundleInterface> $eligibleBundles
-     * @return array<string,mixed>
+     * @return array{columns: array<string, array{type?: string, options?: array<string, mixed>}>}
      */
     private function findLastBundleConfiguration(string $dataGridName, array $eligibleBundles): array
     {
-        return array_reduce(
+        /** @var array{columns: array<string, array{type?: string, options?: array<string, mixed>}>} $configuration */
+        $configuration = array_reduce(
             $eligibleBundles,
             function (array $configuration, BundleInterface $bundle) use ($dataGridName): array {
-                $overridingConfiguration = $this->parseYamlFile(
-                    sprintf(self::BUNDLE_CONFIG_PATH, $bundle->getPath(), $dataGridName)
-                );
+                $overridingConfiguration = $this->getOverridingConfiguration($bundle, $dataGridName);
                 if (true === is_array($overridingConfiguration)) {
                     $configuration = $overridingConfiguration;
                 }
@@ -133,19 +130,55 @@ class ConfigurationBuilder implements DataGridEventSubscriberInterface
             },
             []
         );
+
+        return $configuration;
+    }
+    /**
+     * @param BundleInterface $bundle
+     * @param string $dataGridName
+     * @return array{columns: array<string, array{type?: string, options?: array<string, mixed>}>}|null
+     */
+    private function getOverridingConfiguration(BundleInterface $bundle, string $dataGridName): ?array
+    {
+        $ymlFile = $this->createBundlePathForFile($bundle, $dataGridName, 'yml');
+        $yamlFile = $this->createBundlePathForFile($bundle, $dataGridName, 'yaml');
+        if (true === file_exists($ymlFile)) {
+            $file = $ymlFile;
+        } elseif (true === file_exists($yamlFile)) {
+            $file = $yamlFile;
+        } else {
+            $file = null;
+        }
+
+        if (null === $file) {
+            return null;
+        }
+
+        return $this->parseYamlFile($file);
     }
 
     /**
      * @param string $path
-     * @return array<string,mixed>
+     * @return array{columns: array<string, array{type?: string, options?: array<string, mixed>}>}
      */
     private function parseYamlFile(string $path): array
     {
         $contents = file_get_contents($path);
         if (false === is_string($contents)) {
-            throw new RuntimeException("Unable to read contentes of file {$path}");
+            throw new RuntimeException("Unable to read contents of file {$path}");
         }
 
         return Yaml::parse($contents);
+    }
+
+    private function createBundlePathForFile(BundleInterface $bundle, string $dataSourceName, string $extension): string
+    {
+        return sprintf(
+            '%s/%s/%s.%s',
+            $bundle->getPath(),
+            $this->bundleConfigPath,
+            $dataSourceName,
+            $extension
+        );
     }
 }

@@ -13,12 +13,12 @@ namespace FSi\Component\DataSource\Util;
 
 use function array_key_exists;
 
-class AttributesContainer implements AttributesContainerInterface
+trait AttributesContainer
 {
     /**
      * @var array<string,mixed>
      */
-    protected array $attributes = [];
+    private array $attributes;
 
     public function hasAttribute(string $name): bool
     {

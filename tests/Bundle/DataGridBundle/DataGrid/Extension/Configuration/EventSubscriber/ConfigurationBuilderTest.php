@@ -26,18 +26,10 @@ class ConfigurationBuilderTest extends TestCase
     /**
      * @var Kernel&MockObject
      */
-    private Kernel $kernel;
-    private ConfigurationBuilder $subscriber;
+    private MockObject $kernel;
 
     public function testReadConfigurationFromOneBundle(): void
     {
-        $container = $this->createMock(ContainerInterface::class);
-        $container->expects(self::once())
-            ->method('getParameter')
-            ->with('datagrid.yaml.main_config')
-            ->willReturn(null)
-        ;
-        $this->kernel->expects(self::once())->method('getContainer')->willReturn($container);
         $this->kernel->expects(self::once())
             ->method('getBundles')
             ->willReturnCallback(
@@ -54,19 +46,11 @@ class ConfigurationBuilderTest extends TestCase
         $dataGrid->method('getName')->willReturn('news');
         $dataGrid->expects(self::once())->method('addColumn')->with('id', 'number', ['label' => 'Identity']);
 
-        ($this->subscriber)(new PreSetDataEvent($dataGrid, []));
+        $this->createConfigurationBuilder(null)(new PreSetDataEvent($dataGrid, []));
     }
 
     public function testReadConfigurationFromManyBundles(): void
     {
-        $container = $this->createMock(ContainerInterface::class);
-        $container->expects(self::once())
-            ->method('getParameter')
-            ->with('datagrid.yaml.main_config')
-            ->willReturn(null)
-        ;
-
-        $this->kernel->expects(self::once())->method('getContainer')->willReturn($container);
         $this->kernel->expects(self::once())
             ->method('getBundles')
             ->willReturnCallback(
@@ -95,19 +79,11 @@ class ConfigurationBuilderTest extends TestCase
             )
         ;
 
-        ($this->subscriber)(new PreSetDataEvent($dataGrid, []));
+        $this->createConfigurationBuilder(null)(new PreSetDataEvent($dataGrid, []));
     }
 
     public function testMainConfigurationOverridesBundles(): void
     {
-        $container = $this->createMock(ContainerInterface::class);
-        $container->expects(self::once())
-            ->method('getParameter')
-            ->with('datagrid.yaml.main_config')
-            ->willReturn(sprintf('%s/../../../../Resources/config/main_directory', __DIR__))
-        ;
-
-        $this->kernel->expects(self::once())->method('getContainer')->willReturn($container);
         $this->kernel->expects(self::never())->method('getBundles');
         $dataGrid = $this->getMockBuilder(DataGridInterface::class)->disableOriginalConstructor()->getMock();
         $dataGrid->method('getName')->willReturn('news');
@@ -120,19 +96,12 @@ class ConfigurationBuilderTest extends TestCase
                 ['created_at', 'date', ['label' => 'Created at']]
             );
 
-        ($this->subscriber)(new PreSetDataEvent($dataGrid, []));
+        $mainDirectory = sprintf('%s/../../../../Resources/config/main_directory', __DIR__);
+        $this->createConfigurationBuilder($mainDirectory)(new PreSetDataEvent($dataGrid, []));
     }
 
     public function testBundleConfigUsedWhenNoFileFoundInMainDirectory(): void
     {
-        $container = $this->createMock(ContainerInterface::class);
-        $container->expects(self::once())
-            ->method('getParameter')
-            ->with('datagrid.yaml.main_config')
-            ->willReturn(sprintf('%s/../../../../Resources/config/main_directory', __DIR__))
-        ;
-
-        $this->kernel->expects(self::once())->method('getContainer')->willReturn($container);
         $this->kernel->expects(self::once())
             ->method('getBundles')
             ->willReturnCallback(
@@ -149,7 +118,8 @@ class ConfigurationBuilderTest extends TestCase
         $dataGrid->method('getName')->willReturn('user');
         $dataGrid->expects(self::once())->method('addColumn')->with('username', 'text', []);
 
-        ($this->subscriber)(new PreSetDataEvent($dataGrid, []));
+        $mainDirectory = sprintf('%s/../../../../Resources/config/main_directory', __DIR__);
+        $this->createConfigurationBuilder($mainDirectory)(new PreSetDataEvent($dataGrid, []));
     }
 
     public function testExceptionThrownWhenMainConfigPathIsNotADirectory(): void
@@ -157,19 +127,10 @@ class ConfigurationBuilderTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('"non existing directory" is not a directory!');
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->expects(self::once())
-            ->method('getParameter')
-            ->with('datagrid.yaml.main_config')
-            ->willReturn('non existing directory')
-        ;
-
-        $this->kernel->expects(self::once())->method('getContainer')->willReturn($container);
-
         $dataGrid = $this->getMockBuilder(DataGridInterface::class)->disableOriginalConstructor()->getMock();
         $dataGrid->method('getName')->willReturn('news');
 
-        ($this->subscriber)(new PreSetDataEvent($dataGrid, []));
+        $this->createConfigurationBuilder('non existing directory')(new PreSetDataEvent($dataGrid, []));
     }
 
     protected function setUp(): void
@@ -181,6 +142,14 @@ class ConfigurationBuilderTest extends TestCase
             ->getMock();
 
         $this->kernel = $kernelMock;
-        $this->subscriber = new ConfigurationBuilder($this->kernel);
+    }
+
+    private function createConfigurationBuilder(?string $mainConfigDirectory): ConfigurationBuilder
+    {
+        return new ConfigurationBuilder(
+            $this->kernel,
+            'Resources/config/datagrid',
+            $mainConfigDirectory
+        );
     }
 }
