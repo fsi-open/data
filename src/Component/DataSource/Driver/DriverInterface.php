@@ -17,19 +17,13 @@ use FSi\Component\DataSource\Result;
 
 interface DriverInterface
 {
-    public function hasFieldType(string $type): bool;
-    public function getFieldType(string $type): FieldTypeInterface;
     /**
-     * Returns collection with result.
-     *
-     * Returned object must implement interfaces Countable and IteratorAggregate.
-     * Count on this object must return amount
-     * of all available results.
-     *
      * @param array<FieldInterface> $fields
      * @param int|null $first
      * @param int|null $max
      * @return Result
      */
     public function getResult(array $fields, ?int $first, ?int $max): Result;
+    public function hasFieldType(string $type): bool;
+    public function getFieldType(string $type): FieldTypeInterface;
 }

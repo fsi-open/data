@@ -17,13 +17,13 @@ use FSi\Component\DataSource\Driver\Collection\Event\PostGetResult;
 use FSi\Component\DataSource\Driver\Collection\Event\PreGetResult;
 use FSi\Component\DataSource\Driver\Collection\Exception\CollectionDriverException;
 use FSi\Component\DataSource\Driver\Collection\FieldType\FieldTypeInterface;
-use FSi\Component\DataSource\Driver\DriverAbstract;
+use FSi\Component\DataSource\Driver\AbstractDriver;
 use FSi\Component\DataSource\Field\FieldInterface;
 use FSi\Component\DataSource\Field\Type\FieldFieldInterface;
 use FSi\Component\DataSource\Result;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
-class CollectionDriver extends DriverAbstract
+class CollectionDriver extends AbstractDriver
 {
     /**
      * @var Selectable<int|string,mixed>

@@ -17,7 +17,7 @@ use FSi\Component\DataSource\Driver\Doctrine\ORM\Event\PostGetResult;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\Event\PreGetResult;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\Exception\DoctrineDriverException;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\FieldType\FieldTypeInterface;
-use FSi\Component\DataSource\Driver\DriverAbstract;
+use FSi\Component\DataSource\Driver\AbstractDriver;
 use FSi\Component\DataSource\Field\FieldInterface;
 use FSi\Component\DataSource\Result;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -25,7 +25,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 use function sprintf;
 use function strpos;
 
-final class ORMDriver extends DriverAbstract
+final class ORMDriver extends AbstractDriver
 {
     private ManagerRegistry $managerRegistry;
     private QueryBuilder $query;
