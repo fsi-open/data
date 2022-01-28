@@ -15,6 +15,8 @@ use FSi\Component\DataGrid\Column\ColumnAbstractType;
 use FSi\Component\DataGrid\Column\ColumnInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+use function trim;
+
 class Text extends ColumnAbstractType
 {
     public function getId(): string
@@ -36,7 +38,7 @@ class Text extends ColumnAbstractType
         $trim = $column->getOption('trim');
         if ($trim === true) {
             foreach ($value as &$val) {
-                if (empty($val)) {
+                if (true === empty($val)) {
                     continue;
                 }
 

@@ -192,14 +192,11 @@ final class DataSourceTest extends TestCase
             $this->createDriverMock()
         );
 
-        $max = 20;
-        $first = 40;
+        $datasource->setMaxResults(20);
+        $datasource->setFirstResult(40);
 
-        $datasource->setMaxResults($max);
-        $datasource->setFirstResult($first);
-
-        self::assertEquals($max, $datasource->getMaxResults());
-        self::assertEquals($first, $datasource->getFirstResult());
+        self::assertEquals(20, $datasource->getMaxResults());
+        self::assertEquals(40, $datasource->getFirstResult());
     }
 
     public function testPreAndPostGetParametersCalls(): void

@@ -49,8 +49,7 @@ class DataSource implements DataSourceInterface
      */
     private array $cache;
     /**
-     * Flag set as true when fields or their data is modifying, or even new
-     * extension is added.
+     * Flag set as true when fields or their data is modifying.
      *
      * @var bool
      */
@@ -63,7 +62,9 @@ class DataSource implements DataSourceInterface
         DriverInterface $driver
     ) {
         if (1 !== preg_match('/^[\w]+$/', $name)) {
-            throw new DataSourceException('Name of data source may contain only word characters and digits.');
+            throw new DataSourceException(
+                "Name \"{$name}\" of data source may contain only word characters and digits."
+            );
         }
 
         $this->name = $name;
@@ -79,7 +80,7 @@ class DataSource implements DataSourceInterface
 
     public function hasField(string $name): bool
     {
-        return isset($this->fields[$name]);
+        return array_key_exists($name, $this->fields);
     }
 
     public function addField(
@@ -114,7 +115,7 @@ class DataSource implements DataSourceInterface
     {
         if (false === $this->hasField($name)) {
             throw new DataSourceException(
-                sprintf('There\'s no field with name "%s" in DataSource "%s"', $name, $this->name)
+                "There is no field with name \"{$name}\" in DataSource \"{$this->name}\""
             );
         }
 
