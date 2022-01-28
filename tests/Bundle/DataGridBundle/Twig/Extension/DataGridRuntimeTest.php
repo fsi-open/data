@@ -59,7 +59,7 @@ class DataGridRuntimeTest extends TestCase
 
         $this->twig = $twig;
         $this->extension = new DataGridExtension();
-        $this->runtime = new DataGridRuntime(['datagrid.html.twig'], $this->translator, $twig);
+        $this->runtime = new DataGridRuntime($this->translator, $twig, ['datagrid.html.twig']);
 
         $this->runtimeLoader = new TwigRuntimeLoader([$renderer, $this->runtime]);
         $twig->addRuntimeLoader($this->runtimeLoader);
@@ -70,9 +70,9 @@ class DataGridRuntimeTest extends TestCase
         $this->twig->addExtension($this->extension);
 
         $this->runtime = new DataGridRuntime(
-            ['this_is_not_valid_path.html.twig'],
             $this->translator,
-            $this->twig
+            $this->twig,
+            ['this_is_not_valid_path.html.twig']
         );
         $this->runtimeLoader->replaceInstance($this->runtime);
 
@@ -198,9 +198,9 @@ class DataGridRuntimeTest extends TestCase
         $this->twig->load('datagrid.html.twig');
 
         $this->runtime = new DataGridRuntime(
-            ['datagrid.html.twig', 'datagrid/second_theme.html.twig'],
             $this->translator,
-            $this->twig
+            $this->twig,
+            ['datagrid.html.twig', 'datagrid/second_theme.html.twig']
         );
         $this->runtimeLoader->replaceInstance($this->runtime);
         $dataGridView = $this->getDataGridView('grid');

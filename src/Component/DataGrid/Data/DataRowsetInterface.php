@@ -19,6 +19,6 @@ use Iterator;
  * @template-extends ArrayAccess<int|string,array<string,mixed>|object>
  * @template-extends Iterator<int|string,array<string,mixed>|object>
  */
-interface DataRowsetInterface extends Iterator, Countable, ArrayAccess
+interface DataRowsetInterface extends ArrayAccess, Countable, Iterator
 {
 }

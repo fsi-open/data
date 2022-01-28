@@ -14,6 +14,13 @@ namespace FSi\Component\DataGrid\Data;
 use InvalidArgumentException;
 use RuntimeException;
 
+use function array_key_exists;
+use function count;
+use function current;
+use function key;
+use function next;
+use function reset;
+
 class DataRowset implements DataRowsetInterface
 {
     /**
@@ -64,7 +71,7 @@ class DataRowset implements DataRowsetInterface
 
     public function valid(): bool
     {
-        return $this->key() !== null;
+        return null !== $this->key();
     }
 
     public function offsetExists($offset): bool
@@ -74,11 +81,11 @@ class DataRowset implements DataRowsetInterface
 
     public function offsetGet($offset)
     {
-        if ($this->offsetExists($offset)) {
-            return $this->data[$offset];
+        if (false === $this->offsetExists($offset)) {
+            throw new InvalidArgumentException("Row \"{$offset}\" does not exist in rowset.");
         }
 
-        throw new InvalidArgumentException("Row \"{$offset}\" does not exist in rowset.");
+        return $this->data[$offset];
     }
 
     public function offsetSet($offset, $value): void

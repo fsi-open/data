@@ -12,8 +12,8 @@ declare(strict_types=1);
 namespace Tests\FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension;
 
 use FSi\Component\DataGrid\Column\ColumnInterface;
-use FSi\Component\DataGrid\Extension\Core\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\Column\HeaderViewInterface;
+use FSi\Component\DataGrid\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use PHPUnit\Framework\TestCase;
 
 class DefaultColumnOptionsExtensionTest extends TestCase

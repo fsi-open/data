@@ -11,15 +11,15 @@ declare(strict_types=1);
 
 namespace FSi\Bundle\DataGridBundle\DependencyInjection;
 
-use FSi\Bundle\DataGridBundle\DataGrid\Extension\Symfony\CellFormBuilder\CellFormBuilderInterface;
-use FSi\Component\DataGrid\Event\DataGridEventSubscriberInterface;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\Config\FileLocator;
-use Symfony\Component\HttpKernel\DependencyInjection\Extension;
-use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
-use FSi\Component\DataGrid\DataGridExtensionInterface;
-use FSi\Component\DataGrid\Column\ColumnTypeInterface;
+use FSi\Bundle\DataGridBundle\DataGrid\CellFormBuilder\CellFormBuilderInterface;
 use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
+use FSi\Component\DataGrid\Column\ColumnTypeInterface;
+use FSi\Component\DataGrid\DataGridExtensionInterface;
+use FSi\Component\DataGrid\Event\DataGridEventSubscriberInterface;
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
+use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
 final class FSIDataGridExtension extends Extension
 {
@@ -49,14 +49,19 @@ final class FSIDataGridExtension extends Extension
         }
 
         $container->registerForAutoconfiguration(DataGridExtensionInterface::class)
-            ->addTag('datagrid.extension');
+            ->addTag('datagrid.extension')
+        ;
         $container->registerForAutoconfiguration(ColumnTypeInterface::class)
-            ->addTag('datagrid.column');
+            ->addTag('datagrid.column')
+        ;
         $container->registerForAutoconfiguration(ColumnTypeExtensionInterface::class)
-            ->addTag('datagrid.column_extension');
+            ->addTag('datagrid.column_extension')
+        ;
         $container->registerForAutoconfiguration(DataGridEventSubscriberInterface::class)
-            ->addTag('datagrid.event_subscriber', ['default_priority_method' => 'getPriority']);
+            ->addTag('datagrid.event_subscriber', ['default_priority_method' => 'getPriority'])
+        ;
         $container->registerForAutoconfiguration(CellFormBuilderInterface::class)
-            ->addTag('datagrid.cell_form_builder');
+            ->addTag('datagrid.cell_form_builder')
+        ;
     }
 }

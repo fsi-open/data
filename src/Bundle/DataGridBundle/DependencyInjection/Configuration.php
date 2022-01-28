@@ -25,12 +25,13 @@ final class Configuration implements ConfigurationInterface
             ->children()
                 ->arrayNode('yaml_configuration')
                     ->beforeNormalization()
-                        ->ifTrue(function ($value): bool {
-                            return true === $value || false === $value;
-                        })
-                        ->then(function ($value): array {
-                            return ['enabled' => $value, 'main_configuration_directory' => null];
-                        })
+                        ->ifTrue(
+                            static fn($value): bool => true === $value || false === $value
+                        )
+                        ->then(
+                            static fn($value): array
+                                => ['enabled' => $value, 'main_configuration_directory' => null]
+                        )
                     ->end()
                     ->addDefaultsIfNotSet()
                     ->children()

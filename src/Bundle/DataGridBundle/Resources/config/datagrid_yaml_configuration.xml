@@ -5,7 +5,7 @@
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <services>
-        <service id="FSi\Bundle\DataGridBundle\DataGrid\Extension\Configuration\EventSubscriber\ConfigurationBuilder">
+        <service id="FSi\Bundle\DataGridBundle\DataGrid\EventSubscriber\ConfigurationBuilder">
             <argument type="service" id="kernel" />
             <argument>Resources/config/datagrid</argument>
             <argument>%datagrid.yaml.main_config%</argument>
