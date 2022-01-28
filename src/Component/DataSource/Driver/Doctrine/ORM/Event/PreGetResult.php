@@ -13,7 +13,7 @@ namespace FSi\Component\DataSource\Driver\Doctrine\ORM\Event;
 
 use Doctrine\ORM\QueryBuilder;
 use FSi\Component\DataSource\Driver\DriverInterface;
-use FSi\Component\DataSource\Event\DriverEvent\DriverEventArgs;
+use FSi\Component\DataSource\Driver\Event\DriverEventArgs;
 
 class PreGetResult extends DriverEventArgs
 {

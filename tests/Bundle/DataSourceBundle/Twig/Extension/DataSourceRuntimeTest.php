@@ -15,7 +15,7 @@ use FSi\Bundle\DataSourceBundle\Twig\Extension\DataSourceRuntime;
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\DataSourceView;
 use FSi\Component\DataSource\Field\FieldInterface;
-use FSi\Component\DataSource\Field\FieldTypeInterface;
+use FSi\Component\DataSource\Field\Type\FieldTypeInterface;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\TwigRuntimeLoader;
 use Tests\FSi\Bundle\DataSourceBundle\Fixtures\StubTranslator;
 use FSi\Bundle\DataSourceBundle\Twig\Extension\DataSourceExtension;

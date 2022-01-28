@@ -11,22 +11,15 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataSource;
 
-use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\DataSourceView;
 use FSi\Component\DataSource\Exception\DataSourceViewException;
 use FSi\Component\DataSource\Field\FieldInterface;
-use FSi\Component\DataSource\Field\FieldTypeInterface;
+use FSi\Component\DataSource\Field\Type\FieldTypeInterface;
 use FSi\Component\DataSource\Field\FieldViewInterface;
-use FSi\Component\DataSource\Result;
-use Tests\FSi\Component\DataSource\Fixtures\TestResult;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 final class DataSourceViewTest extends TestCase
 {
-    /**
-     * Checks if view properly proxy some requests to datasource.
-     */
     public function testGetParameters(): void
     {
         $view = new DataSourceView('datasource', [], ['datasource' => []], ['other_datasource' => []]);
@@ -40,9 +33,6 @@ final class DataSourceViewTest extends TestCase
         );
     }
 
-    /**
-     * Checks the correctness of options related methods.
-     */
     public function testOptionsManipulation(): void
     {
         $view = new DataSourceView('datasource', [], [], []);
@@ -68,9 +58,6 @@ final class DataSourceViewTest extends TestCase
         self::assertEquals(null, $view->getAttribute('option2'));
     }
 
-    /**
-     * Checks the correctness of field related methods.
-     */
     public function testFieldsManipulation(): void
     {
         $fieldView1 = $this->createMock(FieldViewInterface::class);
@@ -99,10 +86,7 @@ final class DataSourceViewTest extends TestCase
         self::assertSame($fieldView2, $view['name2']);
     }
 
-    /**
-     * Checks exception thrown when adding another field with the same name.
-     */
-    public function testAddFieldException(): void
+    public function testExceptionWhenAddingAFieldWithTheSameName(): void
     {
         $fieldView = $this->createMock(FieldViewInterface::class);
         $fieldView->method('getName')->willReturn('name');
@@ -115,10 +99,7 @@ final class DataSourceViewTest extends TestCase
         new DataSourceView('datasource', [$field, $field], [], []);
     }
 
-    /**
-     * Checks implementation of \Countable, \SeekableIterator and \ArrayAccess interface.
-     */
-    public function testInterfaces(): void
+    public function testInterfacesImplementation(): void
     {
         $fields = [];
         for ($x = 0; $x < 5; $x++) {

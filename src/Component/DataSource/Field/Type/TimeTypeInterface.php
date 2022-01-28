@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource\Field\Type;
 
-use FSi\Component\DataSource\Field\FieldTypeInterface;
-
 interface TimeTypeInterface extends FieldTypeInterface
 {
 }

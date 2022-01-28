@@ -15,7 +15,7 @@ use ArrayIterator;
 use Doctrine\DBAL\Query\QueryBuilder;
 use FSi\Component\DataSource\Result;
 
-class Paginator implements Result
+final class Paginator implements Result
 {
     private QueryBuilder $query;
 

@@ -13,8 +13,8 @@
         </service>
 
         <!-- Fields -->
-        <prototype namespace="FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\"
-                   resource="../../../../Component/DataSource/Driver/Collection/Extension/Core/Field"
+        <prototype namespace="FSi\Component\DataSource\Driver\Collection\FieldType\"
+                   resource="../../../../Component/DataSource/Driver/Collection/FieldType"
                    autoconfigure="true"
                    autowire="true"
         />

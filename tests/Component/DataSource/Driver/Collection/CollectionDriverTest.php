@@ -24,18 +24,18 @@ use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Driver\Collection\CollectionFactory;
 use FSi\Component\DataSource\Driver\Collection\CollectionResult;
 use FSi\Component\DataSource\Driver\Collection\Event\PreGetResult;
-use FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\Boolean;
-use FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\Date;
-use FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\DateTime;
-use FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\Number;
-use FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\Text;
-use FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\Time;
+use FSi\Component\DataSource\Driver\Collection\FieldType\Boolean;
+use FSi\Component\DataSource\Driver\Collection\FieldType\Date;
+use FSi\Component\DataSource\Driver\Collection\FieldType\DateTime;
+use FSi\Component\DataSource\Driver\Collection\FieldType\Number;
+use FSi\Component\DataSource\Driver\Collection\FieldType\Text;
+use FSi\Component\DataSource\Driver\Collection\FieldType\Time;
 use FSi\Component\DataSource\Driver\DriverFactoryManager;
-use FSi\Component\DataSource\Event\DataSourceEvent\PostGetParameters;
-use FSi\Component\DataSource\Event\DataSourceEvent\PreBindParameters;
-use FSi\Component\DataSource\Extension\Core;
-use FSi\Component\DataSource\Extension\Core\Ordering\OrderingExtension;
-use FSi\Component\DataSource\Extension\Core\Pagination\PaginationExtension;
+use FSi\Component\DataSource\Event\PostGetParameters;
+use FSi\Component\DataSource\Event\PreBindParameters;
+use FSi\Component\DataSource\Extension;
+use FSi\Component\DataSource\Extension\Ordering\OrderingExtension;
+use FSi\Component\DataSource\Extension\Pagination\PaginationExtension;
 use PHPUnit\Framework\TestCase;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -47,7 +47,7 @@ class CollectionDriverTest extends TestCase
 {
     private EntityManager $em;
     private ?EventDispatcherInterface $eventDispatcher = null;
-    private ?Core\Ordering\Storage $orderingStorage = null;
+    private ?Extension\Ordering\Storage $orderingStorage = null;
 
     public function testComparingWithZero(): void
     {
@@ -393,25 +393,25 @@ class CollectionDriverTest extends TestCase
             $this->eventDispatcher = new EventDispatcher();
             $this->eventDispatcher->addListener(
                 PreGetResult::class,
-                new Core\Ordering\EventSubscriber\CollectionPreGetResult($this->getOrderingStorage())
+                new Extension\Ordering\EventSubscriber\CollectionPreGetResult($this->getOrderingStorage())
             );
             $this->eventDispatcher->addListener(
                 PreBindParameters::class,
-                new Core\Ordering\EventSubscriber\OrderingPreBindParameters($this->getOrderingStorage())
+                new Extension\Ordering\EventSubscriber\OrderingPreBindParameters($this->getOrderingStorage())
             );
             $this->eventDispatcher->addListener(
                 PostGetParameters::class,
-                new Core\Ordering\EventSubscriber\OrderingPostGetParameters($this->getOrderingStorage())
+                new Extension\Ordering\EventSubscriber\OrderingPostGetParameters($this->getOrderingStorage())
             );
         }
 
         return $this->eventDispatcher;
     }
 
-    private function getOrderingStorage(): Core\Ordering\Storage
+    private function getOrderingStorage(): Extension\Ordering\Storage
     {
         if (null === $this->orderingStorage) {
-            $this->orderingStorage = new Core\Ordering\Storage();
+            $this->orderingStorage = new Extension\Ordering\Storage();
         }
 
         return $this->orderingStorage;

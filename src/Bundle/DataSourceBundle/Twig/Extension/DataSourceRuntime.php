@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace FSi\Bundle\DataSourceBundle\Twig\Extension;
 
 use FSi\Component\DataSource\DataSourceViewInterface;
-use FSi\Component\DataSource\Extension\Core\Pagination\PaginationExtension;
+use FSi\Component\DataSource\Extension\Pagination\PaginationExtension;
 use FSi\Component\DataSource\Field\FieldViewInterface;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -23,13 +23,17 @@ use Twig\Extension\RuntimeExtensionInterface;
 use Twig\TemplateWrapper;
 
 use function array_key_exists;
+use function array_merge;
+use function range;
+use function max;
+use function ceil;
 
 final class DataSourceRuntime implements RuntimeExtensionInterface
 {
     /**
      * Default theme key in themes array.
      */
-    public const DEFAULT_THEME = '_default_theme';
+    private const DEFAULT_THEME_KEY = '_default_theme';
 
     private RequestStack $requestStack;
     private Environment $environment;
@@ -58,14 +62,14 @@ final class DataSourceRuntime implements RuntimeExtensionInterface
         RouterInterface $router,
         string $template
     ) {
-        $this->themes = [];
-        $this->themesVars = [];
-        $this->routes = [];
-        $this->additionalParameters = [];
         $this->requestStack = $requestStack;
         $this->environment = $environment;
         $this->router = $router;
         $this->baseTemplate = $template;
+        $this->themes = [];
+        $this->themesVars = [];
+        $this->routes = [];
+        $this->additionalParameters = [];
     }
 
     /**
@@ -202,10 +206,7 @@ final class DataSourceRuntime implements RuntimeExtensionInterface
             'descending_url' => $descendingUrl,
             'ascending' => $options['ascending'],
             'descending' => $options['descending'],
-            'vars' => array_merge(
-                $this->getVars($dataSourceName),
-                $vars
-            )
+            'vars' => array_merge($this->getVars($dataSourceName), $vars)
         ];
 
         return $this->renderTheme($dataSourceName, $viewData, $blockNames);
@@ -229,7 +230,7 @@ final class DataSourceRuntime implements RuntimeExtensionInterface
         $pagesParams = $view->getAttribute('parameters_pages');
         $current = (int) $view->getAttribute('page');
         $pageCount = count($pagesParams);
-        if ($pageCount < 2) {
+        if (2 > $pageCount) {
             return '';
         }
 
@@ -394,11 +395,11 @@ final class DataSourceRuntime implements RuntimeExtensionInterface
 
     private function initTemplate(): void
     {
-        if (true === array_key_exists(self::DEFAULT_THEME, $this->themes)) {
+        if (true === array_key_exists(self::DEFAULT_THEME_KEY, $this->themes)) {
             return;
         }
 
-        $this->themes[self::DEFAULT_THEME] = $this->environment->load($this->baseTemplate);
+        $this->themes[self::DEFAULT_THEME_KEY] = $this->environment->load($this->baseTemplate);
     }
 
     private function getCurrentRoute(string $dataSourceName): string
@@ -412,7 +413,7 @@ final class DataSourceRuntime implements RuntimeExtensionInterface
             throw new RuntimeException('Some datasource widget was called out of any request scope.');
         }
 
-        if ($request->attributes->get('_route') === '_fragment') {
+        if ('_fragment' === $request->attributes->get('_route')) {
             throw new RuntimeException(
                 'Some datasource widget was called during Symfony internal request.
                 You must use {% datasource_route %} twig tag to specify target
@@ -436,11 +437,11 @@ final class DataSourceRuntime implements RuntimeExtensionInterface
         $this->initTemplate();
 
         $templates = [];
-        if (array_key_exists($dataSourceName, $this->themes)) {
+        if (true === array_key_exists($dataSourceName, $this->themes)) {
             $templates[] = $this->themes[$dataSourceName];
         }
-        $templates[] = $this->themes[self::DEFAULT_THEME];
 
+        $templates[] = $this->themes[self::DEFAULT_THEME_KEY];
         return $templates;
     }
 

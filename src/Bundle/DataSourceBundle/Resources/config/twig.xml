@@ -9,7 +9,7 @@
             <argument type="service" id="request_stack" />
             <argument type="service" id="twig" />
             <argument type="service" id="router" />
-            <argument>%datasource.twig.template%</argument>
+            <argument key="$template">%datasource.twig.template%</argument>
             <tag name="twig.runtime" />
         </service>
 

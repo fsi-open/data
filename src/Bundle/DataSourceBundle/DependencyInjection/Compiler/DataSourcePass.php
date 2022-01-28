@@ -17,12 +17,12 @@ use FSi\Component\DataSource\Exception\DataSourceException;
 use FSi\Component\DataSource\Field\FieldExtensionInterface;
 use ReflectionNamedType;
 use RuntimeException;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 
-use function array_map;
 use function array_keys;
+use function array_map;
 use function is_a;
 use function sprintf;
 
@@ -34,8 +34,16 @@ final class DataSourcePass implements CompilerPassInterface
             return;
         }
 
+        $this->registerDriverFactories($container);
+        $this->registerEventSubscriber($container);
+        $this->registerFields($container);
+    }
+
+    private function registerDriverFactories(ContainerBuilder $container): void
+    {
         $driverFactories = [];
-        foreach ($container->findTaggedServiceIds('datasource.driver.factory') as $serviceId => $tag) {
+        $servicesIds = array_keys($container->findTaggedServiceIds('datasource.driver.factory'));
+        foreach ($servicesIds as $serviceId) {
             $driverFactoryDefinition = $container->getDefinition($serviceId);
             $driverFactoryClass = $driverFactoryDefinition->getClass();
             if (null === $driverFactoryClass) {
@@ -43,6 +51,7 @@ final class DataSourcePass implements CompilerPassInterface
                     "DataSource driver factory service {$serviceId} has no class"
                 );
             }
+
             if (false === is_a($driverFactoryClass, DriverFactoryInterface::class, true)) {
                 throw new DataSourceException(
                     sprintf(
@@ -52,17 +61,25 @@ final class DataSourcePass implements CompilerPassInterface
                     )
                 );
             }
+
             $driverType = $driverFactoryClass::getDriverType();
             $driverFieldTypes = array_map(
                 static fn ($id) => new Reference($id),
                 array_keys($container->findTaggedServiceIds("datasource.driver.{$driverType}.field"))
             );
-            $driverFactoryDefinition->replaceArgument('$fieldTypes', $driverFieldTypes);
 
+            $driverFactoryDefinition->replaceArgument('$fieldTypes', $driverFieldTypes);
             $driverFactories[] = $driverFactoryDefinition;
         }
-        $container->getDefinition(DriverFactoryManager::class)->replaceArgument(0, $driverFactories);
 
+        $container
+            ->getDefinition(DriverFactoryManager::class)
+            ->replaceArgument('$factories', $driverFactories)
+        ;
+    }
+
+    private function registerFields(ContainerBuilder $container): void
+    {
         $allFieldTypeExtensions = [];
         foreach ($container->findTaggedServiceIds('datasource.field_extension') as $serviceId => $tag) {
             $allFieldTypeExtensions[] = $serviceId;
@@ -112,35 +129,39 @@ final class DataSourcePass implements CompilerPassInterface
 
             $fieldTypeDefinition->replaceArgument('$extensions', $fieldTypeExtensionsReferences);
         }
+    }
 
-        if (true === $container->hasDefinition('event_dispatcher')) {
-            $eventDispatcher = $container->getDefinition('event_dispatcher');
+    private function registerEventSubscriber(ContainerBuilder $container): void
+    {
+        if (false === $container->hasDefinition('event_dispatcher')) {
+            return;
+        }
 
-            foreach ($container->findTaggedServiceIds('datasource.event_subscriber') as $serviceId => $tag) {
-                $defaultPriorityMethod = $tag[0]['default_priority_method'] ?? null;
-                $subscriberDefinition = $container->getDefinition($serviceId);
-                $subscriberReflection = $container->getReflectionClass($subscriberDefinition->getClass());
-                if (null === $subscriberReflection) {
-                    throw new RuntimeException("Unable to reflect DataGrid event subscriber {$serviceId}");
-                }
-                $priority = 0;
-                if (null !== $defaultPriorityMethod) {
-                    $priorityMethodReflection = $subscriberReflection->getMethod($defaultPriorityMethod);
-                    $priority = $priorityMethodReflection->invoke(null);
-                }
-
-                $subscriberInvokeMethodReflection = $subscriberReflection->getMethod('__invoke');
-                $subscriberInvokeMethodEventArgumentReflection = $subscriberInvokeMethodReflection->getParameters()[0];
-                $eventTypeReflection = $subscriberInvokeMethodEventArgumentReflection->getType();
-                if (false === $eventTypeReflection instanceof ReflectionNamedType) {
-                    throw new RuntimeException(
-                        "Unable to reflect class name of the first argument of {$serviceId}::__invoke()"
-                    );
-                }
-                $eventClass = $eventTypeReflection->getName();
-
-                $eventDispatcher->addMethodCall('addListener', [$eventClass, new Reference($serviceId), $priority]);
+        $eventDispatcher = $container->getDefinition('event_dispatcher');
+        foreach ($container->findTaggedServiceIds('datasource.event_subscriber') as $serviceId => $tag) {
+            $defaultPriorityMethod = $tag[0]['default_priority_method'] ?? null;
+            $subscriberDefinition = $container->getDefinition($serviceId);
+            $subscriberReflection = $container->getReflectionClass($subscriberDefinition->getClass());
+            if (null === $subscriberReflection) {
+                throw new RuntimeException("Unable to reflect DataGrid event subscriber {$serviceId}");
             }
+            $priority = 0;
+            if (null !== $defaultPriorityMethod) {
+                $priorityMethodReflection = $subscriberReflection->getMethod($defaultPriorityMethod);
+                $priority = $priorityMethodReflection->invoke(null);
+            }
+
+            $subscriberInvokeMethodReflection = $subscriberReflection->getMethod('__invoke');
+            $subscriberInvokeMethodEventArgumentReflection = $subscriberInvokeMethodReflection->getParameters()[0];
+            $eventTypeReflection = $subscriberInvokeMethodEventArgumentReflection->getType();
+            if (false === $eventTypeReflection instanceof ReflectionNamedType) {
+                throw new RuntimeException(
+                    "Unable to reflect class name of the first argument of {$serviceId}::__invoke()"
+                );
+            }
+            $eventClass = $eventTypeReflection->getName();
+
+            $eventDispatcher->addMethodCall('addListener', [$eventClass, new Reference($serviceId), $priority]);
         }
     }
 }

@@ -15,24 +15,24 @@ use FSi\Component\DataSource\DataSource;
 use FSi\Component\DataSource\DataSourceFactoryInterface;
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Driver\DriverInterface;
-use FSi\Component\DataSource\Event\DataSourceEvent\PostBindParameters;
-use FSi\Component\DataSource\Event\DataSourceEvent\PostBuildView;
-use FSi\Component\DataSource\Event\DataSourceEvent\PostGetParameters;
-use FSi\Component\DataSource\Event\DataSourceEvent\PreBindParameters;
-use FSi\Component\DataSource\Event\DataSourceEvent\PreBuildView;
-use FSi\Component\DataSource\Event\DataSourceEvent\PreGetParameters;
-use FSi\Component\DataSource\Event\FieldEvent\PostBindParameter;
-use FSi\Component\DataSource\Event\FieldEvent\PostGetParameter;
-use FSi\Component\DataSource\Event\FieldEvent\PreBindParameter;
+use FSi\Component\DataSource\Event\PostBindParameters;
+use FSi\Component\DataSource\Event\PostBuildView;
+use FSi\Component\DataSource\Event\PostGetParameters;
+use FSi\Component\DataSource\Event\PreBindParameters;
+use FSi\Component\DataSource\Event\PreBuildView;
+use FSi\Component\DataSource\Event\PreGetParameters;
 use FSi\Component\DataSource\Exception\DataSourceException;
+use FSi\Component\DataSource\Field\Event\PostBindParameter;
+use FSi\Component\DataSource\Field\Event\PostGetParameter;
+use FSi\Component\DataSource\Field\Event\PreBindParameter;
 use FSi\Component\DataSource\Field\FieldInterface;
-use FSi\Component\DataSource\Field\FieldTypeInterface;
-use Psr\EventDispatcher\EventDispatcherInterface;
-use Tests\FSi\Component\DataSource\Fixtures\TestResult;
+use FSi\Component\DataSource\Field\Type\FieldTypeInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\EventDispatcher\EventDispatcherInterface;
+use Tests\FSi\Component\DataSource\Fixtures\TestResult;
 
-class DataSourceTest extends TestCase
+final class DataSourceTest extends TestCase
 {
     /**
      * @doesNotPerformAssertions

@@ -5,7 +5,7 @@
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <services>
-        <service id="FSi\Bundle\DataSourceBundle\DataSource\Extension\Configuration\EventSubscriber\ConfigurationBuilder">
+        <service id="FSi\Bundle\DataSourceBundle\DataSource\EventSubscriber\ConfigurationBuilder">
             <argument type="service" id="kernel" />
             <argument>Resources/config/datasource</argument>
             <argument>%datasource.yaml.main_config%</argument>

@@ -6,7 +6,7 @@
 
     <services>
         <!-- DoctrineFactory -->
-        <service id="FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineFactory">
+        <service id="FSi\Component\DataSource\Driver\Doctrine\ORM\ORMFactory">
             <argument type="service" id="doctrine" />
             <argument type="service" id="event_dispatcher" />
             <argument key="$fieldTypes" type="collection" />
@@ -14,8 +14,8 @@
         </service>
 
         <!-- Fields -->
-        <prototype namespace="FSi\Component\DataSource\Driver\Doctrine\ORM\Extension\Core\Field\"
-                   resource="../../../../Component/DataSource/Driver/Doctrine/ORM/Extension/Core/Field"
+        <prototype namespace="FSi\Component\DataSource\Driver\Doctrine\ORM\FieldType\"
+                   resource="../../../../Component/DataSource/Driver/Doctrine/ORM/FieldType"
                    autoconfigure="true"
                    autowire="true"
         />

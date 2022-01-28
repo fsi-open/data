@@ -20,13 +20,13 @@ use FSi\Component\DataSource\Driver\DriverFactoryManager;
 use PHPUnit\Framework\TestCase;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
-class DriverFactoryManagerTest extends TestCase
+final class DriverFactoryManagerTest extends TestCase
 {
     public function testBasicManagerOperations(): void
     {
         $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
         $doctrineDbalFactory = new DBALFactory($this->createMock(ConnectionRegistry::class), $eventDispatcher, []);
-        $doctrineOrmFactory = new ORM\DoctrineFactory($this->createMock(ManagerRegistry::class), $eventDispatcher, []);
+        $doctrineOrmFactory = new ORM\ORMFactory($this->createMock(ManagerRegistry::class), $eventDispatcher, []);
         $collectionFactory = new CollectionFactory($eventDispatcher, []);
 
         $manager = new DriverFactoryManager([$doctrineDbalFactory, $doctrineOrmFactory, $collectionFactory]);

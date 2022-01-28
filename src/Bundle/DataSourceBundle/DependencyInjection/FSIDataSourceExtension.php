@@ -11,13 +11,12 @@ declare(strict_types=1);
 
 namespace FSi\Bundle\DataSourceBundle\DependencyInjection;
 
-use FSi\Component\DataSource\Driver\Collection\CollectionFieldInterface;
-use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALFieldInterface;
-use FSi\Component\DataSource\Driver\Doctrine\ORM\DoctrineFieldInterface;
+use FSi\Component\DataSource\DataSourceEventSubscriberInterface;
+use FSi\Component\DataSource\Driver\Collection;
+use FSi\Component\DataSource\Driver\Doctrine;
 use FSi\Component\DataSource\Driver\DriverFactoryInterface;
-use FSi\Component\DataSource\Event\DataSourceEventSubscriberInterface;
 use FSi\Component\DataSource\Field\FieldExtensionInterface;
-use FSi\Component\DataSource\Field\FieldTypeInterface;
+use FSi\Component\DataSource\Field\Type\FieldTypeInterface;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -25,6 +24,7 @@ use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
 use function array_key_exists;
+use function is_array;
 use function method_exists;
 
 final class FSIDataSourceExtension extends Extension
@@ -76,14 +76,14 @@ final class FSIDataSourceExtension extends Extension
         $container->registerForAutoconfiguration(FieldTypeInterface::class)->addTag('datasource.field');
         $container->registerForAutoconfiguration(FieldExtensionInterface::class)->addTag('datasource.field_extension');
         $container->registerForAutoconfiguration(DriverFactoryInterface::class)->addTag('datasource.driver.factory');
-        $container->registerForAutoconfiguration(CollectionFieldInterface::class)
+        $container->registerForAutoconfiguration(Collection\FieldType\FieldTypeInterface::class)
             ->addTag('datasource.driver.collection.field')
         ;
-        $container->registerForAutoconfiguration(DoctrineFieldInterface::class)
-            ->addTag('datasource.driver.doctrine-orm.field')
-        ;
-        $container->registerForAutoconfiguration(DBALFieldInterface::class)
+        $container->registerForAutoconfiguration(Doctrine\DBAL\FieldType\FieldTypeInterface::class)
             ->addTag('datasource.driver.doctrine-dbal.field')
+        ;
+        $container->registerForAutoconfiguration(Doctrine\ORM\FieldType\FieldTypeInterface::class)
+            ->addTag('datasource.driver.doctrine-orm.field')
         ;
         $container->registerForAutoconfiguration(DataSourceEventSubscriberInterface::class)
             ->addTag('datasource.event_subscriber', ['default_priority_method' => 'getPriority'])

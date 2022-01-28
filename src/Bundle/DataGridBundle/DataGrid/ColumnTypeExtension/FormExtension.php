@@ -35,13 +35,13 @@ final class FormExtension extends ColumnAbstractTypeExtension implements DataGri
     /**
      * @var array<class-string<ColumnTypeInterface>,CellFormBuilderInterface>
      */
-    private array $cellFormBuilders = [];
+    private array $cellFormBuilders;
     private FormFactoryInterface $formFactory;
     private bool $csrfProtectionEnabled;
     /**
      * @var array<string,FormInterface<FormInterface>>
      */
-    private array $forms = [];
+    private array $forms;
 
     public static function getExtendedColumnTypes(): array
     {
@@ -58,6 +58,7 @@ final class FormExtension extends ColumnAbstractTypeExtension implements DataGri
         FormFactoryInterface $formFactory,
         bool $csrfProtectionEnabled = true
     ) {
+        $this->cellFormBuilders = [];
         foreach ($cellFormBuilders as $cellFormBuilder) {
             foreach ($cellFormBuilder::getSupportedColumnTypes() as $supportedColumnType) {
                 $this->cellFormBuilders[$supportedColumnType] = $cellFormBuilder;
@@ -65,6 +66,7 @@ final class FormExtension extends ColumnAbstractTypeExtension implements DataGri
         }
         $this->formFactory = $formFactory;
         $this->csrfProtectionEnabled = $csrfProtectionEnabled;
+        $this->forms = [];
     }
 
     public function initOptions(OptionsResolver $optionsResolver): void
