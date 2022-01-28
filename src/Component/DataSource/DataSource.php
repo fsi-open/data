@@ -12,14 +12,15 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource;
 
 use FSi\Component\DataSource\Driver\DriverInterface;
-use FSi\Component\DataSource\Event\DataSourceEvent;
-use FSi\Component\DataSource\Event\FieldEvent;
+use FSi\Component\DataSource\Event as DataSourceEvent;
 use FSi\Component\DataSource\Exception\DataSourceException;
+use FSi\Component\DataSource\Field\Event as FieldEvent;
 use FSi\Component\DataSource\Field\FieldInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 use function array_key_exists;
 use function array_reduce;
+use function count;
 use function get_class;
 use function gettype;
 use function is_array;
@@ -152,7 +153,10 @@ class DataSource implements DataSourceInterface
             $dataSourceFieldParameters = $parameters[$this->name][DataSourceInterface::PARAMETER_FIELDS] ?? [];
 
             foreach ($this->fields as $field) {
-                $event = new FieldEvent\PreBindParameter($field, $dataSourceFieldParameters[$field->getName()] ?? null);
+                $event = new FieldEvent\PreBindParameter(
+                    $field,
+                    $dataSourceFieldParameters[$field->getName()] ?? null
+                );
                 $this->eventDispatcher->dispatch($event);
                 $parameter = $event->getParameter();
 

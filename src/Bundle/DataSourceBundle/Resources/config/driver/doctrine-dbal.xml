@@ -14,8 +14,8 @@
         </service>
 
         <!-- Fields -->
-        <prototype namespace="FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\"
-                   resource="../../../../Component/DataSource/Driver/Doctrine/DBAL/Extension/Core/Field"
+        <prototype namespace="FSi\Component\DataSource\Driver\Doctrine\DBAL\FieldType\"
+                   resource="../../../../Component/DataSource/Driver/Doctrine/DBAL/FieldType"
                    autoconfigure="true"
                    autowire="true"
         />

@@ -15,10 +15,11 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Selectable;
 use FSi\Component\DataSource\Driver\Collection\Event\PostGetResult;
 use FSi\Component\DataSource\Driver\Collection\Event\PreGetResult;
-use FSi\Component\DataSource\Driver\DriverAbstract;
 use FSi\Component\DataSource\Driver\Collection\Exception\CollectionDriverException;
+use FSi\Component\DataSource\Driver\Collection\FieldType\FieldTypeInterface;
+use FSi\Component\DataSource\Driver\DriverAbstract;
 use FSi\Component\DataSource\Field\FieldInterface;
-use FSi\Component\DataSource\Field\FieldTypeInterface;
+use FSi\Component\DataSource\Field\Type\FieldFieldInterface;
 use FSi\Component\DataSource\Result;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
@@ -63,7 +64,7 @@ class CollectionDriver extends DriverAbstract
 
         foreach ($fields as $field) {
             $fieldType = $field->getType();
-            if (false === $fieldType instanceof CollectionFieldInterface) {
+            if (false === $fieldType instanceof FieldTypeInterface) {
                 throw new CollectionDriverException(
                     sprintf(
                         'Field\'s "%s" type "%s" is not compatible with type "%s"',

@@ -13,10 +13,10 @@ namespace Tests\FSi\Component\DataSource\Field;
 
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Field\FieldInterface;
+use FSi\Component\DataSource\Field\Type\FieldTypeInterface;
 use FSi\Component\DataSource\Field\FieldView;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use FSi\Component\DataSource\Field\FieldTypeInterface;
 
 class FieldViewTest extends TestCase
 {

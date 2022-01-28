@@ -14,7 +14,7 @@ namespace Tests\FSi\Component\DataSource\Fixtures;
 use ArrayIterator;
 use FSi\Component\DataSource\Result;
 
-class TestResult implements Result
+final class TestResult implements Result
 {
     public function count(): int
     {

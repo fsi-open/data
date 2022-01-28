@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Field;
 
 use FSi\Component\DataSource\DataSourceInterface;
+use FSi\Component\DataSource\Field\Type\FieldTypeInterface;
 
 use function array_key_exists;
 

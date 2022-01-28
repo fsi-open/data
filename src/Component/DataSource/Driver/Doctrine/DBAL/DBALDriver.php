@@ -16,16 +16,16 @@ use Doctrine\DBAL\Query\QueryBuilder;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Event\PostGetResult;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Event\PreGetResult;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Exception\DBALDriverException;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\FieldType\FieldTypeInterface;
 use FSi\Component\DataSource\Driver\DriverAbstract;
 use FSi\Component\DataSource\Field\FieldInterface;
-use FSi\Component\DataSource\Field\FieldTypeInterface;
 use FSi\Component\DataSource\Result;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 use function sprintf;
 use function strpos;
 
-class DBALDriver extends DriverAbstract
+final class DBALDriver extends DriverAbstract
 {
     private QueryBuilder $initialQuery;
     private string $alias;
@@ -84,7 +84,7 @@ class DBALDriver extends DriverAbstract
 
         foreach ($fields as $field) {
             $fieldType = $field->getType();
-            if (false === $fieldType instanceof DBALFieldInterface) {
+            if (false === $fieldType instanceof FieldTypeInterface) {
                 throw new DBALDriverException(
                     sprintf(
                         'Field\'s "%s" type "%s" is not compatible with type "%s"',

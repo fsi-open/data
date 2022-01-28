@@ -5,13 +5,24 @@
     xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <services>
+
+        <defaults autoconfigure="true" autowire="true" public="false" />
+
+        <!-- Core/Extensions -->
+        <prototype namespace="FSi\Component\DataSource\Extension\"
+                   resource="../../../../Component/DataSource/Extension"
+        />
+
+        <!-- Symfony/Extensions -->
+        <prototype namespace="FSi\Bundle\DataSourceBundle\DataSource\" resource="../../DataSource" />
+
         <!-- DriverFactoryManager -->
         <service id="FSi\Component\DataSource\Driver\DriverFactoryManagerInterface"
                  alias="FSi\Component\DataSource\Driver\DriverFactoryManager"
         />
 
         <service id="FSi\Component\DataSource\Driver\DriverFactoryManager">
-            <argument type="collection" />
+            <argument key="$factories" type="collection" />
         </service>
 
         <!-- DataSourceFactory -->
@@ -20,30 +31,7 @@
                  public="true"
         />
 
-        <service id="FSi\Component\DataSource\DataSourceFactory" lazy="true">
-            <argument type="service" id="event_dispatcher" />
-            <argument type="service" id="FSi\Component\DataSource\Driver\DriverFactoryManagerInterface"></argument>
-        </service>
-
-        <!-- Core/Extensions -->
-        <prototype namespace="FSi\Component\DataSource\Extension\Core\Ordering\"
-                   resource="../../../../Component/DataSource/Extension/Core/Ordering"
-                   autoconfigure="true"
-                   autowire="true"
-        />
-
-        <prototype namespace="FSi\Component\DataSource\Extension\Core\Pagination\"
-                   resource="../../../../Component/DataSource/Extension/Core/Pagination"
-                   autoconfigure="true"
-                   autowire="true"
-        />
-
-        <!-- Symfony/Extensions -->
-        <prototype namespace="FSi\Bundle\DataSourceBundle\DataSource\Extension\Symfony\"
-                   resource="../../DataSource/Extension/Symfony/{Core,Form}"
-                   autoconfigure="true"
-                   autowire="true"
-        />
+        <service id="FSi\Component\DataSource\DataSourceFactory" lazy="true" />
 
     </services>
 </container>

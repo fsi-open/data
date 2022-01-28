@@ -21,22 +21,22 @@ use Doctrine\DBAL\Types\Types;
 use FSi\Component\DataSource\DataSourceFactory;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALFactory;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Event\PreGetResult;
-use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\Boolean;
-use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\Date;
-use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\DateTime;
-use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\Number;
-use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\Text;
-use FSi\Component\DataSource\Driver\Doctrine\DBAL\Extension\Core\Field\Time;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\FieldType\Boolean;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\FieldType\Date;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\FieldType\DateTime;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\FieldType\Number;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\FieldType\Text;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\FieldType\Time;
 use FSi\Component\DataSource\Driver\DriverFactoryInterface;
 use FSi\Component\DataSource\Driver\DriverFactoryManager;
-use FSi\Component\DataSource\Event\DataSourceEvent\PostGetParameters;
-use FSi\Component\DataSource\Event\DataSourceEvent\PreBindParameters;
-use FSi\Component\DataSource\Extension\Core;
-use FSi\Component\DataSource\Extension\Core\Ordering\Field\FieldExtension;
+use FSi\Component\DataSource\Event\PostGetParameters;
+use FSi\Component\DataSource\Event\PreBindParameters;
+use FSi\Component\DataSource\Extension;
+use FSi\Component\DataSource\Extension\Ordering\Field\FieldExtension;
+use PHPUnit\Framework\TestCase;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL\Fixtures\TestConnectionRegistry;
-use PHPUnit\Framework\TestCase;
 use Tests\FSi\Component\DataSource\Fixtures\DBALQueryLogger;
 
 abstract class TestBase extends TestCase
@@ -47,7 +47,7 @@ abstract class TestBase extends TestCase
     protected DBALQueryLogger $queryLogger;
     private ?Connection $connection = null;
     private ?EventDispatcherInterface $eventDispatcher = null;
-    private ?Core\Ordering\Storage $orderingStorage = null;
+    private ?Extension\Ordering\Storage $orderingStorage = null;
 
     protected function getDriverFactory(): DriverFactoryInterface
     {
@@ -72,15 +72,15 @@ abstract class TestBase extends TestCase
             $this->eventDispatcher = new EventDispatcher();
             $this->eventDispatcher->addListener(
                 PreGetResult::class,
-                new Core\Ordering\EventSubscriber\DBALPreGetResult($this->getOrderingStorage())
+                new Extension\Ordering\EventSubscriber\DBALPreGetResult($this->getOrderingStorage())
             );
             $this->eventDispatcher->addListener(
                 PreBindParameters::class,
-                new Core\Ordering\EventSubscriber\OrderingPreBindParameters($this->getOrderingStorage())
+                new Extension\Ordering\EventSubscriber\OrderingPreBindParameters($this->getOrderingStorage())
             );
             $this->eventDispatcher->addListener(
                 PostGetParameters::class,
-                new Core\Ordering\EventSubscriber\OrderingPostGetParameters($this->getOrderingStorage())
+                new Extension\Ordering\EventSubscriber\OrderingPostGetParameters($this->getOrderingStorage())
             );
             $this->queryLogger = new DBALQueryLogger();
             $this->eventDispatcher->addListener(PreGetResult::class, $this->queryLogger, -1);
@@ -89,10 +89,10 @@ abstract class TestBase extends TestCase
         return $this->eventDispatcher;
     }
 
-    private function getOrderingStorage(): Core\Ordering\Storage
+    private function getOrderingStorage(): Extension\Ordering\Storage
     {
         if (null === $this->orderingStorage) {
-            $this->orderingStorage = new Core\Ordering\Storage();
+            $this->orderingStorage = new Extension\Ordering\Storage();
         }
 
         return $this->orderingStorage;

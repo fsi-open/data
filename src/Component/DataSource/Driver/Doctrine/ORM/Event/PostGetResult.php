@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource\Driver\Doctrine\ORM\Event;
 
-use FSi\Component\DataSource\Event\DriverEvent\ResultEventArgs;
+use FSi\Component\DataSource\Driver\Event\ResultEventArgs;
 
 class PostGetResult extends ResultEventArgs
 {

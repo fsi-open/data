@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Driver;
 
 use FSi\Component\DataSource\Field\FieldInterface;
-use FSi\Component\DataSource\Field\FieldTypeInterface;
+use FSi\Component\DataSource\Field\Type\FieldTypeInterface;
 use FSi\Component\DataSource\Result;
 
 interface DriverInterface

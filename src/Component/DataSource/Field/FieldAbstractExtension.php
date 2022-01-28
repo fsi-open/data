@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource\Field;
 
+use FSi\Component\DataSource\Field\Type\FieldTypeInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 abstract class FieldAbstractExtension implements FieldExtensionInterface

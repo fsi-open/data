@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures\Form\Extension\TestCore;
 
-use FSi\Component\DataSource\Field\FieldAbstractType;
+use FSi\Component\DataSource\Field\Type\AbstractFieldType;
 
-final class TestFieldType extends FieldAbstractType
+final class TestFieldType extends AbstractFieldType
 {
     public function getId(): string
     {

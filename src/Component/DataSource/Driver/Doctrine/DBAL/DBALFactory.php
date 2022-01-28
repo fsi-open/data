@@ -16,9 +16,9 @@ use Doctrine\DBAL\Connection;
 use Doctrine\Persistence\ConnectionRegistry;
 use Doctrine\DBAL\Query\QueryBuilder;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Exception\DBALDriverException;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\FieldType\FieldTypeInterface;
 use FSi\Component\DataSource\Driver\DriverFactoryInterface;
 use FSi\Component\DataSource\Driver\DriverInterface;
-use FSi\Component\DataSource\Field\FieldTypeInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Options;
@@ -29,7 +29,7 @@ use function is_object;
 use function is_string;
 use function sprintf;
 
-class DBALFactory implements DriverFactoryInterface
+final class DBALFactory implements DriverFactoryInterface
 {
     private ConnectionRegistry $registry;
     private EventDispatcherInterface $eventDispatcher;

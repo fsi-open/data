@@ -13,24 +13,20 @@ namespace Tests\FSi\Component\DataSource;
 
 use FSi\Component\DataSource\DataSourceFactory;
 use FSi\Component\DataSource\Driver\Collection\CollectionFactory;
-use FSi\Component\DataSource\Driver\Collection\Extension\Core\Field\Text;
-use FSi\Component\DataSource\Driver\DriverFactoryInterface;
+use FSi\Component\DataSource\Driver\Collection\FieldType\Text;
 use FSi\Component\DataSource\Driver\DriverFactoryManager;
-use PHPUnit\Framework\TestCase;
-use FSi\Component\DataSource\Driver\DriverInterface;
-use FSi\Component\DataSource\DataSource;
 use FSi\Component\DataSource\Exception\DataSourceException;
+use PHPUnit\Framework\TestCase;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
-class FactoryTest extends TestCase
+use function array_merge;
+
+final class FactoryTest extends TestCase
 {
-    /**
-     * Checks exception thrown when creating DataSource with non-existing driver
-     */
-    public function testFactoryException6(): void
+    public function testFactoryExceptionOnUnknownDriver(): void
     {
         $this->expectException(DataSourceException::class);
-        $this->expectExceptionMessage('Driver "unknownDriver" doesn\'t exist.');
+        $this->expectExceptionMessage('Driver "unknownDriver" does not exist.');
 
         $factory = new DataSourceFactory(
             $this->createMock(EventDispatcherInterface::class),
@@ -39,10 +35,7 @@ class FactoryTest extends TestCase
         $factory->createDataSource('unknownDriver');
     }
 
-    /**
-     * Checks exception thrown when creating DataSource with non unique name.
-     */
-    public function testFactoryCreateDataSourceException1(): void
+    public function testFactoryExceptionOnCreatingADataSourceWithNonUniqueName(): void
     {
         $this->expectException(DataSourceException::class);
 
@@ -55,10 +48,7 @@ class FactoryTest extends TestCase
         $factory->createDataSource('collection', ['collection' => []], 'nonunique');
     }
 
-    /**
-     * Checks exception thrown when creating DataSource with wrong name.
-     */
-    public function testFactoryCreateDataSourceException2(): void
+    public function testFactoryExceptionOnCreatingADataSourceWithIncorrectName(): void
     {
         $this->expectException(DataSourceException::class);
 
@@ -69,10 +59,7 @@ class FactoryTest extends TestCase
         $factory->createDataSource('collection', ['collection' => []], 'wrong-one');
     }
 
-    /**
-     * Checks exception thrown when creating DataSource with empty name.
-     */
-    public function testFactoryCreateDataSourceException3(): void
+    public function testFactoryExceptionOnCreatingADataSourceWithEmptyName(): void
     {
         $this->expectException(DataSourceException::class);
 
@@ -83,10 +70,7 @@ class FactoryTest extends TestCase
         $factory->createDataSource('collection', ['collection' => []], '');
     }
 
-    /**
-     * Checks fetching parameters of all and others datasources.
-     */
-    public function testGetAllAndOtherParameters(): void
+    public function testGetAllAndOtherDataSourceParameters(): void
     {
         $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
         $driveFactoryManager = new DriverFactoryManager([new CollectionFactory($eventDispatcher, [new Text([])])]);

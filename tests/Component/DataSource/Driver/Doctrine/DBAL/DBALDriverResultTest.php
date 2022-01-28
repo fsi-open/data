@@ -14,8 +14,8 @@ namespace Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL;
 use Doctrine\DBAL\Connection;
 use FSi\Component\DataSource\DataSourceInterface;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Paginator;
-use FSi\Component\DataSource\Extension\Core\Ordering\OrderingExtension;
-use FSi\Component\DataSource\Extension\Core\Pagination\PaginationExtension;
+use FSi\Component\DataSource\Extension\Ordering\OrderingExtension;
+use FSi\Component\DataSource\Extension\Pagination\PaginationExtension;
 
 use function preg_replace;
 

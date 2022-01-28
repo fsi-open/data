@@ -18,10 +18,17 @@ use InvalidArgumentException;
 use RuntimeException;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 
+use function array_key_exists;
+use function count;
+use function get_class;
+use function gettype;
+use function is_object;
+use function is_string;
+
 /**
  * @template-extends ArrayCollection<int|string,mixed>
  */
-class DBALResult extends ArrayCollection implements Result
+final class DBALResult extends ArrayCollection implements Result
 {
     private int $count;
 
@@ -44,7 +51,7 @@ class DBALResult extends ArrayCollection implements Result
         $data = $paginator->getIterator();
 
         $propertyAccessor = new PropertyAccessor();
-        if (0 !== $data->count()) {
+        if (0 !== count($data)) {
             foreach ($data as $element) {
                 if (true === is_string($indexField)) {
                     $index = $propertyAccessor->getValue($element, $indexField);
