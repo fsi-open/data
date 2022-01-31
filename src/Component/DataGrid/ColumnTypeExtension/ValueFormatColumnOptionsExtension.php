@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataGrid\ColumnTypeExtension;
 
-use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Column\ColumnAbstractTypeExtension;
+use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\ColumnType\Boolean;
 use FSi\Component\DataGrid\ColumnType\Collection;
 use FSi\Component\DataGrid\ColumnType\DateTime;
@@ -22,7 +22,15 @@ use FSi\Component\DataGrid\ColumnType\Text;
 use InvalidArgumentException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+use function count;
+use function current;
+use function implode;
+use function is_array;
 use function is_callable;
+use function is_string;
+use function reset;
+use function sprintf;
+use function vsprintf;
 
 class ValueFormatColumnOptionsExtension extends ColumnAbstractTypeExtension
 {

@@ -16,6 +16,15 @@ use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Exception\DataGridColumnException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+use function in_array;
+use function number_format;
+use function round;
+
+use const PHP_ROUND_HALF_UP;
+use const PHP_ROUND_HALF_DOWN;
+use const PHP_ROUND_HALF_EVEN;
+use const PHP_ROUND_HALF_ODD;
+
 class Money extends ColumnAbstractType
 {
     public const ROUND_HALF_UP = PHP_ROUND_HALF_UP;
@@ -75,7 +84,7 @@ class Money extends ColumnAbstractType
         if (null !== $currencyField) {
             if (false === in_array($currencyField, $mappingFields, true)) {
                 throw new DataGridColumnException(
-                    sprintf('There is no field with name "%s".', $currencyField)
+                    "There is no field with name \"{$currencyField}\"."
                 );
             }
 
@@ -83,8 +92,8 @@ class Money extends ColumnAbstractType
             unset($value[$currencyField]);
         }
 
-        foreach ($value as $fieldName => &$val) {
-            if (empty($val)) {
+        foreach ($value as &$val) {
+            if (true === empty($val)) {
                 continue;
             }
 

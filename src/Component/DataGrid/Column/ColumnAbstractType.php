@@ -28,7 +28,7 @@ abstract class ColumnAbstractType implements ColumnTypeInterface
     /**
      * @param array<ColumnTypeExtensionInterface> $columnTypeExtensions
      */
-    public function __construct(array $columnTypeExtensions = [])
+    public function __construct(array $columnTypeExtensions)
     {
         array_walk($columnTypeExtensions, static function (ColumnTypeExtensionInterface $columnTypeExtension): void {
             $found = array_reduce(

@@ -14,7 +14,6 @@ namespace FSi\Bundle\DataGridBundle\DependencyInjection;
 use FSi\Bundle\DataGridBundle\DataGrid\CellFormBuilder\CellFormBuilderInterface;
 use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
 use FSi\Component\DataGrid\Column\ColumnTypeInterface;
-use FSi\Component\DataGrid\DataGridExtensionInterface;
 use FSi\Component\DataGrid\Event\DataGridEventSubscriberInterface;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -48,9 +47,6 @@ final class FSIDataGridExtension extends Extension
             $container->setParameter('datagrid.twig.themes', $config['twig']['themes']);
         }
 
-        $container->registerForAutoconfiguration(DataGridExtensionInterface::class)
-            ->addTag('datagrid.extension')
-        ;
         $container->registerForAutoconfiguration(ColumnTypeInterface::class)
             ->addTag('datagrid.column')
         ;

@@ -15,6 +15,14 @@ use FSi\Component\DataGrid\Column\ColumnAbstractType;
 use FSi\Component\DataGrid\Column\ColumnInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+use function number_format;
+use function round;
+
+use const PHP_ROUND_HALF_UP;
+use const PHP_ROUND_HALF_DOWN;
+use const PHP_ROUND_HALF_EVEN;
+use const PHP_ROUND_HALF_ODD;
+
 class Number extends ColumnAbstractType
 {
     public const ROUND_HALF_UP = PHP_ROUND_HALF_UP;
@@ -70,7 +78,7 @@ class Number extends ColumnAbstractType
         $formatThousandsSeparator = $column->getOption('format_thousands_sep');
 
         foreach ($value as &$val) {
-            if (empty($val)) {
+            if (true === empty($val)) {
                 continue;
             }
 
@@ -79,7 +87,12 @@ class Number extends ColumnAbstractType
             }
 
             if (true === $format) {
-                $val = number_format((float) $val, $formatDecimals, $formatDecimalPoint, $formatThousandsSeparator);
+                $val = number_format(
+                    (float) $val,
+                    $formatDecimals,
+                    $formatDecimalPoint,
+                    $formatThousandsSeparator
+                );
             }
         }
 

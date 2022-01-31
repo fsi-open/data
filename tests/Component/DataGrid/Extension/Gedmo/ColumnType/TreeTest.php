@@ -30,7 +30,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Tests\FSi\Component\DataGrid\Fixtures\EntityTree;
 
-class TreeTest extends TestCase
+final class TreeTest extends TestCase
 {
     public function testWrongValue(): void
     {
@@ -167,8 +167,9 @@ class TreeTest extends TestCase
     private function getDataGridMock(): MockObject
     {
         $dataGrid = $this->createMock(DataGridInterface::class);
-        $dataGrid->method('getDataMapper')
-            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
+        $dataGrid->method('getDataMapper')->willReturn(
+            new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor())
+        );
 
         return $dataGrid;
     }

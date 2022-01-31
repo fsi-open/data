@@ -40,10 +40,9 @@ final class DataSourceFactory implements DataSourceFactoryInterface
         array $driverOptions = [],
         string $name = 'datasource'
     ): DataSourceInterface {
-        $driver = $this->driverFactoryManager->getFactory($driverName)->createDriver($driverOptions);
-
         $this->checkDataSourceName($name);
 
+        $driver = $this->driverFactoryManager->getFactory($driverName)->createDriver($driverOptions);
         $datasource = new DataSource($name, $this, $this->eventDispatcher, $driver);
         $this->dataSources[$name] = $datasource;
 
@@ -58,7 +57,7 @@ final class DataSourceFactory implements DataSourceFactoryInterface
         }
 
         if (0 !== count($result)) {
-            return array_merge(...$result);
+            $result = array_merge(...$result);
         }
 
         return $result;
@@ -74,7 +73,7 @@ final class DataSourceFactory implements DataSourceFactoryInterface
         }
 
         if (0 !== count($result)) {
-            return array_merge_recursive(...$result);
+            $result = array_merge_recursive(...$result);
         }
 
         return $result;

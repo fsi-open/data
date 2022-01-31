@@ -24,6 +24,7 @@ use InvalidArgumentException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use RuntimeException;
 
+use function array_key_exists;
 use function current;
 use function key;
 use function next;
@@ -32,26 +33,28 @@ use function sprintf;
 
 final class DataGrid implements DataGridInterface
 {
-    protected DataGridFactoryInterface $dataGridFactory;
-    protected EventDispatcherInterface $eventDispatcher;
-    protected ?DataRowsetInterface $rowset = null;
+    private DataGridFactoryInterface $dataGridFactory;
+    private EventDispatcherInterface $eventDispatcher;
     private string $name;
     private DataMapperInterface $dataMapper;
+    private ?DataRowsetInterface $rowset;
     /**
      * @var array<string,ColumnInterface>
      */
-    private array $columns = [];
+    private array $columns;
 
     public function __construct(
-        string $name,
         DataGridFactoryInterface $dataGridFactory,
         DataMapperInterface $dataMapper,
-        EventDispatcherInterface $eventDispatcher
+        EventDispatcherInterface $eventDispatcher,
+        string $name
     ) {
-        $this->name = $name;
         $this->dataGridFactory = $dataGridFactory;
         $this->dataMapper = $dataMapper;
         $this->eventDispatcher = $eventDispatcher;
+        $this->name = $name;
+        $this->rowset = null;
+        $this->columns = [];
     }
 
     public function getFactory(): DataGridFactoryInterface
@@ -67,7 +70,6 @@ final class DataGrid implements DataGridInterface
     public function addColumn(string $name, string $type, array $options = []): DataGridInterface
     {
         $columnType = $this->dataGridFactory->getColumnType($type);
-
         return $this->addColumnInstance($columnType->createColumn($this, $name, $options));
     }
 
@@ -90,7 +92,9 @@ final class DataGrid implements DataGridInterface
     public function removeColumn(string $name): DataGridInterface
     {
         if (false === $this->hasColumn($name)) {
-            throw new InvalidArgumentException("Column \"{$name}\" does not exist in datagrid \"{$this->name}\".");
+            throw new InvalidArgumentException(
+                "Column \"{$name}\" does not exist in datagrid \"{$this->name}\"."
+            );
         }
 
         unset($this->columns[$name]);
@@ -98,20 +102,15 @@ final class DataGrid implements DataGridInterface
         return $this;
     }
 
-    public function clearColumns(): DataGridInterface
+    public function clearColumns(): void
     {
         $this->columns = [];
-
-        return $this;
     }
 
     public function getColumn(string $name): ColumnInterface
     {
         if (false === $this->hasColumn($name)) {
-            throw new InvalidArgumentException(sprintf(
-                'Column "%s" does not exist in data grid.',
-                $name
-            ));
+            throw new InvalidArgumentException("Column \"{$name}\" does not exist in data grid.");
         }
 
         return $this->columns[$name];
@@ -147,7 +146,7 @@ final class DataGrid implements DataGridInterface
 
         $this->eventDispatcher->dispatch(new PostBuildViewEvent($this, $view));
 
-        return (new PostBuildViewEvent($this, $view))->getDataGridView();
+        return $view;
     }
 
     public function setData(iterable $data): void
@@ -163,6 +162,7 @@ final class DataGrid implements DataGridInterface
         if (null === $this->rowset) {
             throw $this->createUninitializedDataException();
         }
+
         return count($this->rowset);
     }
 
@@ -174,6 +174,7 @@ final class DataGrid implements DataGridInterface
         if (null === $this->rowset) {
             throw $this->createUninitializedDataException();
         }
+
         return current($this->rowset);
     }
 
@@ -185,6 +186,7 @@ final class DataGrid implements DataGridInterface
         if (null === $this->rowset) {
             throw $this->createUninitializedDataException();
         }
+
         return key($this->rowset);
     }
 
@@ -193,6 +195,7 @@ final class DataGrid implements DataGridInterface
         if (null === $this->rowset) {
             throw $this->createUninitializedDataException();
         }
+
         next($this->rowset);
     }
 
@@ -201,6 +204,7 @@ final class DataGrid implements DataGridInterface
         if (null === $this->rowset) {
             throw $this->createUninitializedDataException();
         }
+
         reset($this->rowset);
     }
 
@@ -214,6 +218,7 @@ final class DataGrid implements DataGridInterface
         if (null === $this->rowset) {
             throw $this->createUninitializedDataException();
         }
+
         return $this->rowset->offsetExists($offset);
     }
 
@@ -222,6 +227,7 @@ final class DataGrid implements DataGridInterface
         if (null === $this->rowset) {
             throw $this->createUninitializedDataException();
         }
+
         return $this->rowset->offsetGet($offset);
     }
 
@@ -251,6 +257,8 @@ final class DataGrid implements DataGridInterface
 
     private function createUninitializedDataException(): DataGridException
     {
-        return new DataGridException("DataGrid {$this->name} has not been initialized with data.");
+        return new DataGridException(
+            "DataGrid \"{$this->name}\" has not been initialized with data."
+        );
     }
 }

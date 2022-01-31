@@ -17,10 +17,6 @@
                    resource="../../../../Component/DataGrid/{ColumnType,ColumnTypeExtension,EventSubscriber,Extension}"
         />
 
-        <service id="FSi\Bundle\DataGridBundle\DataGrid\Extension\DependencyInjectionExtension">
-            <argument key="$columnTypes" type="tagged_iterator" tag="datagrid.column" />
-        </service>
-
         <service id="FSi\Bundle\DataGridBundle\DataGrid\ColumnTypeExtension\FormExtension">
             <argument key="$cellFormBuilders" type="tagged_iterator" tag="datagrid.cell_form_builder" />
             <argument key="$csrfProtectionEnabled">%form.type_extension.csrf.enabled%</argument>
@@ -34,8 +30,8 @@
         </service>
 
         <service id="FSi\Component\DataGrid\DataGridFactory">
-            <argument key="$extensions" type="tagged_iterator" tag="datagrid.extension" />
             <argument key="$dataMapper" type="service" id="FSi\Component\DataGrid\DataMapper\ChainMapper" />
+            <argument key="$columnTypes" type="tagged_iterator" tag="datagrid.column" />
         </service>
 
         <service id="FSi\Component\DataGrid\DataGridFormHandler" />

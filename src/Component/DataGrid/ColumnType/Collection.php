@@ -15,6 +15,9 @@ use FSi\Component\DataGrid\Column\ColumnAbstractType;
 use FSi\Component\DataGrid\Column\ColumnInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+use function implode;
+use function is_array;
+
 class Collection extends ColumnAbstractType
 {
     public function getId(): string

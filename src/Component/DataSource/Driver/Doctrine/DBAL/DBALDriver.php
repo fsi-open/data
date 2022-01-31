@@ -17,7 +17,7 @@ use FSi\Component\DataSource\Driver\Doctrine\DBAL\Event\PostGetResult;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Event\PreGetResult;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Exception\DBALDriverException;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\FieldType\FieldTypeInterface;
-use FSi\Component\DataSource\Driver\DriverAbstract;
+use FSi\Component\DataSource\Driver\AbstractDriver;
 use FSi\Component\DataSource\Field\FieldInterface;
 use FSi\Component\DataSource\Result;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -25,7 +25,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 use function sprintf;
 use function strpos;
 
-final class DBALDriver extends DriverAbstract
+final class DBALDriver extends AbstractDriver
 {
     private QueryBuilder $initialQuery;
     private string $alias;

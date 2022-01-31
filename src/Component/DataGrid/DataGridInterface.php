@@ -28,6 +28,17 @@ interface DataGridInterface extends ArrayAccess, Countable, Iterator
     public function getName(): string;
 
     /**
+     * @return array<ColumnInterface>
+     */
+    public function getColumns(): array;
+
+    public function hasColumn(string $name): bool;
+
+    public function hasColumnType(string $type): bool;
+
+    public function getColumn(string $name): ColumnInterface;
+
+    /**
      * @param string $name
      * @param string $type
      * @param array<string,mixed> $options
@@ -39,18 +50,7 @@ interface DataGridInterface extends ArrayAccess, Countable, Iterator
 
     public function removeColumn(string $name): DataGridInterface;
 
-    public function clearColumns(): DataGridInterface;
-
-    public function getColumn(string $name): ColumnInterface;
-
-    /**
-     * @return array<ColumnInterface>
-     */
-    public function getColumns(): array;
-
-    public function hasColumn(string $name): bool;
-
-    public function hasColumnType(string $type): bool;
+    public function clearColumns(): void;
 
     public function createView(): DataGridViewInterface;
 

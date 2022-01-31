@@ -17,15 +17,20 @@ use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 use function array_key_exists;
+use function is_string;
+use function sprintf;
+use function strpos;
+use function urlencode;
+use function vsprintf;
 
 class Action extends ColumnAbstractType
 {
-    protected OptionsResolver $actionOptionsResolver;
+    private OptionsResolver $actionOptionsResolver;
 
     /**
      * @param array<ColumnTypeExtensionInterface> $columnTypeExtensions
      */
-    public function __construct(array $columnTypeExtensions = [])
+    public function __construct(array $columnTypeExtensions)
     {
         parent::__construct($columnTypeExtensions);
         $this->actionOptionsResolver = new OptionsResolver();
@@ -76,12 +81,15 @@ class Action extends ColumnAbstractType
             $url = (isset($options['protocol'], $options['domain'])) ? $options['protocol'] . $options['domain'] : '';
             $url .= vsprintf($options['uri_scheme'], $value);
 
-            if (true === array_key_exists('redirect_uri', $options) && is_string($options['redirect_uri'])) {
-                if (strpos($url, '?') !== false) {
-                    $url .= '&redirect_uri=' . urlencode($options['redirect_uri']);
-                } else {
-                    $url .= '?redirect_uri=' . urlencode($options['redirect_uri']);
-                }
+            if (
+                true === array_key_exists('redirect_uri', $options)
+                && true === is_string($options['redirect_uri'])
+            ) {
+                $url .= sprintf(
+                    '%sredirect_uri=%s',
+                    false !== strpos($url, '?') ? '%' : '?',
+                    urlencode($options['redirect_uri'])
+                );
             }
 
             $return[$name]['url'] = $url;

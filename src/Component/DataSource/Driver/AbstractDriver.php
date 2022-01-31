@@ -18,15 +18,14 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 use function array_key_exists;
 use function array_walk;
 use function get_class;
-use function sprintf;
 
-abstract class DriverAbstract implements DriverInterface
+abstract class AbstractDriver implements DriverInterface
 {
     private EventDispatcherInterface $eventDispatcher;
     /**
      * @var array<FieldTypeInterface>
      */
-    private array $fieldTypes = [];
+    private array $fieldTypes;
 
     /**
      * @param EventDispatcherInterface $eventDispatcher
@@ -35,6 +34,7 @@ abstract class DriverAbstract implements DriverInterface
     public function __construct(EventDispatcherInterface $eventDispatcher, array $fieldTypes)
     {
         $this->eventDispatcher = $eventDispatcher;
+        $this->fieldTypes = [];
         array_walk($fieldTypes, function (FieldTypeInterface $fieldType): void {
             $this->fieldTypes[$fieldType->getId()] = $fieldType;
             $this->fieldTypes[get_class($fieldType)] = $fieldType;
@@ -49,7 +49,7 @@ abstract class DriverAbstract implements DriverInterface
     public function getFieldType(string $type): FieldTypeInterface
     {
         if (false === $this->hasFieldType($type)) {
-            throw new DataSourceException(sprintf('Unsupported field type ("%s").', $type));
+            throw new DataSourceException("Unsupported field type (\"{$type}\").");
         }
 
         return $this->fieldTypes[$type];
