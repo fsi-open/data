@@ -51,9 +51,9 @@ final class DataGridFactoryTest extends TestCase
 
     protected function setUp(): void
     {
-        $dataMapper = $this->createMock(DataMapperInterface::class);
-        $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
-
-        $this->factory = new DataGridFactory($dataMapper, $eventDispatcher, [new FooType([])]);
+        $this->factory = new DataGridFactory(
+            $this->createMock(EventDispatcherInterface::class),
+            [new FooType([], $this->createMock(DataMapperInterface::class))]
+        );
     }
 }

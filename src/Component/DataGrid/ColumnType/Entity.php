@@ -39,8 +39,11 @@ class Entity extends ColumnAbstractType
         /** @var string $relationField */
         $relationField = $column->getOption('relation_field');
 
-        $values = $column->getDataGrid()->getDataMapper()->getData($relationField, $object);
-        $value = $this->filterValue($column, $values);
+        $value = $this->filterValue(
+            $column,
+            $this->dataMapper->getData($relationField, $object)
+        );
+
         foreach ($this->columnTypeExtensions as $extension) {
             $value = $extension->filterValue($column, $value);
         }
@@ -58,7 +61,7 @@ class Entity extends ColumnAbstractType
         if (true === is_iterable($value)) {
             foreach ($value as $object) {
                 foreach ($mappingFields as $field) {
-                    $objectValues[$field] = $column->getDataGrid()->getDataMapper()->getData($field, $object);
+                    $objectValues[$field] = $this->dataMapper->getData($field, $object);
                 }
 
                 $values[] = $objectValues;
@@ -66,7 +69,7 @@ class Entity extends ColumnAbstractType
         } else {
             foreach ($mappingFields as $field) {
                 $objectValues[$field] = null !== $value
-                    ? $column->getDataGrid()->getDataMapper()->getData($field, $value)
+                    ? $this->dataMapper->getData($field, $value)
                     : null;
             }
 

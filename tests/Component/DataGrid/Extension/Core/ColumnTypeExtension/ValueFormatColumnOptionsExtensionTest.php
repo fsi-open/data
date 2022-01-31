@@ -239,34 +239,23 @@ final class ValueFormatColumnOptionsExtensionTest extends TestCase
 
     public function testFormatClosure(): void
     {
-        $columnType = new Text([new DefaultColumnOptionsExtension(), $this->extension]);
+        $columnType = new Text(
+            [new DefaultColumnOptionsExtension(), $this->extension],
+            new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor())
+        );
 
-        $column = $columnType->createColumn($this->getDataGridMock(), 'text', [
+        $column = $columnType->createColumn($this->createMock(DataGridInterface::class), 'text', [
             'field_mapping' => ['text'],
-            'value_format' => function ($data) {
-                return sprintf('%s %s', $data['text'], $data['text']);
-            }
+            'value_format' => static fn(array $data): string => "{$data['text']} {$data['text']}"
         ]);
-        $cellView = $columnType->createCellView($column, 1, (object) ['text' => 'bar']);
 
+        $cellView = $columnType->createCellView($column, 1, (object) ['text' => 'bar']);
         $this->assertSame('bar bar', $cellView->getValue());
     }
 
     protected function setUp(): void
     {
         $this->extension = new ValueFormatColumnOptionsExtension();
-    }
-
-    /**
-     * @return DataGridInterface&MockObject
-     */
-    private function getDataGridMock(): MockObject
-    {
-        $dataGrid = $this->createMock(DataGridInterface::class);
-        $dataGrid->method('getDataMapper')
-            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
-
-        return $dataGrid;
     }
 
     /**
@@ -277,15 +266,9 @@ final class ValueFormatColumnOptionsExtensionTest extends TestCase
     private function assertFilteredValue(array $options, array $value, string $filteredValue): void
     {
         $column = $this->createMock(ColumnInterface::class);
-
-        $column->method('getOption')
-            ->willReturnCallback(static function (string $option) use ($options) {
-                if (true === array_key_exists($option, $options)) {
-                    return $options[$option];
-                }
-
-                return null;
-            });
+        $column->method('getOption')->willReturnCallback(
+            fn(string $option) => true === array_key_exists($option, $options) ? $options[$option] : null
+        );
 
         $this->assertSame($filteredValue, $this->extension->filterValue($column, $value));
     }

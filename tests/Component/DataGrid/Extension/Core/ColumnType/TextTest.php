@@ -15,31 +15,21 @@ use FSi\Component\DataGrid\ColumnType\Text;
 use FSi\Component\DataGrid\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
-class TextTest extends TestCase
+final class TextTest extends TestCase
 {
     public function testTrimOption(): void
     {
-        $columnType = new Text([new DefaultColumnOptionsExtension()]);
+        $columnType = new Text(
+            [new DefaultColumnOptionsExtension()],
+            new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor())
+        );
 
-        $column = $columnType->createColumn($this->getDataGridMock(), 'text', ['trim' => true]);
+        $column = $columnType->createColumn($this->createMock(DataGridInterface::class), 'text', ['trim' => true]);
         $cellView = $columnType->createCellView($column, 1, (object) ['text' => ' VALUE ']);
 
         $this->assertSame(['text' => 'VALUE'], $cellView->getValue());
-    }
-
-    /**
-     * @return DataGridInterface&MockObject
-     */
-    private function getDataGridMock(): MockObject
-    {
-        $dataGrid = $this->createMock(DataGridInterface::class);
-        $dataGrid->method('getDataMapper')
-            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
-
-        return $dataGrid;
     }
 }

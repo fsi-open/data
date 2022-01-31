@@ -15,6 +15,7 @@ use Closure;
 use FSi\Component\DataGrid\Column\ColumnAbstractType;
 use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
+use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -38,9 +39,10 @@ final class Action extends ColumnAbstractType
     public function __construct(
         UrlGeneratorInterface $urlGenerator,
         RequestStack $requestStack,
+        DataMapperInterface $dataMapper,
         array $columnTypeExtensions
     ) {
-        parent::__construct($columnTypeExtensions);
+        parent::__construct($columnTypeExtensions, $dataMapper);
 
         $this->urlGenerator = $urlGenerator;
         $this->requestStack = $requestStack;

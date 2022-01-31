@@ -19,6 +19,7 @@ use Doctrine\Persistence\Mapping\ClassMetadataFactory;
 use Doctrine\Persistence\ObjectManager;
 use FSi\Component\DataGrid\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\DataGridInterface;
+use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
 use FSi\Component\DataGrid\Gedmo\ColumnType\Tree;
 use Gedmo\Tree\RepositoryInterface;
@@ -32,10 +33,12 @@ use Tests\FSi\Component\DataGrid\Fixtures\EntityTree;
 
 final class TreeTest extends TestCase
 {
+    private DataMapperInterface $dataMapper;
+
     public function testWrongValue(): void
     {
         $registry = $this->createMock(ManagerRegistry::class);
-        $columnType = new Tree($registry, [new DefaultColumnOptionsExtension()]);
+        $columnType = new Tree($registry, $this->dataMapper, [new DefaultColumnOptionsExtension()]);
 
         $column = $columnType->createColumn($this->getDataGridMock(), 'tree', ['field_mapping' => ['id']]);
 
@@ -48,7 +51,7 @@ final class TreeTest extends TestCase
     public function testGetValue(): void
     {
         $registry = $this->getManagerRegistry();
-        $columnType = new Tree($registry, [new DefaultColumnOptionsExtension()]);
+        $columnType = new Tree($registry, $this->dataMapper, [new DefaultColumnOptionsExtension()]);
 
         $column = $columnType->createColumn($this->getDataGridMock(), 'tree', ['field_mapping' => ['id']]);
         $view = $columnType->createCellView($column, 1, new EntityTree("foo"));
@@ -65,6 +68,11 @@ final class TreeTest extends TestCase
             ],
             $view->getValue()
         );
+    }
+
+    protected function setUp(): void
+    {
+        $this->dataMapper = new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor());
     }
 
     /**
@@ -166,11 +174,6 @@ final class TreeTest extends TestCase
      */
     private function getDataGridMock(): MockObject
     {
-        $dataGrid = $this->createMock(DataGridInterface::class);
-        $dataGrid->method('getDataMapper')->willReturn(
-            new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor())
-        );
-
-        return $dataGrid;
+        return $this->createMock(DataGridInterface::class);
     }
 }

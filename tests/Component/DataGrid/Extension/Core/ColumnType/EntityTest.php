@@ -15,7 +15,6 @@ use FSi\Component\DataGrid\ColumnType\Entity;
 use FSi\Component\DataGrid\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Tests\FSi\Component\DataGrid\Fixtures\Entity as Fixture;
@@ -24,27 +23,21 @@ final class EntityTest extends TestCase
 {
     public function testGetValue(): void
     {
-        $columnType = new Entity([new DefaultColumnOptionsExtension()]);
+        $columnType = new Entity(
+            [new DefaultColumnOptionsExtension()],
+            new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor())
+        );
 
-        $dataGrid = $this->getDataGridMock();
-        $column = $columnType->createColumn($dataGrid, 'foo', ['relation_field' => 'author']);
+        $column = $columnType->createColumn(
+            $this->createMock(DataGridInterface::class),
+            'foo',
+            ['relation_field' => 'author']
+        );
 
         $object = new Fixture('object');
         $object->setAuthor((object) ['foo' => 'bar']);
 
         $cellView = $columnType->createCellView($column, 1, $object);
         $this->assertSame([['foo' => 'bar']], $cellView->getValue());
-    }
-
-    /**
-     * @return DataGridInterface&MockObject
-     */
-    private function getDataGridMock(): MockObject
-    {
-        $dataGrid = $this->createMock(DataGridInterface::class);
-        $dataGrid->method('getDataMapper')
-            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
-
-        return $dataGrid;
     }
 }

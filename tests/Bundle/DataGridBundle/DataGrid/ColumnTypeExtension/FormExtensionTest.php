@@ -225,11 +225,11 @@ final class FormExtensionTest extends TestCase
         $dataGrid = $this->createMock(DataGridInterface::class);
         $this->dataGrid = $dataGrid;
         $this->dataGrid->method('getName')->willReturn('grid');
-        $this->dataGrid->method('getDataMapper')->willReturn($this->getDataMapper());
 
         $this->extension = new FormExtension(
             [new TextCellFormBuilder(), new EntityCellFormBuilder()],
             $formFactory,
+            $this->getDataMapper(),
             true
         );
     }

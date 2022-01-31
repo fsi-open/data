@@ -140,7 +140,10 @@ final class BooleanTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->columnType = new Boolean([new DefaultColumnOptionsExtension()]);
+        $this->columnType = new Boolean(
+            [new DefaultColumnOptionsExtension()],
+            new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor())
+        );
     }
 
     /**
@@ -148,10 +151,6 @@ final class BooleanTest extends TestCase
      */
     private function getDataGridMock(): MockObject
     {
-        $dataGrid = $this->createMock(DataGridInterface::class);
-        $dataGrid->method('getDataMapper')
-            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
-
-        return $dataGrid;
+        return $this->createMock(DataGridInterface::class);
     }
 }

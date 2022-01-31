@@ -14,8 +14,9 @@ namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\ColumnTypeExtension;
 use FSi\Bundle\DataGridBundle\DataGrid\CellFormBuilder\BooleanCellFormBuilder;
 use FSi\Bundle\DataGridBundle\DataGrid\ColumnTypeExtension\BooleanColumnExtension;
 use FSi\Bundle\DataGridBundle\DataGrid\ColumnTypeExtension\FormExtension;
-use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\ColumnType\Boolean;
+use FSi\Component\DataGrid\DataGridInterface;
+use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -25,10 +26,19 @@ final class BooleanColumnExtensionTest extends TestCase
 {
     public function testColumnOptions(): void
     {
-        $columnType = new Boolean([
-            new FormExtension([new BooleanCellFormBuilder()], $this->createMock(FormFactoryInterface::class), true),
-            new BooleanColumnExtension($this->getTranslator()),
-        ]);
+        $dataMapper = $this->createMock(DataMapperInterface::class);
+        $columnType = new Boolean(
+            [
+                new FormExtension(
+                    [new BooleanCellFormBuilder()],
+                    $this->createMock(FormFactoryInterface::class),
+                    $dataMapper,
+                    true
+                ),
+                new BooleanColumnExtension($this->getTranslator()),
+            ],
+            $dataMapper
+        );
         $column = $columnType->createColumn($this->createMock(DataGridInterface::class), 'grid', []);
 
         $this->assertEquals('YES', $column->getOption('true_value'));

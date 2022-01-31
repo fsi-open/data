@@ -13,6 +13,7 @@ namespace FSi\Bundle\DataGridBundle\DataGrid\ColumnTypeExtension;
 
 use FSi\Bundle\DataGridBundle\DataGrid\CellFormBuilder\CellFormBuilderInterface;
 use FSi\Bundle\DataGridBundle\Form\Type\RowType;
+use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\Column\CellViewInterface;
 use FSi\Component\DataGrid\Column\ColumnAbstractType;
 use FSi\Component\DataGrid\Column\ColumnAbstractTypeExtension;
@@ -32,16 +33,17 @@ use function implode;
 
 final class FormExtension extends ColumnAbstractTypeExtension implements DataGridCellFormHandlerInterface
 {
-    /**
-     * @var array<class-string<ColumnTypeInterface>,CellFormBuilderInterface>
-     */
-    private array $cellFormBuilders;
     private FormFactoryInterface $formFactory;
+    private DataMapperInterface $dataMapper;
     private bool $csrfProtectionEnabled;
     /**
      * @var array<string,FormInterface<FormInterface>>
      */
     private array $forms;
+    /**
+     * @var array<class-string<ColumnTypeInterface>,CellFormBuilderInterface>
+     */
+    private array $cellFormBuilders;
 
     public static function getExtendedColumnTypes(): array
     {
@@ -56,17 +58,19 @@ final class FormExtension extends ColumnAbstractTypeExtension implements DataGri
     public function __construct(
         iterable $cellFormBuilders,
         FormFactoryInterface $formFactory,
-        bool $csrfProtectionEnabled = true
+        DataMapperInterface $dataMapper,
+        bool $csrfProtectionEnabled
     ) {
+        $this->formFactory = $formFactory;
+        $this->dataMapper = $dataMapper;
+        $this->csrfProtectionEnabled = $csrfProtectionEnabled;
+        $this->forms = [];
         $this->cellFormBuilders = [];
         foreach ($cellFormBuilders as $cellFormBuilder) {
             foreach ($cellFormBuilder::getSupportedColumnTypes() as $supportedColumnType) {
                 $this->cellFormBuilders[$supportedColumnType] = $cellFormBuilder;
             }
         }
-        $this->formFactory = $formFactory;
-        $this->csrfProtectionEnabled = $csrfProtectionEnabled;
-        $this->forms = [];
     }
 
     public function initOptions(OptionsResolver $optionsResolver): void
@@ -95,7 +99,7 @@ final class FormExtension extends ColumnAbstractTypeExtension implements DataGri
             $data = $form->getData();
             foreach ($data as $fields) {
                 foreach ($fields as $field => $value) {
-                    $column->getDataGrid()->getDataMapper()->setData($field, $source, $value);
+                    $this->dataMapper->setData($field, $source, $value);
                 }
             }
         }
@@ -151,7 +155,7 @@ final class FormExtension extends ColumnAbstractTypeExtension implements DataGri
 
         $formData = [];
         foreach (array_keys($fields) as $fieldName) {
-            $formData[$fieldName] = $column->getDataGrid()->getDataMapper()->getData($fieldName, $object);
+            $formData[$fieldName] = $this->dataMapper->getData($fieldName, $object);
         }
 
         $formBuilder = $this->formFactory->createNamedBuilder(

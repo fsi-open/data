@@ -22,10 +22,11 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 use Tests\FSi\Component\DataGrid\Fixtures\ColumnType\FooType;
 use Tests\FSi\Component\DataGrid\Fixtures\Entity;
 
+use function array_keys;
+
 final class DataGridTest extends TestCase
 {
     private DataGridFactoryInterface $factory;
-    private DataMapperInterface $dataMapper;
     private DataGridInterface $datagrid;
 
     public function testGetName(): void
@@ -60,11 +61,6 @@ final class DataGridTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Column "bar" does not exist in data grid.');
         $this->datagrid->getColumn('bar');
-    }
-
-    public function testGetDataMapper(): void
-    {
-        self::assertInstanceOf(DataMapperInterface::class, $this->datagrid->getDataMapper());
     }
 
     public function testSetData(): void
@@ -125,29 +121,21 @@ final class DataGridTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dataMapper = $this->createMock(DataMapperInterface::class);
-        $this->dataMapper->method('getData')
+        $dataMapper = $this->createMock(DataMapperInterface::class);
+        $dataMapper->method('getData')
             ->willReturnCallback(
                 static fn(string $field, $object): ?string => 'name' === $field ? $object->getName() : null
             );
 
-        $this->dataMapper->method('setData')
-            ->willReturnCallback(
-                static function ($field, $object, $value) {
-                    if ('name' === $field) {
-                        $object->setName($value);
-                    }
-                }
-            );
-
         $this->factory = new DataGridFactory(
-            $this->dataMapper,
             $this->createMock(EventDispatcherInterface::class),
-            [new FooType([])]
+            [new FooType([], $dataMapper)]
         );
 
-        $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
-
-        $this->datagrid = new DataGrid($this->factory, $this->dataMapper, $eventDispatcher, 'grid');
+        $this->datagrid = new DataGrid(
+            $this->factory,
+            $this->createMock(EventDispatcherInterface::class),
+            'grid'
+        );
     }
 }
