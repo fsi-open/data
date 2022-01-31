@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace FSi\Component\DataGrid\Column;
 
 use FSi\Component\DataGrid\DataGridInterface;
+use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\Exception\DataGridColumnException;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -28,7 +29,7 @@ abstract class ColumnAbstractType implements ColumnTypeInterface
     /**
      * @param array<ColumnTypeExtensionInterface> $columnTypeExtensions
      */
-    public function __construct(array $columnTypeExtensions)
+    public function __construct(array $columnTypeExtensions, DataMapperInterface $dataMapper)
     {
         array_walk($columnTypeExtensions, static function (ColumnTypeExtensionInterface $columnTypeExtension): void {
             $found = array_reduce(
@@ -50,6 +51,7 @@ abstract class ColumnAbstractType implements ColumnTypeInterface
         });
 
         $this->columnTypeExtensions = $columnTypeExtensions;
+        $this->dataMapper = $dataMapper;
     }
 
     public function createColumn(DataGridInterface $dataGrid, string $name, array $options): ColumnInterface

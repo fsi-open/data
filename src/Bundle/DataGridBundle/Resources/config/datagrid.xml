@@ -22,6 +22,10 @@
             <argument key="$csrfProtectionEnabled">%form.type_extension.csrf.enabled%</argument>
         </service>
 
+        <service id="FSi\Component\DataGrid\DataMapper\DataMapperInterface"
+                 alias="FSi\Component\DataGrid\DataMapper\ChainMapper"
+        />
+
         <service id="FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper" />
         <service id="FSi\Component\DataGrid\DataMapper\ChainMapper">
             <argument key="$mappers" type="collection">
@@ -30,7 +34,6 @@
         </service>
 
         <service id="FSi\Component\DataGrid\DataGridFactory">
-            <argument key="$dataMapper" type="service" id="FSi\Component\DataGrid\DataMapper\ChainMapper" />
             <argument key="$columnTypes" type="tagged_iterator" tag="datagrid.column" />
         </service>
 

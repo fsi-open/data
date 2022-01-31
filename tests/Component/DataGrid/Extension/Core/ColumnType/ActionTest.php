@@ -92,7 +92,10 @@ final class ActionTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->columnType = new Action([new DefaultColumnOptionsExtension()]);
+        $this->columnType = new Action(
+            [new DefaultColumnOptionsExtension()],
+            new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor())
+        );
     }
 
     /**
@@ -100,10 +103,6 @@ final class ActionTest extends TestCase
      */
     private function getDataGridMock(): MockObject
     {
-        $dataGrid = $this->createMock(DataGridInterface::class);
-        $dataGrid->method('getDataMapper')
-            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
-
-        return $dataGrid;
+        return $this->createMock(DataGridInterface::class);
     }
 }

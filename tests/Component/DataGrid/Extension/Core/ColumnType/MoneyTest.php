@@ -15,9 +15,10 @@ use FSi\Component\DataGrid\ColumnType\Money;
 use FSi\Component\DataGrid\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccess;
+
+use function array_merge;
 
 final class MoneyTest extends TestCase
 {
@@ -59,7 +60,10 @@ final class MoneyTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->columnType = new Money([new DefaultColumnOptionsExtension()]);
+        $this->columnType = new Money(
+            [new DefaultColumnOptionsExtension()],
+            new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor())
+        );
     }
 
     /**
@@ -73,21 +77,13 @@ final class MoneyTest extends TestCase
             'currency' => 'PLN',
         ], $options);
 
-        $column = $this->columnType->createColumn($this->getDataGridMock(), 'price', $options);
+        $column = $this->columnType->createColumn(
+            $this->createMock(DataGridInterface::class),
+            'price',
+            $options
+        );
+
         $cellView = $this->columnType->createCellView($column, 1, $value);
-
         $this->assertSame($expectedValue, $cellView->getValue());
-    }
-
-    /**
-     * @return DataGridInterface&MockObject
-     */
-    private function getDataGridMock(): MockObject
-    {
-        $dataGrid = $this->createMock(DataGridInterface::class);
-        $dataGrid->method('getDataMapper')
-            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
-
-        return $dataGrid;
     }
 }

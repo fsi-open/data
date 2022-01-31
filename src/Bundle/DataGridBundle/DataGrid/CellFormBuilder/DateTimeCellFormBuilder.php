@@ -14,6 +14,7 @@ namespace FSi\Bundle\DataGridBundle\DataGrid\CellFormBuilder;
 use DateTimeInterface;
 use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\ColumnType\DateTime;
+use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 
 use function array_key_exists;
@@ -22,9 +23,16 @@ use function is_string;
 
 final class DateTimeCellFormBuilder extends AbstractCellFormBuilder
 {
+    private DataMapperInterface $dataMapper;
+
     public static function getSupportedColumnTypes(): array
     {
         return [DateTime::class];
+    }
+
+    public function __construct(DataMapperInterface $dataMapper)
+    {
+        $this->dataMapper = $dataMapper;
     }
 
     public function prepareFormFields(ColumnInterface $column, $object, array $formTypes, array $options): array
@@ -36,7 +44,7 @@ final class DateTimeCellFormBuilder extends AbstractCellFormBuilder
                 continue;
             }
 
-            $value = $column->getDataGrid()->getDataMapper()->getData($field['name'], $object);
+            $value = $this->dataMapper->getData($field['name'], $object);
             if (true === is_numeric($value)) {
                 $field['options']['input'] = 'timestamp';
             } elseif (true === is_string($value)) {

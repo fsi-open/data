@@ -15,7 +15,6 @@ use FSi\Component\DataGrid\ColumnType\Number;
 use FSi\Component\DataGrid\ColumnTypeExtension\DefaultColumnOptionsExtension;
 use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
@@ -94,7 +93,10 @@ final class NumberTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->columnType = new Number([new DefaultColumnOptionsExtension()]);
+        $this->columnType = new Number(
+            [new DefaultColumnOptionsExtension()],
+            new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor())
+        );
     }
 
     /**
@@ -104,21 +106,14 @@ final class NumberTest extends TestCase
      */
     private function assertCellValue(array $options, object $value, array $expectedValue): void
     {
-        $column = $this->columnType->createColumn($this->getDataGridMock(), 'number', $options);
+        $column = $this->columnType->createColumn(
+            $this->createMock(DataGridInterface::class),
+            'number',
+            $options
+        );
+
         $cellView = $this->columnType->createCellView($column, 1, $value);
 
         $this->assertSame($expectedValue, $cellView->getValue());
-    }
-
-    /**
-     * @return DataGridInterface&MockObject
-     */
-    private function getDataGridMock(): MockObject
-    {
-        $dataGrid = $this->createMock(DataGridInterface::class);
-        $dataGrid->method('getDataMapper')
-            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
-
-        return $dataGrid;
     }
 }

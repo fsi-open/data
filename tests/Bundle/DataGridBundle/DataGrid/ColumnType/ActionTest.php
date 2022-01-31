@@ -25,6 +25,8 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\Request;
 
+use function urlencode;
+
 final class ActionTest extends TestCase
 {
     /**
@@ -180,7 +182,12 @@ final class ActionTest extends TestCase
         $this->router = $this->createMock(RouterInterface::class);
         $this->requestStack = $this->createMock(RequestStack::class);
         $this->requestStack->method('getCurrentRequest')->willReturn(new Request());
-        $this->columnType = new Action($this->router, $this->requestStack, [new DefaultColumnOptionsExtension()]);
+        $this->columnType = new Action(
+            $this->router,
+            $this->requestStack,
+            new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()),
+            [new DefaultColumnOptionsExtension()]
+        );
     }
 
     /**
@@ -188,10 +195,6 @@ final class ActionTest extends TestCase
      */
     private function getDataGridMock(): MockObject
     {
-        $dataGrid = $this->createMock(DataGridInterface::class);
-        $dataGrid->method('getDataMapper')
-            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
-
-        return $dataGrid;
+        return $this->createMock(DataGridInterface::class);
     }
 }

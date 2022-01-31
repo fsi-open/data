@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace FSi\Component\DataGrid\Column;
 
 use FSi\Component\DataGrid\Exception\DataGridColumnException;
+use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -20,6 +21,7 @@ use function sprintf;
 
 trait ColumnTypeTrait
 {
+    protected DataMapperInterface $dataMapper;
     /**
      * @var array<ColumnTypeExtensionInterface>
      */
@@ -92,9 +94,8 @@ trait ColumnTypeTrait
             );
         }
 
-        $dataMapper = $column->getDataGrid()->getDataMapper();
         foreach ($column->getOption('field_mapping') as $field) {
-            $values[$field] = $dataMapper->getData($field, $object);
+            $values[$field] = $this->dataMapper->getData($field, $object);
         }
 
         $value = $this->filterValue($column, $values);

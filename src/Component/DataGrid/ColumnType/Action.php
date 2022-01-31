@@ -14,6 +14,7 @@ namespace FSi\Component\DataGrid\ColumnType;
 use FSi\Component\DataGrid\Column\ColumnAbstractType;
 use FSi\Component\DataGrid\Column\ColumnInterface;
 use FSi\Component\DataGrid\Column\ColumnTypeExtensionInterface;
+use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 use function array_key_exists;
@@ -30,9 +31,9 @@ class Action extends ColumnAbstractType
     /**
      * @param array<ColumnTypeExtensionInterface> $columnTypeExtensions
      */
-    public function __construct(array $columnTypeExtensions)
+    public function __construct(array $columnTypeExtensions, DataMapperInterface $dataMapper)
     {
-        parent::__construct($columnTypeExtensions);
+        parent::__construct($columnTypeExtensions, $dataMapper);
         $this->actionOptionsResolver = new OptionsResolver();
     }
 

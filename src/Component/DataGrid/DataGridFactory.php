@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace FSi\Component\DataGrid;
 
 use FSi\Component\DataGrid\Column\ColumnTypeInterface;
-use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\Exception\DataGridException;
 use FSi\Component\DataGrid\Exception\UnexpectedTypeException;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -21,7 +20,6 @@ use function array_key_exists;
 
 final class DataGridFactory implements DataGridFactoryInterface
 {
-    private DataMapperInterface $dataMapper;
     private EventDispatcherInterface $eventDispatcher;
     /**
      * @var array<string, DataGridInterface>
@@ -33,16 +31,13 @@ final class DataGridFactory implements DataGridFactoryInterface
     private array $columnTypes;
 
     /**
-     * @param DataMapperInterface $dataMapper
      * @param EventDispatcherInterface $eventDispatcher
      * @param iterable<ColumnTypeInterface> $columnTypes
      */
     public function __construct(
-        DataMapperInterface $dataMapper,
         EventDispatcherInterface $eventDispatcher,
         iterable $columnTypes
     ) {
-        $this->dataMapper = $dataMapper;
         $this->eventDispatcher = $eventDispatcher;
         $this->dataGrids = [];
         $this->columnTypes = [];
@@ -71,13 +66,7 @@ final class DataGridFactory implements DataGridFactoryInterface
             throw new DataGridException("Datagrid name \"{$name}\" is not unique.");
         }
 
-        $this->dataGrids[$name] = new DataGrid(
-            $this,
-            $this->dataMapper,
-            $this->eventDispatcher,
-            $name
-        );
-
+        $this->dataGrids[$name] = new DataGrid($this, $this->eventDispatcher, $name);
         return $this->dataGrids[$name];
     }
 }

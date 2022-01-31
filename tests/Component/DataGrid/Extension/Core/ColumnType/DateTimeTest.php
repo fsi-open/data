@@ -23,7 +23,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
-class DateTimeTest extends TestCase
+final class DateTimeTest extends TestCase
 {
     private DateTimeColumnType $columnType;
 
@@ -378,7 +378,10 @@ class DateTimeTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->columnType = new DateTimeColumnType([new DefaultColumnOptionsExtension()]);
+        $this->columnType = new DateTimeColumnType(
+            [new DefaultColumnOptionsExtension()],
+            new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor())
+        );
     }
 
     /**
@@ -386,10 +389,6 @@ class DateTimeTest extends TestCase
      */
     private function getDataGridMock(): MockObject
     {
-        $dataGrid = $this->createMock(DataGridInterface::class);
-        $dataGrid->method('getDataMapper')
-            ->willReturn(new PropertyAccessorMapper(PropertyAccess::createPropertyAccessor()));
-
-        return $dataGrid;
+        return $this->createMock(DataGridInterface::class);
     }
 }

@@ -12,9 +12,8 @@ declare(strict_types=1);
 namespace FSi\Component\DataGrid;
 
 use FSi\Component\DataGrid\Column\ColumnInterface;
-use FSi\Component\DataGrid\Data\DataRowsetInterface;
 use FSi\Component\DataGrid\Data\DataRowset;
-use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
+use FSi\Component\DataGrid\Data\DataRowsetInterface;
 use FSi\Component\DataGrid\Event\PostBuildViewEvent;
 use FSi\Component\DataGrid\Event\PostSetDataEvent;
 use FSi\Component\DataGrid\Event\PreBuildViewEvent;
@@ -25,6 +24,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 use RuntimeException;
 
 use function array_key_exists;
+use function count;
 use function current;
 use function key;
 use function next;
@@ -36,7 +36,6 @@ final class DataGrid implements DataGridInterface
     private DataGridFactoryInterface $dataGridFactory;
     private EventDispatcherInterface $eventDispatcher;
     private string $name;
-    private DataMapperInterface $dataMapper;
     private ?DataRowsetInterface $rowset;
     /**
      * @var array<string,ColumnInterface>
@@ -45,12 +44,10 @@ final class DataGrid implements DataGridInterface
 
     public function __construct(
         DataGridFactoryInterface $dataGridFactory,
-        DataMapperInterface $dataMapper,
         EventDispatcherInterface $eventDispatcher,
         string $name
     ) {
         $this->dataGridFactory = $dataGridFactory;
-        $this->dataMapper = $dataMapper;
         $this->eventDispatcher = $eventDispatcher;
         $this->name = $name;
         $this->rowset = null;
@@ -85,7 +82,6 @@ final class DataGrid implements DataGridInterface
         }
 
         $this->columns[$column->getName()] = $column;
-
         return $this;
     }
 
@@ -139,8 +135,7 @@ final class DataGrid implements DataGridInterface
 
     public function createView(): DataGridViewInterface
     {
-        $event = new PreBuildViewEvent($this);
-        $this->eventDispatcher->dispatch($event);
+        $this->eventDispatcher->dispatch(new PreBuildViewEvent($this));
 
         $view = new DataGridView($this->name, $this->columns, $this->getRowset());
 
@@ -239,11 +234,6 @@ final class DataGrid implements DataGridInterface
     public function offsetUnset($offset)
     {
         throw new RuntimeException('Method not implemented');
-    }
-
-    public function getDataMapper(): DataMapperInterface
-    {
-        return $this->dataMapper;
     }
 
     private function getRowset(): DataRowsetInterface

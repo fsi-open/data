@@ -14,7 +14,6 @@ namespace FSi\Component\DataGrid;
 use ArrayAccess;
 use Countable;
 use FSi\Component\DataGrid\Column\ColumnInterface;
-use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use Iterator;
 
 /**
@@ -58,6 +57,4 @@ interface DataGridInterface extends ArrayAccess, Countable, Iterator
      * @param iterable<int|string,array<string,mixed>|object> $data
      */
     public function setData(iterable $data): void;
-
-    public function getDataMapper(): DataMapperInterface;
 }
