@@ -11,11 +11,13 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource\Extension\Pagination\EventSubscriber;
 
-use FSi\Component\DataSource\Event\PostBuildView;
+use Countable;
 use FSi\Component\DataSource\DataSourceEventSubscriberInterface;
+use FSi\Component\DataSource\Event\PostBuildView;
 use FSi\Component\DataSource\Extension\Pagination\PaginationExtension;
 
 use function ceil;
+use function count;
 use function floor;
 
 final class PaginationPostBuildView implements DataSourceEventSubscriberInterface
@@ -28,18 +30,23 @@ final class PaginationPostBuildView implements DataSourceEventSubscriberInterfac
     public function __invoke(PostBuildView $event): void
     {
         $datasource = $event->getDataSource();
+        $result = $datasource->getResult();
+        if (false === $result instanceof Countable) {
+            return;
+        }
+
         $datasourceName = $datasource->getName();
         $view = $event->getView();
         $parameters = $view->getParameters();
         $maxResults = $datasource->getMaxResults();
 
-        if (null === $maxResults || 0 === $maxResults) {
-            $all = 1;
-            $page = 1;
-        } else {
-            $all = (int) ceil(count($datasource->getResult()) / $maxResults);
+        if (null !== $maxResults && 0 !== $maxResults) {
+            $all = (int) ceil(count($result) / $maxResults);
             $current = $datasource->getFirstResult();
             $page = (int) floor($current / $maxResults) + 1;
+        } else {
+            $all = 1;
+            $page = 1;
         }
 
         unset($parameters[$datasourceName][PaginationExtension::PARAMETER_PAGE]);

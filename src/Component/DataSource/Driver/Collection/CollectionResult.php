@@ -13,6 +13,7 @@ namespace FSi\Component\DataSource\Driver\Collection;
 
 use ArrayAccess;
 use ArrayIterator;
+use Countable;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Selectable;
@@ -21,7 +22,7 @@ use FSi\Component\DataSource\Result;
 /**
  * @template-implements ArrayAccess<int|string,mixed>
  */
-class CollectionResult implements ArrayAccess, Result
+class CollectionResult implements ArrayAccess, Countable, Result
 {
     /**
      * @var Collection<int|string,mixed>

@@ -29,6 +29,7 @@ final class BundleIntegrationTest extends WebTestCase
      * @var string
      */
     protected static $class = TestKernel::class;
+
     private KernelBrowser $client;
     private ?int $groupId;
 
@@ -186,6 +187,11 @@ final class BundleIntegrationTest extends WebTestCase
         self::assertSelectorTextContains('tr:first-child td:last-child', 'An author');
         self::assertSelectorTextNotContains('tr:last-child td:first-child', 'Another news');
         self::assertSelectorTextNotContains('tr:last-child td:last-child', 'Another author');
+    }
+
+    protected static function getKernelClass(): string
+    {
+        return TestKernel::class;
     }
 
     protected function setUp(): void

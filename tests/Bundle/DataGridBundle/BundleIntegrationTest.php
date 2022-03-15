@@ -49,4 +49,9 @@ final class BundleIntegrationTest extends WebTestCase
         self::assertInputValueSame('datagrid[0][name]', 'new name 1');
         self::assertInputValueSame('datagrid[1][author]', 'new author 2');
     }
+
+    protected static function getKernelClass(): string
+    {
+        return TestKernel::class;
+    }
 }

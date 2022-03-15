@@ -12,10 +12,11 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
 use ArrayIterator;
+use Countable;
 use Doctrine\DBAL\Query\QueryBuilder;
 use FSi\Component\DataSource\Result;
 
-final class Paginator implements Result
+final class Paginator implements Countable, Result
 {
     private QueryBuilder $query;
 

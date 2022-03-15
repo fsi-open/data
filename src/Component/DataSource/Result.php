@@ -11,12 +11,11 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource;
 
-use Countable;
 use IteratorAggregate;
 
 /**
  * @template-extends IteratorAggregate<int|string,mixed>
  */
-interface Result extends Countable, IteratorAggregate
+interface Result extends IteratorAggregate
 {
 }

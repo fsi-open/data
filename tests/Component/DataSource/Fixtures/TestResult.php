@@ -12,9 +12,10 @@ declare(strict_types=1);
 namespace Tests\FSi\Component\DataSource\Fixtures;
 
 use ArrayIterator;
+use Countable;
 use FSi\Component\DataSource\Result;
 
-final class TestResult implements Result
+final class TestResult implements Countable, Result
 {
     public function count(): int
     {

@@ -17,10 +17,12 @@ use FSi\Component\DataSource\DataSourceViewInterface;
 use FSi\Component\DataSource\Driver\Collection\CollectionFactory;
 use FSi\Component\DataSource\Driver\DriverFactoryManager;
 use FSi\Component\DataSource\Event;
+use FSi\Component\DataSource\Event\PostBuildView;
 use FSi\Component\DataSource\Extension\Pagination\EventSubscriber\PaginationPostBuildView;
 use FSi\Component\DataSource\Extension\Pagination\EventSubscriber\PaginationPostGetParameters;
 use FSi\Component\DataSource\Extension\Pagination\EventSubscriber\PaginationPreBindParameters;
 use FSi\Component\DataSource\Extension\Pagination\PaginationExtension;
+use FSi\Component\DataSource\Result;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Tests\FSi\Component\DataSource\Fixtures\TestResult;
@@ -124,5 +126,18 @@ final class PaginationExtensionTest extends TestCase
         ]);
 
         self::assertEquals(105, $dataSource->getMaxResults());
+    }
+
+    public function testPaginationSkippedIfResultNotCountable(): void
+    {
+        $result = $this->createMock(Result::class);
+        $dataSource = $this->createMock(DataSourceInterface::class);
+        $dataSource->expects(self::once())->method('getResult')->willReturn($result);
+
+        $view = $this->createMock(DataSourceViewInterface::class);
+        $view->expects(self::never())->method('setAttribute');
+
+        $subscriber = new PaginationPostBuildView();
+        ($subscriber)(new PostBuildView($dataSource, $view));
     }
 }

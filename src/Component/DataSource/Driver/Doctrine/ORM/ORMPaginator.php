@@ -12,12 +12,13 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Driver\Doctrine\ORM;
 
 use ArrayIterator;
+use Countable;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator as DoctrinePaginator;
 use FSi\Component\DataSource\Result;
 use Iterator;
 
-class ORMPaginator implements Result
+class ORMPaginator implements Countable, Result
 {
     /**
      * @var DoctrinePaginator<mixed>
