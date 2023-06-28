@@ -167,11 +167,7 @@
         {% endapply %}
         {% for file in cell.value %}
             {% if is_web_file(file) %}
-                {% if cell.getAttribute('resolve_file_url') %}
-                    <a href="{{ file|file_url }}" target="_blank">{{ file|file_name }}</a>
-                {% else %}
-                    {{ file|file_name }}
-                {% endif %}
+                {{ block('web_file_content') }}
             {% endif %}
         {% endfor %}
         {% apply spaceless %}
@@ -185,13 +181,27 @@
     {% for image in cell.value %}
         <div style="width: {{ cell.attributes.width + 2 * 5 }}px; {% if cell.attributes.height is not null %}height: {{ cell.attributes.height + 2 * 5 }}px;{% endif %}" class="text-center">
             {% if is_web_file(image) %}
-                <img src="{{ image|file_url }}"
-                     alt="{{ image|file_name }}"
-                     {% if cell.attributes.width is not null %}width="{{ cell.attributes.width }}"
-                     {% endif %}{% if cell.attributes.height is not null %}height="{{ cell.attributes.height }}"{% endif %}
-                >
+                {{ block('web_image_content') }}
             {% endif %}
         </div>
     {% endfor %}
 </td>
+{% endblock %}
+
+{% block web_file_content %}
+{% if cell.getAttribute('resolve_file_url') %}
+    <a href="{{ file|file_url }}" target="_blank">{{ file|file_name }}</a>
+{% else %}
+    {{ file|file_name }}
+{% endif %}
+{% endblock %}
+
+{% block web_image_content %}
+<div style="width: {{ cell.attributes.width + 2 * 5 }}px; {% if cell.attributes.height is not null %}height: {{ cell.attributes.height + 2 * 5 }}px;{% endif %}" class="text-center">
+    <img src="{{ image|file_url }}"
+         alt="{{ image|file_name }}"
+         {% if cell.attributes.width is not null %}width="{{ cell.attributes.width }}"
+         {% endif %}{% if cell.attributes.height is not null %}height="{{ cell.attributes.height }}"{% endif %}
+    >
+</div>
 {% endblock %}
