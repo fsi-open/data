@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataSource\Driver\Elastica\FieldType;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Tests\FSi\Component\DataSource\Driver\Elastica\TestBase;
 use Tests\FSi\Component\DataSource\Driver\Elastica\Fixtures\Branch;
 
@@ -56,6 +57,15 @@ class EntityTest extends TestBase
         $result = $this->filterDataSource(['branch' => new Branch(2)]);
 
         $this->assertCount(2, $result);
+    }
+
+    public function testFindItemsByCollectionOfEntities(): void
+    {
+        $this->dataSource->clearFields();
+        $this->dataSource->addField('branch', 'entity', ['comparison' => 'in']);
+        $result = $this->filterDataSource(['branch' => new ArrayCollection([new Branch(2), new Branch(3)])]);
+
+        $this->assertCount(3, $result);
     }
 
     public function testFindItemsByEntityWithNonStandardId(): void

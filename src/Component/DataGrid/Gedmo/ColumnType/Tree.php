@@ -153,7 +153,9 @@ final class Tree extends ColumnAbstractType
     }
 
     /**
-     * @param class-string $class
+     * @template T of object
+     * @param class-string<T> $class
+     * @return TreeRepositoryInterface<T>
      */
     private function getTreeRepository(string $class, ObjectManager $em): TreeRepositoryInterface
     {

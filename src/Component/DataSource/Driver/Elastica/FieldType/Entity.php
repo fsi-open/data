@@ -19,6 +19,9 @@ use FSi\Component\DataSource\Field\Type\EntityTypeInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
+use function in_array;
+use function sprintf;
+
 class Entity extends AbstractFieldField implements EntityTypeInterface
 {
     public function buildQuery(BoolQuery $query, BoolQuery $filter, FieldInterface $field): void
@@ -30,16 +33,20 @@ class Entity extends AbstractFieldField implements EntityTypeInterface
 
         $fieldPath = $field->getOption('field');
         $comparison = $field->getOption('comparison');
-        if ('eq' === $comparison) {
+        if (true === in_array($comparison, ['eq', 'in'], true)) {
             $accessor = PropertyAccess::createPropertyAccessor();
             $idFieldName = $field->getOption('identifier_field');
 
-            $filter->addMust(
-                new Terms(
-                    sprintf("%s.%s", $fieldPath, $idFieldName),
-                    [$accessor->getValue($data, $idFieldName)]
-                )
-            );
+            if ('eq' === $comparison) {
+                $data = [$data];
+            }
+
+            $ids = [];
+            foreach ($data as $entity) {
+                $ids[] = $accessor->getValue($entity, $idFieldName);
+            }
+
+            $filter->addMust(new Terms(sprintf("%s.%s", $fieldPath, $idFieldName), $ids));
         } elseif ('isNull' === $comparison) {
             $existsQuery = new Exists($fieldPath);
             if ('null' === $data) {
@@ -60,7 +67,7 @@ class Entity extends AbstractFieldField implements EntityTypeInterface
         parent::initOptions($optionsResolver);
 
         $optionsResolver
-            ->setAllowedValues('comparison', ['eq', 'isNull'])
+            ->setAllowedValues('comparison', ['eq', 'in', 'isNull'])
             ->setDefaults(['identifier_field' => 'id'])
             ->setAllowedTypes('identifier_field', ['string'])
         ;
