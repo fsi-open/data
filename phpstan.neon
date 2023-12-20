@@ -18,6 +18,8 @@ parameters:
           path: tests/Bundle/DataGridBundle/DataGrid/EventSubscriber/BindRequestTest.php
         - message: '#Strict comparison using === between false and array will always evaluate to false\.#'
           path: src/Component/DataIndexer/DoctrineDataIndexer.php
+        - message: '#PHPDoc tag @return contains generic type Gedmo\\Tree\\RepositoryInterface<object> but interface Gedmo\\Tree\\RepositoryInterface is not generic\.#'
+          path: src/Component/DataGrid/Gedmo/ColumnType/Tree.php
         - message: '#Call to an undefined method Tests\\FSi\\Component\\DataGrid\\ColumnTypeExtension\\EntityValueFormatColumnOptionsExtensionTest\:\:expectError\(\)\.#'
           path: tests/Component/DataGrid/ColumnTypeExtension/EntityValueFormatColumnOptionsExtensionTest.php
         - message: "#Call to function method_exists\\(\\) with \\$this\\(Tests\\\\FSi\\\\Component\\\\DataGrid\\\\ColumnTypeExtension\\\\EntityValueFormatColumnOptionsExtensionTest\\) and 'expectError' will always evaluate to false.#"
