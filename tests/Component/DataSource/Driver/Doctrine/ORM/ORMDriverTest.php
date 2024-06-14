@@ -12,10 +12,11 @@ declare(strict_types=1);
 namespace Tests\FSi\Component\DataSource\Driver\Doctrine\ORM;
 
 use DateTimeImmutable;
+use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\Driver\SimplifiedXmlDriver;
+use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
-use Doctrine\ORM\Tools\Setup;
 use Doctrine\Persistence\ManagerRegistry;
 use FSi\Component\DataSource\DataSourceFactory;
 use FSi\Component\DataSource\DataSourceInterface;
@@ -678,13 +679,16 @@ final class ORMDriverTest extends TestCase
 
     protected function setUp(): void
     {
-        $config = Setup::createConfiguration(true, null, null);
+        $config = ORMSetup::createConfiguration(true);
         $config->setMetadataDriverImpl(
             new SimplifiedXmlDriver(
                 [__DIR__ . '/../../../Fixtures/doctrine' => 'Tests\\FSi\\Component\\DataSource\\Fixtures\\Entity'],
             )
         );
-        $em = EntityManager::create(['driver' => 'pdo_sqlite', 'memory' => true], $config);
+        $em = new EntityManager(
+            DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]),
+            $config
+        );
         $tool = new SchemaTool($em);
         $tool->createSchema([
             $em->getClassMetadata(News::class),

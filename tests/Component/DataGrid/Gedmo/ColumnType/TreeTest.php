@@ -13,7 +13,8 @@ namespace Tests\FSi\Component\DataGrid\Gedmo\ColumnType;
 
 use Doctrine\Common\EventManager;
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Mapping\ClassMetadataInfo;
+use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\Mapping\ClassMetadataFactory;
 use Doctrine\Persistence\ObjectManager;
@@ -22,7 +23,7 @@ use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use FSi\Component\DataGrid\DataMapper\PropertyAccessorMapper;
 use FSi\Component\DataGrid\Gedmo\ColumnType\Tree;
-use Gedmo\Tree\RepositoryInterface;
+use Gedmo\Tree\Entity\Repository\AbstractTreeRepository;
 use Gedmo\Tree\Strategy;
 use Gedmo\Tree\TreeListener;
 use InvalidArgumentException;
@@ -98,7 +99,7 @@ final class TreeTest extends TestCase
                                     ->willReturnCallback(
                                         function ($class) {
                                             if (EntityTree::class === $class) {
-                                                $metadata = $this->createMock(ClassMetadataInfo::class);
+                                                $metadata = $this->createMock(ClassMetadata::class);
                                                 $metadata->method('getIdentifierFieldNames')->willReturn(['id']);
 
                                                 return $metadata;
@@ -118,9 +119,9 @@ final class TreeTest extends TestCase
                             function ($class) {
                                 if (EntityTree::class === $class) {
                                     /**
-                                     * @var ClassMetadataInfo<EntityTree>&MockObject $metadata
+                                     * @var ClassMetadata<EntityTree>&MockObject $metadata
                                      */
-                                    $metadata = $this->createMock(ClassMetadataInfo::class);
+                                    $metadata = $this->createMock(ClassMetadata::class);
                                     $metadata->method('getIdentifierFieldNames')->willReturn(['id']);
                                     $metadata->isMappedSuperclass = false;
                                     $metadata->rootEntityName = $class;
@@ -157,7 +158,7 @@ final class TreeTest extends TestCase
         $evm = $this->createMock(EventManager::class);
         $evm->method('getAllListeners')->willReturn([[$treeListener]]);
 
-        $treeRepository = $this->createMock(RepositoryInterface::class);
+        $treeRepository = $this->createMock(AbstractTreeRepository::class);
         $treeRepository->method('childCount')->willReturn(2);
 
         $em = $this->createMock(EntityManager::class);

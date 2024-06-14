@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Driver\Doctrine\DBAL\FieldType;
 
 use Doctrine\DBAL\Query\QueryBuilder;
+use Doctrine\DBAL\Types\Types;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Exception\DBALDriverException;
 use FSi\Component\DataSource\Field\Type\AbstractFieldType as CoreAbstractFieldType;
 use FSi\Component\DataSource\Field\FieldInterface;
@@ -79,7 +80,7 @@ abstract class AbstractFieldType extends CoreAbstractFieldType implements FieldT
         $fieldName = $this->getQueryFieldName($field, $alias);
         $name = $field->getName();
 
-        $type = $this->getDBALType();
+        $type = $this->getDBALType() ?? Types::STRING;
         $comparison = $field->getOption('comparison');
 
         $clause = $field->getOption('clause');

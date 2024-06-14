@@ -11,13 +11,14 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataSource\Driver\Doctrine\ORM;
 
+use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\Driver\XmlDriver;
+use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\SchemaTool;
-use Doctrine\ORM\Tools\Setup;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\Mapping\Driver\SymfonyFileLocator;
 use FSi\Component\DataSource\Driver\Doctrine\ORM\Event\PostGetResult;
@@ -247,7 +248,7 @@ final class ORMDriverBasicTest extends TestCase
 
     private function createEntityManager(): EntityManager
     {
-        $config = Setup::createConfiguration(true, null, null);
+        $config = ORMSetup::createConfiguration(true);
         $config->setMetadataDriverImpl(
             new XmlDriver(
                 new SymfonyFileLocator(
@@ -256,7 +257,10 @@ final class ORMDriverBasicTest extends TestCase
                 )
             )
         );
-        $em = EntityManager::create(['driver' => 'pdo_sqlite', 'memory' => true], $config);
+        $em = new EntityManager(
+            DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]),
+            $config
+        );
         $tool = new SchemaTool($em);
         $tool->createSchema([
             $em->getClassMetadata(News::class),

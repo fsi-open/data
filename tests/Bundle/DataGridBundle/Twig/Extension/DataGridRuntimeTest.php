@@ -161,7 +161,7 @@ final class DataGridRuntimeTest extends TestCase
         $this->runtime->setTheme($dataGridView, new TemplateWrapper($this->twig, $template));
 
         $template->expects(self::once())
-            ->method('displayBlock')
+            ->method('renderBlock')
             ->with('datagrid', [
                 'datagrid' => $dataGridView,
                 'vars' => [],
@@ -206,7 +206,7 @@ final class DataGridRuntimeTest extends TestCase
 
 
         $template->expects(self::once())
-            ->method('displayBlock')
+            ->method('renderBlock')
             ->with('datagrid_header', [
                 'headers' => [],
                 'vars' => [],
@@ -240,7 +240,7 @@ final class DataGridRuntimeTest extends TestCase
         $headerView->method('getAttribute')->with('translation_domain')->willReturn(null);
 
         $template->expects(self::once())
-            ->method('displayBlock')
+            ->method('renderBlock')
             ->with('datagrid_column_header', [
                 'header' => $headerView,
                 'translation_domain' => null,
@@ -267,7 +267,7 @@ final class DataGridRuntimeTest extends TestCase
         $this->runtime->setTheme($dataGridView, new TemplateWrapper($this->twig, $template));
 
         $template->expects(self::once())
-            ->method('displayBlock')
+            ->method('renderBlock')
             ->with('datagrid_rowset', [
                 'datagrid' => $dataGridView,
                 'vars' => [],
@@ -303,7 +303,7 @@ final class DataGridRuntimeTest extends TestCase
             ->willReturnCallback(static fn($key): ?int => 'index' === $key ? 0 : null);
 
         $template->expects(self::once())
-            ->method('displayBlock')
+            ->method('renderBlock')
             ->with('datagrid_column_cell', [
                 'cell' => $cellView,
                 'row_index' => 0,
@@ -341,7 +341,7 @@ final class DataGridRuntimeTest extends TestCase
         $cellView->method('getAttribute')->with('form')->willReturn('form');
 
         $template->expects(self::once())
-            ->method('displayBlock')
+            ->method('renderBlock')
             ->with('datagrid_column_cell_form', [
                 'form' => 'form',
                 'vars' => [],
@@ -373,7 +373,7 @@ final class DataGridRuntimeTest extends TestCase
         $cellView->method('getAttribute')->with('translation_domain')->willReturn(null);
 
         $template->expects(self::once())
-            ->method('displayBlock')
+            ->method('renderBlock')
             ->with('datagrid_column_type_action_cell_action', [
                 'cell' => $cellView,
                 'action' => 'edit',

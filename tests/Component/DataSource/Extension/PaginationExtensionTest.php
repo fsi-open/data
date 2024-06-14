@@ -34,28 +34,28 @@ use function array_key_exists;
 final class PaginationExtensionTest extends TestCase
 {
     /**
-     * @return array<int,array{first_result: int, max_results: int, page:int|null, current_page: int}>
+     * @return array<int,array{firstResult: int, maxResults: int, page:int|null, currentPage: int}>
      */
     public static function paginationCases(): array
     {
         return [
             [
-                'first_result' => 20,
-                'max_results' => 20,
+                'firstResult' => 20,
+                'maxResults' => 20,
                 'page' => 2,
-                'current_page' => 2
+                'currentPage' => 2
             ],
             [
-                'first_result' => 20,
-                'max_results' => 0,
+                'firstResult' => 20,
+                'maxResults' => 0,
                 'page' => null,
-                'current_page' => 1
+                'currentPage' => 1
             ],
             [
-                'first_result' => 0,
-                'max_results' => 20,
+                'firstResult' => 0,
+                'maxResults' => 20,
                 'page' => null,
-                'current_page' => 1
+                'currentPage' => 1
             ],
         ];
     }

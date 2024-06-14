@@ -119,7 +119,7 @@ final class DataSourceRuntimeTest extends TestCase
         $this->runtime->setTheme($dataSourceView, new TemplateWrapper($this->twig, $template));
 
         $template->expects(self::once())
-            ->method('displayBlock')
+            ->method('renderBlock')
             ->with('datasource_filter', [
                 'datasource' => $dataSourceView,
                 'vars' => [],

@@ -17,8 +17,10 @@ use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadataFactory;
+use Doctrine\ORM\Mapping\DefaultNamingStrategy;
 use Doctrine\ORM\Mapping\DefaultQuoteStrategy;
 use Doctrine\ORM\Mapping\Driver\XmlDriver;
+use Doctrine\ORM\Proxy\ProxyFactory;
 use Doctrine\ORM\Repository\DefaultRepositoryFactory;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\Persistence\ManagerRegistry;
@@ -226,15 +228,10 @@ final class DoctrineDataIndexerTest extends TestCase
 
     protected function setUp(): void
     {
-        $eventManager = new EventManager();
         $config = $this->getMockEntityManagerConfiguration();
-        $connection = DriverManager::getConnection(
-            ['driver' => 'pdo_sqlite', 'memory' => true,],
-            $config,
-            $eventManager
-        );
+        $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true,], $config);
 
-        $manager = EntityManager::create($connection, $config, $eventManager);
+        $manager = new EntityManager($connection, $config);
         $schema = array_map(
             fn(string $class) => $manager->getClassMetadata($class),
             [News::class, Post::class]
@@ -242,7 +239,7 @@ final class DoctrineDataIndexerTest extends TestCase
 
         $schemaTool = new SchemaTool($manager);
         $schemaTool->dropSchema($schema);
-        $schemaTool->updateSchema($schema, true);
+        $schemaTool->updateSchema($schema);
 
         $this->manager = $manager;
     }
@@ -266,8 +263,10 @@ final class DoctrineDataIndexerTest extends TestCase
         $config = $this->createMock(Configuration::class);
         $config->method('getProxyDir')->willReturn(sys_get_temp_dir());
 
+        $config->method('getNamingStrategy')->willReturn(new DefaultNamingStrategy());
         $config->expects(self::once())->method('getProxyNamespace')->willReturn('Proxy');
-        $config->expects(self::once())->method('getAutoGenerateProxyClasses')->willReturn(true);
+        $config->expects(self::once())->method('getAutoGenerateProxyClasses')
+            ->willReturn(ProxyFactory::AUTOGENERATE_ALWAYS);
         $config->expects(self::once())->method('getClassMetadataFactoryName')->willReturn(ClassMetadataFactory::class);
         $config->method('getQuoteStrategy')->willReturn(new DefaultQuoteStrategy());
 
