@@ -60,8 +60,8 @@ final class OrderingExtensionTest extends TestCase
      * @return array<int,array{
      *     fields: array<int,array<string,mixed>>,
      *     parameters: array<string,string>,
-     *     expected_ordering: array<string,string>,
-     *     expected_parameters: array<string,mixed>
+     *     expectedOrdering: array<string,string>,
+     *     expectedParameters: array<string,mixed>
      * }>
      */
     public static function orderingDataProvider(): array
@@ -76,10 +76,10 @@ final class OrderingExtensionTest extends TestCase
                 'parameters' => [
                     'field1' => 'asc'
                 ],
-                'expected_ordering' => [
+                'expectedOrdering' => [
                     'field1' => 'asc',
                 ],
-                'expected_parameters' => [
+                'expectedParameters' => [
                     'field1' => [
                         'ordering_ascending' => ['field1' => 'asc'],
                         'ordering_descending' => ['field1' => 'desc']
@@ -116,11 +116,11 @@ final class OrderingExtensionTest extends TestCase
                     'field2' => 'asc',
                     'field1' => 'desc',
                 ],
-                'expected_ordering' => [
+                'expectedOrdering' => [
                     'field2' => 'asc',
                     'field1' => 'desc'
                 ],
-                'expected_parameters' => [
+                'expectedParameters' => [
                     'field1' => [
                         'ordering_ascending' => [
                             'field1' => 'asc',
@@ -171,12 +171,12 @@ final class OrderingExtensionTest extends TestCase
                     ],
                 ],
                 'parameters' => ['field3' => 'desc'],
-                'expected_ordering' => [
+                'expectedOrdering' => [
                     'field3' => 'desc',
                     'field2' => 'desc',
                     'field1' => 'asc'
                 ],
-                'expected_parameters' => [
+                'expectedParameters' => [
                     'field1' => [
                         'ordering_ascending' => [
                             'field1' => 'asc',
@@ -222,12 +222,12 @@ final class OrderingExtensionTest extends TestCase
                     'field1' => 'asc',
                     'field3' => 'desc'
                 ],
-                'expected_ordering' => [
+                'expectedOrdering' => [
                     'field1' => 'asc',
                     'field3' => 'desc',
                     'field2' => 'desc'
                 ],
-                'expected_parameters' => [
+                'expectedParameters' => [
                     'field1' => [
                         'ordering_ascending' => [
                             'field1' => 'asc',
