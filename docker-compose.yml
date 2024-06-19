@@ -10,7 +10,8 @@ services:
             - 443:443
         environment:
             PHP_IDE_CONFIG: 'serverName=localhost'
-            XDEBUG_CONFIG: 'discover_client_host=false client_host=host.docker.internal'
+            XDEBUG_CONFIG: 'idekey=PHPSTORM discover_client_host=false client_host=host.docker.internal'
+            XDEBUG_MODE: debug
             HOST_UID: 1000
             HOST_GID: 1000
             ELASTICSEARCH_URL: 'http://elasticsearch:9200'

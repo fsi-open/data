@@ -13,11 +13,12 @@ namespace Tests\FSi\Component\DataSource\Driver\Collection;
 
 use DateTimeImmutable;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\Driver\XmlDriver;
+use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
-use Doctrine\ORM\Tools\Setup;
 use Doctrine\Persistence\Mapping\Driver\SymfonyFileLocator;
 use FSi\Component\DataSource\DataSourceFactory;
 use FSi\Component\DataSource\DataSourceInterface;
@@ -315,7 +316,7 @@ class CollectionDriverTest extends TestCase
 
     protected function setUp(): void
     {
-        $config = Setup::createConfiguration(true, null, null);
+        $config = ORMSetup::createConfiguration(true);
         $config->setMetadataDriverImpl(
             new XmlDriver(
                 new SymfonyFileLocator(
@@ -324,7 +325,10 @@ class CollectionDriverTest extends TestCase
                 )
             )
         );
-        $em = EntityManager::create(['driver' => 'pdo_sqlite', 'memory' => true], $config);
+        $em = new EntityManager(
+            DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]),
+            $config
+        );
         $tool = new SchemaTool($em);
         $classes = [
             $em->getClassMetadata(News::class),

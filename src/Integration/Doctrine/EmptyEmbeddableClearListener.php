@@ -11,7 +11,8 @@ declare(strict_types=1);
 
 namespace FSi\Integration\Doctrine;
 
-use Doctrine\ORM\Event\LifecycleEventArgs;
+use Assert\Assertion;
+use Doctrine\ORM\Event\PostLoadEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
@@ -34,16 +35,23 @@ final class EmptyEmbeddableClearListener
         $this->propertyAccessor = null;
     }
 
-    public function clearEmpty(object $object, LifecycleEventArgs $event): void
+    public function clearEmpty(object $object, PostLoadEventArgs $event): void
     {
-        $entityManager = $event->getEntityManager();
+        $entityManager = $event->getObjectManager();
         $classMetadata = $entityManager->getClassMetadata(get_class($object));
+        if (false === $classMetadata instanceof ClassMetadata) {
+            return;
+        }
 
         $embeddedClasses = $this->getEmbeddedClasses($classMetadata);
         foreach ($embeddedClasses as $fieldName => $embeddedData) {
             /** @var class-string<object> $class */
             $class = $embeddedData['class'];
             $embeddedMeta = $entityManager->getClassMetadata($class);
+            if (false === $embeddedMeta instanceof ClassMetadata) {
+                continue;
+            }
+
             $embeddedParentMeta = $classMetadata;
             $embeddedParentObject = $object;
             if (
@@ -59,6 +67,10 @@ final class EmptyEmbeddableClearListener
                 /** @var class-string<object> $embeddedParentClass */
                 $embeddedParentClass = $embeddedParentData['class'];
                 $embeddedParentMeta = $entityManager->getClassMetadata($embeddedParentClass);
+                if (false === $embeddedParentMeta instanceof ClassMetadata) {
+                    continue;
+                }
+
                 $fieldName = $embeddedData['originalField'];
             }
 

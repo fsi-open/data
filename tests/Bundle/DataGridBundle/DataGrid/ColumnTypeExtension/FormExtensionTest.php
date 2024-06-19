@@ -11,11 +11,14 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Bundle\DataGridBundle\DataGrid\ColumnTypeExtension;
 
+use Composer\InstalledVersions;
 use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Mapping\FieldMapping;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -30,6 +33,7 @@ use FSi\Component\DataGrid\DataGridInterface;
 use FSi\Component\DataGrid\DataMapper\DataMapperInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 use ReflectionProperty;
 use Symfony\Bridge\Doctrine\Form\DoctrineOrmExtension;
 use Symfony\Component\Form\Extension\Core\CoreExtension;
@@ -44,6 +48,8 @@ use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\ValidatorBuilder;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\Entity;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\EntityCategory;
+
+use function class_exists;
 
 final class FormExtensionTest extends TestCase
 {
@@ -163,11 +169,20 @@ final class FormExtensionTest extends TestCase
         $objectManager->method('getConfiguration')->willReturn($configuration);
         $objectManager->method('getExpressionBuilder')->willReturn(new Expr());
 
-        $query = $this->getMockBuilder(AbstractQuery::class)
-            ->setConstructorArgs([$objectManager])
-            ->onlyMethods(['execute', '_doExecute', 'getSql'])
-            ->addMethods(['setFirstResult', 'setMaxResults'])
-            ->getMock();
+        $classReflection = new ReflectionClass(Query::class);
+        if (true === $classReflection->isFinal()) {
+            $query = $this->getMockBuilder(AbstractQuery::class)
+                ->setConstructorArgs([$objectManager])
+                ->onlyMethods(['execute', '_doExecute', 'getSql'])
+                ->addMethods(['setFirstResult', 'setMaxResults'])
+                ->getMock();
+        } else {
+            $query = $this->getMockBuilder(Query::class)
+                ->setConstructorArgs([$objectManager])
+                ->onlyMethods(['execute', '_doExecute', 'getSql', 'setFirstResult', 'setMaxResults'])
+                ->getMock();
+        }
+
         $query->method('execute')->willReturn($entities);
         $query->method('setFirstResult')->willReturn($query);
         $query->method('setMaxResults')->willReturn($query);
@@ -179,15 +194,22 @@ final class FormExtensionTest extends TestCase
         $entityClass = EntityCategory::class;
         $classMetadata = new ClassMetadata($entityClass);
         $classMetadata->identifier = ['id'];
-        $classMetadata->fieldMappings = [
-            'id' => [
-                'type' => 'integer',
-                'fieldName' => 'id',
-                'columnName' => 'id',
-                'inherited' => $entityClass,
-                'options' => [],
-            ]
+        $fieldMapping = [
+            'type' => 'integer',
+            'fieldName' => 'id',
+            'columnName' => 'id',
+            'inherited' => $entityClass,
+            'options' => [],
         ];
+        if (true === class_exists(FieldMapping::class)) {
+            $classMetadata->fieldMappings = [
+                'id' => FieldMapping::fromMappingArray($fieldMapping),
+            ];
+        } else {
+            $classMetadata->fieldMappings = [
+                'id' => $fieldMapping
+            ];
+        }
         $classMetadata->reflFields = [
             'id' => new ReflectionProperty($entityClass, 'id'),
         ];

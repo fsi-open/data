@@ -124,7 +124,7 @@ abstract class TestBase extends TestCase
 
     protected function loadTestData(Connection $connection): void
     {
-        $schemaManager = $connection->getSchemaManager();
+        $schemaManager = $connection->createSchemaManager();
 
         $schemaManager->createTable(new Table(self::TABLE_CATEGORY_NAME, [
             new Column('id', Type::getType(Types::INTEGER)),

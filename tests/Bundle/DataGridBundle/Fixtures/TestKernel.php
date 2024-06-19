@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Bundle\DataGridBundle\Fixtures;
 
+use Composer\InstalledVersions;
 use FSi\Bundle\DataGridBundle\DataGridBundle;
 use FSi\Component\Files\Integration\Symfony\FilesBundle;
 use Oneup\FlysystemBundle\OneupFlysystemBundle;
@@ -21,7 +22,7 @@ use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel;
-use Symfony\Component\Routing\RouteCollectionBuilder;
+use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\FixturesBundle\Controller\TestController;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\FixturesBundle\FixturesBundle;
 
@@ -49,9 +50,9 @@ final class TestKernel extends Kernel
         return __DIR__;
     }
 
-    protected function configureRoutes(RouteCollectionBuilder $routes): void
+    protected function configureRoutes(RoutingConfigurator $routes): void
     {
-        $routes->add('/test/{id?}', TestController::class, 'test');
+        $routes->add('test', '/test/{id?}')->controller(TestController::class);
     }
 
     protected function configureContainer(ContainerBuilder $c, LoaderInterface $loader): void
@@ -61,9 +62,9 @@ final class TestKernel extends Kernel
             'default_locale' => 'en',
             'form' => ['csrf_protection' => true],
             'secret' => 'qwerty',
-            'session' => [
-                'storage_id' => 'session.storage.mock_file',
-            ],
+            'session' => (InstalledVersions::getVersion('symfony/framework-bundle') > '6.0.0')
+                ? ['storage_factory_id' => 'session.storage.factory.mock_file']
+                : ['storage_id' => 'session.storage.mock_file'],
             'test' => true,
             'translator' => ['fallback' => 'en'],
         ]);

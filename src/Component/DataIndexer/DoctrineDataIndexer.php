@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataIndexer;
 
-use Doctrine\ORM\Mapping\ClassMetadataInfo;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Persistence\ObjectRepository;
@@ -137,7 +137,7 @@ class DoctrineDataIndexer implements DataIndexerInterface
     {
         $classMetadata = $this->manager->getClassMetadata($class);
 
-        if (false === $classMetadata instanceof ClassMetadataInfo) {
+        if (false === $classMetadata instanceof ClassMetadata) {
             throw new RuntimeException("Only Doctrine ORM is supported at the moment");
         }
 

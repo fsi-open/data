@@ -11,10 +11,11 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Bundle\DataSourceBundle\DataSource\Extension;
 
+use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\Driver\XmlDriver;
+use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
-use Doctrine\ORM\Tools\Setup;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\Mapping\Driver\SymfonyFileLocator;
 use FSi\Bundle\DataSourceBundle\DataSource\EventSubscriber\FieldPreBindParameter;
@@ -37,6 +38,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Security\Csrf\CsrfTokenManager;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Tests\FSi\Component\DataSource\Fixtures\Entity\News;
+
+use function class_exists;
+use function method_exists;
 
 final class FormExtensionEntityTest extends TestCase
 {
@@ -101,14 +105,17 @@ final class FormExtensionEntityTest extends TestCase
         $mappingRootDir = __DIR__ . '/../../../../Component/DataSource/Fixtures/doctrine';
         $entityNamespace = 'Tests\FSi\Component\DataSource\Fixtures\Entity';
 
-        $config = Setup::createConfiguration(true, null, null);
+        $config = ORMSetup::createConfiguration(true);
         $config->setMetadataDriverImpl(
             new XmlDriver(
                 new SymfonyFileLocator([$mappingRootDir => $entityNamespace], '.orm.xml')
             )
         );
 
-        $em = EntityManager::create(['driver' => 'pdo_sqlite', 'memory' => true], $config);
+        $em = new EntityManager(
+            DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]),
+            $config
+        );
         $tool = new SchemaTool($em);
         $tool->createSchema([$em->getClassMetadata(News::class)]);
 

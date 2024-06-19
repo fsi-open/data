@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Bundle\DataSourceBundle\Fixtures;
 
+use Composer\InstalledVersions;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use FOS\ElasticaBundle\FOSElasticaBundle;
 use FSi\Bundle\DataSourceBundle\DataSourceBundle;
@@ -21,7 +22,7 @@ use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel;
-use Symfony\Component\Routing\RouteCollectionBuilder;
+use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Tests\FSi\Bundle\DataSourceBundle\Fixtures\FixturesBundle\Controller\TestController;
 use Tests\FSi\Bundle\DataSourceBundle\Fixtures\FixturesBundle\FixturesBundle;
 use Tests\FSi\Component\DataSource\Fixtures\Entity\News;
@@ -55,9 +56,9 @@ final class TestKernel extends Kernel
         return "{$this->getProjectDir()}/tests/Bundle/DataSourceBundle/Fixtures/var/log";
     }
 
-    protected function configureRoutes(RouteCollectionBuilder $routes): void
+    protected function configureRoutes(RoutingConfigurator $routes): void
     {
-        $routes->add('/test/{driver}', TestController::class, 'datasource_test');
+        $routes->add('datasource_test', '/test/{driver}')->controller(TestController::class);
     }
 
     protected function configureContainer(ContainerBuilder $configuration, LoaderInterface $loader): void
@@ -67,9 +68,9 @@ final class TestKernel extends Kernel
             'default_locale' => 'en',
             'form' => ['csrf_protection' => true],
             'secret' => 'qwerty',
-            'session' => [
-                'storage_id' => 'session.storage.mock_file',
-            ],
+            'session' => (InstalledVersions::getVersion('symfony/framework-bundle') > '6.0.0')
+                ? ['storage_factory_id' => 'session.storage.factory.mock_file']
+                : ['storage_id' => 'session.storage.mock_file'],
             'test' => true,
             'translator' => ['fallback' => 'en']
         ]);
