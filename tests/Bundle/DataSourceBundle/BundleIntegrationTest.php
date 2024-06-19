@@ -23,6 +23,8 @@ use Tests\FSi\Bundle\DataSourceBundle\Fixtures\TestKernel;
 use Tests\FSi\Component\DataSource\Fixtures\Entity\Group;
 use Tests\FSi\Component\DataSource\Fixtures\Entity\News;
 
+use function method_exists;
+
 final class BundleIntegrationTest extends WebTestCase
 {
     /**
@@ -262,7 +264,7 @@ final class BundleIntegrationTest extends WebTestCase
         $entityManager = $container->get('doctrine.orm.entity_manager');
 
         /** @var Resetter $resetter */
-        $resetter = $this->getContainer()->get('test.fos_elastica.resetter');
+        $resetter = $container->get('test.fos_elastica.resetter');
         $resetter->resetIndex('news');
 
         $metadata = $entityManager->getMetadataFactory()->getAllMetadata();
@@ -302,7 +304,7 @@ final class BundleIntegrationTest extends WebTestCase
         $entityManager->flush();
 
         /** @var IndexManager $indexManager */
-        $indexManager = $this->getContainer()->get(IndexManager::class);
+        $indexManager = $container->get('test.fos_elastica.index_manager');
         $indexManager->getIndex('news')->refresh();
 
         $this->groupId = $group->getId();

@@ -23,6 +23,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
+use Symfony\Component\Routing\RouteCollectionBuilder;
 use Tests\FSi\Bundle\DataSourceBundle\Fixtures\FixturesBundle\Controller\TestController;
 use Tests\FSi\Bundle\DataSourceBundle\Fixtures\FixturesBundle\FixturesBundle;
 use Tests\FSi\Component\DataSource\Fixtures\Entity\News;
@@ -56,9 +57,17 @@ final class TestKernel extends Kernel
         return "{$this->getProjectDir()}/tests/Bundle/DataSourceBundle/Fixtures/var/log";
     }
 
-    protected function configureRoutes(RoutingConfigurator $routes): void
+    /**
+     * @param RouteCollectionBuilder|RoutingConfigurator $routes
+     * @return void
+     */
+    protected function configureRoutes($routes): void
     {
-        $routes->add('datasource_test', '/test/{driver}')->controller(TestController::class);
+        if (true === $routes instanceof RouteCollectionBuilder) {
+            $routes->add('/test/{driver}', TestController::class, 'datasource_test');
+        } else {
+            $routes->add('datasource_test', '/test/{driver}')->controller(TestController::class);
+        }
     }
 
     protected function configureContainer(ContainerBuilder $configuration, LoaderInterface $loader): void
