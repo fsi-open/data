@@ -10,5 +10,6 @@
         />
 
         <service id="test.fos_elastica.resetter" alias="fos_elastica.resetter" public="true" />
+        <service id="test.fos_elastica.index_manager" alias="fos_elastica.index_manager" public="true" />
     </services>
 </container>

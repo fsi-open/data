@@ -23,6 +23,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
+use Symfony\Component\Routing\RouteCollectionBuilder;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\FixturesBundle\Controller\TestController;
 use Tests\FSi\Bundle\DataGridBundle\Fixtures\FixturesBundle\FixturesBundle;
 
@@ -50,9 +51,17 @@ final class TestKernel extends Kernel
         return __DIR__;
     }
 
-    protected function configureRoutes(RoutingConfigurator $routes): void
+    /**
+     * @param RouteCollectionBuilder|RoutingConfigurator $routes
+     * @return void
+     */
+    protected function configureRoutes($routes): void
     {
-        $routes->add('test', '/test/{id?}')->controller(TestController::class);
+        if (true === $routes instanceof RouteCollectionBuilder) {
+            $routes->add('/test/{id?}', TestController::class, 'test');
+        } else {
+            $routes->add('test', '/test/{id?}')->controller(TestController::class);
+        }
     }
 
     protected function configureContainer(ContainerBuilder $c, LoaderInterface $loader): void
