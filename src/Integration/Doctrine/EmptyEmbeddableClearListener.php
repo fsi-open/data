@@ -11,13 +11,11 @@ declare(strict_types=1);
 
 namespace FSi\Integration\Doctrine;
 
-use Assert\Assertion;
 use Doctrine\ORM\Event\PostLoadEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
-use function array_key_exists;
 use function get_class;
 use function is_object;
 use function mb_strlen;
@@ -54,10 +52,7 @@ final class EmptyEmbeddableClearListener
 
             $embeddedParentMeta = $classMetadata;
             $embeddedParentObject = $object;
-            if (
-                true === array_key_exists('declaredField', $embeddedData)
-                && null !== $embeddedData['declaredField']
-            ) {
+            if (null !== ($embeddedData['declaredField'] ?? null)) {
                 $embeddedParentObject = $this->getPropertyAccessor()->getValue(
                     $object,
                     $embeddedData['declaredField']
