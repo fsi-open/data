@@ -23,8 +23,6 @@ use Tests\FSi\Bundle\DataSourceBundle\Fixtures\TestKernel;
 use Tests\FSi\Component\DataSource\Fixtures\Entity\Group;
 use Tests\FSi\Component\DataSource\Fixtures\Entity\News;
 
-use function method_exists;
-
 final class BundleIntegrationTest extends WebTestCase
 {
     /**
