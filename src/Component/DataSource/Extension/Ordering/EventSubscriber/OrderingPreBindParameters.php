@@ -40,6 +40,16 @@ final class OrderingPreBindParameters implements DataSourceEventSubscriberInterf
     public function __invoke(PreBindParameters $event): void
     {
         $dataSource = $event->getDataSource();
+        foreach ($dataSource->getFields() as $field) {
+            if (true === $field->getOption('sortable') && null !== $field->getOption('default_sort')) {
+                $this->storage->setFieldSorting(
+                    $field,
+                    $field->hasOption('default_sort_priority') ? $field->getOption('default_sort_priority') : 0,
+                    'asc' === $field->getOption('default_sort')
+                );
+            }
+        }
+
         $dataSourceName = $dataSource->getName();
         $parameters = $event->getParameters();
         if (false === array_key_exists($dataSourceName, $parameters)) {

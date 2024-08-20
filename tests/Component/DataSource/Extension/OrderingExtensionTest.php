@@ -300,7 +300,7 @@ final class OrderingExtensionTest extends TestCase
         }
 
         $dataSource->expects(self::atLeastOnce())->method('getName')->willReturn('ds');
-        $dataSource->method('getFields')->willReturn($fields);
+        $dataSource->method('getFields')->willReturn($dataSourceFields);
 
         $dataSource
             ->method('getField')
