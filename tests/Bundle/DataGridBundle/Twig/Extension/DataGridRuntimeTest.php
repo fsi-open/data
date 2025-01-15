@@ -167,9 +167,9 @@ final class DataGridRuntimeTest extends TestCase
                 'vars' => [],
                 'global_var' => 'global_value'
             ])
-            ->willReturn(true);
+            ->willReturn('template');
 
-        $this->runtime->dataGrid($dataGridView);
+        $this->assertEquals('template', $this->runtime->dataGrid($dataGridView));
     }
 
     public function testDataGridMultipleTemplates(): void
@@ -212,8 +212,8 @@ final class DataGridRuntimeTest extends TestCase
                 'vars' => [],
                 'global_var' => 'global_value'
             ])
-            ->willReturn(true);
-        $this->runtime->dataGridHeader($dataGridView);
+            ->willReturn('template');
+        $this->assertEquals('template', $this->runtime->dataGridHeader($dataGridView));
     }
 
     public function testDataGridColumnHeaderRenderBlock(): void
@@ -247,9 +247,9 @@ final class DataGridRuntimeTest extends TestCase
                 'vars' => [],
                 'global_var' => 'global_value'
             ])
-            ->willReturn(true);
+            ->willReturn('template');
 
-        $this->runtime->dataGridColumnHeader($headerView);
+        $this->assertEquals('template', $this->runtime->dataGridColumnHeader($headerView));
     }
 
     public function testDataGridRowsetRenderBlock(): void
@@ -273,9 +273,9 @@ final class DataGridRuntimeTest extends TestCase
                 'vars' => [],
                 'global_var' => 'global_value'
             ])
-            ->willReturn(true);
+            ->willReturn('template');
 
-        $this->runtime->dataGridRowset($dataGridView);
+        $this->assertEquals('template', $this->runtime->dataGridRowset($dataGridView));
     }
 
     public function testDataGridColumnCellRenderBlock(): void
@@ -312,9 +312,9 @@ final class DataGridRuntimeTest extends TestCase
                 'vars' => [],
                 'global_var' => 'global_value'
             ])
-            ->willReturn(true);
+            ->willReturn('template');
 
-        $this->runtime->dataGridColumnCell($cellView);
+        $this->assertEquals('template', $this->runtime->dataGridColumnCell($cellView));
     }
 
     public function testDataGridColumnCellFormRenderBlock(): void
@@ -347,9 +347,9 @@ final class DataGridRuntimeTest extends TestCase
                 'vars' => [],
                 'global_var' => 'global_value'
             ])
-            ->willReturn(true);
+            ->willReturn('template');
 
-        $this->runtime->dataGridColumnCellForm($cellView);
+        $this->assertEquals('template', $this->runtime->dataGridColumnCellForm($cellView));
     }
 
     public function testDataGridColumnActionCellActionRenderBlock(): void
@@ -383,9 +383,12 @@ final class DataGridRuntimeTest extends TestCase
                 'field_mapping_values' => [],
                 'global_var' => 'global_value'
             ])
-            ->willReturn(true);
+            ->willReturn('template');
 
-        $this->runtime->dataGridColumnActionCellActionWidget($cellView, 'edit', 'content');
+        $this->assertEquals(
+            'template',
+            $this->runtime->dataGridColumnActionCellActionWidget($cellView, 'edit', 'content')
+        );
     }
 
     protected function setUp(): void
