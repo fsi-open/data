@@ -9,7 +9,9 @@
                  public="true"
                  autowire="true"
         />
-        
+
+        <service id="Psr\Clock\ClockInterface" class="Symfony\Component\Clock\NativeClock" />
+
         <service id="Nyholm\Psr7\Factory\Psr17Factory" />
         <service id="nyholm.psr7.psr17_factory" class="Nyholm\Psr7\Factory\Psr17Factory" />
         <service id="Psr\Http\Message\RequestFactoryInterface" alias="nyholm.psr7.psr17_factory" />
