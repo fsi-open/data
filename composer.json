@@ -26,7 +26,7 @@
         "doctrine/orm": "^2.14|^3.0",
         "doctrine/persistence": "^2.4|^3.0",
         "friendsofsymfony/elastica-bundle": "^6.3",
-        "fsi/files": "^2.0.2",
+        "fsi/files": "^2.0.2|^3.0@dev",
         "gedmo/doctrine-extensions": "^3.5",
         "nyholm/psr7": "^1.8",
         "oneup/flysystem-bundle": "^4.4",
