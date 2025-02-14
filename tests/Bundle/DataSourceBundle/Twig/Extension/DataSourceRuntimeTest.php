@@ -125,10 +125,10 @@ final class DataSourceRuntimeTest extends TestCase
                 'vars' => [],
                 'global_var' => 'global_value'
             ])
-            ->willReturn(true)
+            ->willReturn('template')
         ;
 
-        $this->runtime->dataSourceFilter($dataSourceView);
+        $this->assertEquals('template', $this->runtime->dataSourceFilter($dataSourceView));
     }
 
     protected function setUp(): void
