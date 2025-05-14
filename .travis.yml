@@ -1,6 +1,6 @@
 language: php
 
-dist: focal
+dist: nomble
 
 addons:
   apt:
@@ -15,6 +15,7 @@ matrix:
         - php: 8.1
         - php: 8.2
         - php: 8.3
+        - php: 8.4
 
 env:
     global:
@@ -27,9 +28,10 @@ cache:
 
 before_install:
     - curl -O https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.17.8-amd64.deb
+    - sudo apt purge -y elasticsearch
     - sudo dpkg -i --force-confnew elasticsearch-7.17.8-amd64.deb
     - sudo chown -R elasticsearch:elasticsearch /etc/default/elasticsearch
-    - sudo service elasticsearch restart
+    - sudo service elasticsearch start
 
 before_script:
     - echo 'date.timezone = "Europe/Warsaw"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
