@@ -1,0 +1,46 @@
+name: Tests
+
+on:
+    push:
+        branches:
+            - 'master'
+            - '1.0'
+    pull_request:
+    workflow_dispatch:
+
+jobs:
+    test:
+        strategy:
+            matrix:
+                php-version: [8.1, 8.2, 8.3]
+        runs-on: ubuntu-22.04
+        container:
+            image: fsiopenpl/docker-php-apache:alpine-${{ matrix.php-version }}
+            env:
+                APP_ENV: test
+                DATABASE_HOST: mysql
+                REDIS_URL: redis://redis:6379
+                ELASTICSEARCH_HOST: elasticsearch
+        timeout-minutes: 10
+        services:
+            elasticsearch:
+                image: docker.elastic.co/elasticsearch/elasticsearch:7.17.8
+                ports:
+                    - 9200/tcp
+                env:
+                    cluster.name: fsi-open.data
+                    xpack.security.enabled: false
+                    cluster.routing.allocation.disk.threshold_enabled: false
+                    discovery.type: single-node
+                    ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+        steps:
+            - name: Validate composer config
+              run: composer validate
+            - name: Install dependencies
+              run: composer install
+            - name: Code quality
+              run: composer sniffer
+            - name: Code static analysis
+              run: composer stan
+            - name: Unit tests
+              run: composer unit
