@@ -12,15 +12,14 @@ jobs:
     test:
         strategy:
             matrix:
-                php-version: [8.1, 8.2, 8.3]
+                php-version: [8.1, 8.2, 8.3, 8.4]
         runs-on: ubuntu-22.04
         container:
             image: fsiopenpl/docker-php-apache:alpine-${{ matrix.php-version }}
             env:
                 APP_ENV: test
-                DATABASE_HOST: mysql
-                REDIS_URL: redis://redis:6379
-                ELASTICSEARCH_HOST: elasticsearch
+                ELASTICSEARCH_URL: http://elasticsearch:9200
+                COMPOSER_FLAGS: ${{ matrix.php-version == '8.1' && ' --prefer-lowest' || '' }}
         timeout-minutes: 10
         services:
             elasticsearch:
@@ -34,10 +33,12 @@ jobs:
                     discovery.type: single-node
                     ES_JAVA_OPTS: '-Xms512m -Xmx512m'
         steps:
+            - name: Checkout source
+              uses: actions/checkout@v1
             - name: Validate composer config
               run: composer validate
             - name: Install dependencies
-              run: composer install
+              run: composer update ${COMPOSER_FLAGS}
             - name: Code quality
               run: composer sniffer
             - name: Code static analysis
