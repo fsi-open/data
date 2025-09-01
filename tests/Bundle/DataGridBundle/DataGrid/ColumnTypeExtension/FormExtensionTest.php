@@ -18,6 +18,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\FieldMapping;
+use Doctrine\ORM\Mapping\PropertyAccessors\PropertyAccessorFactory;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
@@ -210,9 +211,15 @@ final class FormExtensionTest extends TestCase
                 'id' => $fieldMapping
             ];
         }
-        $classMetadata->reflFields = [
-            'id' => new ReflectionProperty($entityClass, 'id'),
-        ];
+        if (true === class_exists(PropertyAccessorFactory::class)) {
+            $classMetadata->propertyAccessors = [
+                'id' => PropertyAccessorFactory::createPropertyAccessor($entityClass, 'id'),
+            ];
+        } else {
+            $classMetadata->reflFields = [
+                'id' => new ReflectionProperty($entityClass, 'id'),
+            ];
+        }
 
         $repository = $this->getMockBuilder(EntityRepository::class)
             ->setConstructorArgs([$objectManager, $classMetadata])

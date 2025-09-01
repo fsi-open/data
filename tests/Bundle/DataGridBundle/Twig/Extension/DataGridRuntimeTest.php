@@ -381,7 +381,8 @@ final class DataGridRuntimeTest extends TestCase
                 'attr' => [],
                 'translation_domain' => null,
                 'field_mapping_values' => [],
-                'global_var' => 'global_value'
+                'global_var' => 'global_value',
+                'vars' => [],
             ])
             ->willReturn('template');
 
