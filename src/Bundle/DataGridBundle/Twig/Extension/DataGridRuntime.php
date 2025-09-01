@@ -247,7 +247,8 @@ class DataGridRuntime implements RuntimeExtensionInterface
             'content' => $content,
             'attr' => $urlAttrs,
             'translation_domain' => $view->getAttribute('translation_domain'),
-            'field_mapping_values' => $fieldMappingValues
+            'field_mapping_values' => $fieldMappingValues,
+            'vars' => $this->getDataGridVars($dataGridName),
         ];
 
         return $this->renderTheme($dataGridName, $context, $blockNames);
