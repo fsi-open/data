@@ -30,6 +30,8 @@ parameters:
           path: tests/Component/DataGrid/ColumnTypeExtension/ValueFormatColumnOptionsExtensionTest.php
         - message: "#Return type of call to method PHPUnit\\\\Framework\\\\MockObject\\\\MockBuilder<Doctrine\\\\ORM\\\\Query>::getMock\\(\\) contains unresolvable type\\.#"
           path: tests/Bundle/DataGridBundle/DataGrid/ColumnTypeExtension/FormExtensionTest.php
+        - message: '#Access to an undefined property Doctrine\\ORM\\Mapping\\ClassMetadata<Tests\\FSi\\Bundle\\DataGridBundle\\Fixtures\\EntityCategory>::\$propertyAccessors\.#'
+          path: 'tests/Bundle/DataGridBundle/DataGrid/ColumnTypeExtension/FormExtensionTest.php'
         - message: '#.*Symfony\\Component\\Routing\\RouteCollectionBuilder.*#'
           path: 'tests/Bundle/DataGridBundle/Fixtures/TestKernel.php'
         - message: '#.*Symfony\\Component\\Routing\\RouteCollectionBuilder.*#'
