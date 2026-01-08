@@ -17,11 +17,6 @@ use Tests\FSi\Bundle\DataGridBundle\Fixtures\TestKernel;
 
 final class BundleIntegrationTest extends WebTestCase
 {
-    /**
-     * @var string
-     */
-    protected static $class = TestKernel::class;
-
     public function testDataGridRenderingAndEditing(): void
     {
         $client = self::createClient();

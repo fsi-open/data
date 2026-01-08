@@ -142,7 +142,8 @@ final class TestController
             'field' => 'doctrine-dbal' === $driver ? 'e.create_time' : 'createTime',
             'form_options' => [
                 'label' => 'Create time',
-                'input' => 'datetime_immutable'
+                'input' => 'datetime_immutable',
+                'widget' => 'choice',
             ],
             'form_order' => -2,
         ]);

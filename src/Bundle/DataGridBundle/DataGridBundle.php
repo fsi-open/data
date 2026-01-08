@@ -31,7 +31,7 @@ class DataGridBundle extends Bundle
 
     public function getContainerExtension(): ?ExtensionInterface
     {
-        if (null === $this->extension) {
+        if (false === $this->extension instanceof FSIDataGridExtension) {
             $this->extension = new FSIDataGridExtension();
         }
 
