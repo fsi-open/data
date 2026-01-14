@@ -13,13 +13,20 @@ namespace FSi\Bundle\DataGridBundle\Form\Type;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormTypeInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class RowType extends AbstractType
 {
     /**
      * @param FormBuilderInterface<FormBuilderInterface> $builder
-     * @param array{fields:array<string,array{name:string,type:string,options:array<string,mixed>}>} $options
+     * @param array{
+     *     fields:array<string,array{
+     *         name:string,
+     *         type:class-string<FormTypeInterface>|null,
+     *         options:array<string,mixed>
+     *     }>
+     * } $options
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {

@@ -161,18 +161,29 @@ final class FormExtensionTest extends TestCase
         $dataSource = $this->createMock(DataSourceInterface::class);
         $dataSource->method('getName')->willReturn('datasource');
 
+        $formOptions = [];
         if ($type === DateTimeTypeInterface::class) {
             $parameters = [
                 'date' => ['year' => 2012, 'month' => 12, 'day' => 12],
                 'time' => ['hour' => 12, 'minute' => 12],
             ];
             $parameters2 = new DateTimeImmutable('2012-12-12 12:12:00');
+            $formOptions = [
+                'years' => range(2012, (int) date('Y')),
+                'date_widget' => 'choice',
+                'time_widget' => 'choice',
+            ];
         } elseif ($type === TimeTypeInterface::class) {
             $parameters = ['hour' => 12, 'minute' => 12];
             $parameters2 = new DateTimeImmutable(date('Y-m-d', 0) . ' 12:12:00');
+            $formOptions = ['widget' => 'choice'];
         } elseif ($type === DateTypeInterface::class) {
             $parameters = ['year' => 2012, 'month' => 12, 'day' => 12];
             $parameters2 = new DateTimeImmutable('2012-12-12');
+            $formOptions = [
+                'years' => range(2012, (int) date('Y')),
+                'widget' => 'choice',
+            ];
         } elseif ($type === NumberTypeInterface::class) {
             $parameters = 123;
             $parameters2 = 123;
@@ -192,9 +203,7 @@ final class FormExtensionTest extends TestCase
 
         $options = $optionsResolver->resolve([
             'comparison' => 'eq',
-            'form_options' => true === in_array($type, [DateTypeInterface::class, DateTimeTypeInterface::class], true)
-                ? ['years' => range(2012, (int) date('Y'))]
-                : []
+            'form_options' => $formOptions,
         ]);
 
         $field = new Field('datasource', $fieldType, 'name', $options);

@@ -13,9 +13,9 @@
     "require": {
         "php": "^8.1",
         "psr/event-dispatcher": "^1.0",
-        "symfony/event-dispatcher" : "^4.4.30|^5.4|^6.0",
-        "symfony/property-access": "^4.4.30|^5.4|^6.0",
-        "symfony/options-resolver": "^5.4|^6.0",
+        "symfony/event-dispatcher" : "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/property-access": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/options-resolver": "^5.4|^6.0|^7.0",
         "twig/twig": "^3.9"
     },
     "require-dev": {
@@ -26,7 +26,7 @@
         "doctrine/orm": "^2.14|^3.0",
         "doctrine/persistence": "^2.4|^3.0",
         "friendsofsymfony/elastica-bundle": "^6.3",
-        "fsi/files": "^2.0.2|^3.0@dev",
+        "fsi/files": "^2.0.2|^3.0",
         "gedmo/doctrine-extensions": "^3.5",
         "nyholm/psr7": "^1.8",
         "oneup/flysystem-bundle": "^4.4",
@@ -38,28 +38,28 @@
         "ruflin/elastica": "^7.2",
         "seec/phpunit-consecutive-params": "^1.1.1",
         "squizlabs/php_codesniffer": "^3.7",
-        "symfony/browser-kit": "^4.4.30|^5.4|^6.0",
-        "symfony/cache": "^4.4.30|^5.4|^6.0",
-        "symfony/clock": "^6.4",
-        "symfony/css-selector": "^4.4.30|^5.4|^6.0",
-        "symfony/config": "^4.4.30|^5.4|^6.0",
-        "symfony/doctrine-bridge": "^4.4.30|^5.4|^6.0",
-        "symfony/dom-crawler": "^4.4.30|^5.4|^6.0",
-        "symfony/dependency-injection": "^4.4.30|^5.4|^6.0",
-        "symfony/form": "^4.4.30|^5.4|^6.0",
-        "symfony/finder": "^4.4.30|^5.4|^6.0",
-        "symfony/framework-bundle": "^4.4.30|^5.4|^6.0",
-        "symfony/http-client": "^4.4.30|^5.4|^6.0",
-        "symfony/http-kernel": "^4.4.30|^5.4|^6.0",
-        "symfony/routing": "^4.4.30|^5.4|^6.0",
-        "symfony/security-core": "^4.4.30|^5.4|^6.0",
-        "symfony/security-csrf": "^4.4.30|^5.4|^6.0",
-        "symfony/translation": "^4.4.30|^5.4|^6.0",
-        "symfony/twig-bridge": "^4.4.30|^5.4|^6.0",
-        "symfony/twig-bundle": "^4.4.30|^5.4|^6.0",
-        "symfony/validator": "^4.4.30|^5.4|^6.0",
-        "symfony/var-exporter": "^4.4.30|^5.4|^6.0",
-        "symfony/yaml": "^4.4.30|^5.4|^6.0"
+        "symfony/browser-kit": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/cache": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/clock": "^6.4|^7.0",
+        "symfony/css-selector": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/config": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/doctrine-bridge": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/dom-crawler": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/dependency-injection": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/form": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/finder": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/framework-bundle": "^4.4.40|^5.4|^6.0|^7.0",
+        "symfony/http-client": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/http-kernel": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/routing": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/security-core": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/security-csrf": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/translation": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/twig-bridge": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/twig-bundle": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/validator": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/var-exporter": "^4.4.30|^5.4|^6.0|^7.0",
+        "symfony/yaml": "^4.4.30|^5.4|^6.0|^7.0"
     },
     "autoload": {
         "psr-4": {
@@ -70,6 +70,9 @@
         "psr-4": {
             "Tests\\FSi\\": "tests"
         }
+    },
+    "conflict": {
+        "symfony/property-info": ">=8.0"
     },
     "config": {
         "bin-dir": "vendor/bin",

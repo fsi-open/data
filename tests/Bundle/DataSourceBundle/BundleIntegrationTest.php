@@ -25,11 +25,6 @@ use Tests\FSi\Component\DataSource\Fixtures\Entity\News;
 
 final class BundleIntegrationTest extends WebTestCase
 {
-    /**
-     * @var string
-     */
-    protected static $class = TestKernel::class;
-
     private KernelBrowser $client;
     private ?int $groupId;
 
