@@ -327,7 +327,7 @@ class DataGridRuntime implements RuntimeExtensionInterface
         array $availableBlocks = []
     ): string {
         $templates = $this->getTemplates($dataGridName);
-        $contextVars = $this->environment->mergeGlobals($contextVars);
+        $contextVars += $this->environment->getGlobals();
 
         foreach ($availableBlocks as $blockName) {
             foreach ($templates as $template) {

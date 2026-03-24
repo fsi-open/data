@@ -12,22 +12,24 @@ declare(strict_types=1);
 namespace FSi\Bundle\DataSourceBundle\Twig\Node;
 
 use FSi\Bundle\DataSourceBundle\Twig\Extension\DataSourceRuntime;
+use Twig\Attribute\YieldReady;
 use Twig\Compiler;
+use Twig\Node\BodyNode;
 use Twig\Node\Expression\AbstractExpression;
 use Twig\Node\Node;
 
-final class DataSourceThemeNode extends Node
+#[YieldReady]
+final class DataSourceThemeNode extends BodyNode
 {
     /**
      * @param Node<Node> $dataGrid
      * @param Node<Node> $theme
      * @param AbstractExpression<AbstractExpression> $vars
      * @param int $lineno
-     * @param string|null $tag
      */
-    public function __construct(Node $dataGrid, Node $theme, AbstractExpression $vars, int $lineno, ?string $tag = null)
+    public function __construct(Node $dataGrid, Node $theme, AbstractExpression $vars, int $lineno)
     {
-        parent::__construct(['datasource' => $dataGrid, 'theme' => $theme, 'vars' => $vars], [], $lineno, $tag);
+        parent::__construct(['datasource' => $dataGrid, 'theme' => $theme, 'vars' => $vars], [], $lineno);
     }
 
     public function compile(Compiler $compiler): void

@@ -487,7 +487,7 @@ final class DataSourceRuntime implements RuntimeExtensionInterface
         array $availableBlocks = []
     ): string {
         $templates = $this->getTemplates($dataSourceName);
-        $contextVars = $this->environment->mergeGlobals($contextVars);
+        $contextVars += $this->environment->getGlobals();
 
         foreach ($availableBlocks as $blockName) {
             foreach ($templates as $template) {

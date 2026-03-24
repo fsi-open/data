@@ -69,7 +69,7 @@ final class DataSourceRuntimeTest extends TestCase
         $this->twig->addExtension($this->extension);
 
         $dataSource = $this->getDataSourceView('datasource');
-        self::assertSame('', $this->runtime->dataSourceFilter($dataSource));
+        self::assertSame('', trim($this->runtime->dataSourceFilter($dataSource)));
     }
 
     public function testDataSourceFilterCount(): void

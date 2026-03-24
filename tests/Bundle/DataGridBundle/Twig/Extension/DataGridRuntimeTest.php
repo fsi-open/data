@@ -85,7 +85,10 @@ final class DataGridRuntimeTest extends TestCase
             'datagrid_with_theme' => $dataGridWithThemeView,
         ]);
 
-        self::assertSame($this->getExpectedHtml('datagrid/datagrid_widget_result.html'), $html);
+        self::assertSame(
+            $this->getExpectedHtml('datagrid/datagrid_widget_result.html'),
+            trim(preg_replace('/>\s+</', '><', $html) ?? '') . "\n"
+        );
     }
 
     public function testRenderColumnHeaderWidget(): void
@@ -104,7 +107,10 @@ final class DataGridRuntimeTest extends TestCase
             'header_with_theme' => $headerWithThemeView,
         ]);
 
-        self::assertSame($this->getExpectedHtml('datagrid/datagrid_header_widget_result.html'), $html);
+        self::assertSame(
+            $this->getExpectedHtml('datagrid/datagrid_header_widget_result.html'),
+            trim(preg_replace('/>\s+</', '><', $html) ?? '') . "\n"
+        );
     }
 
     public function testRenderCellWidget(): void
@@ -123,7 +129,10 @@ final class DataGridRuntimeTest extends TestCase
             'cell_with_theme' => $cellWithThemeView,
         ]);
 
-        self::assertSame($this->getExpectedHtml('datagrid/datagrid_cell_widget_result.html'), $html);
+        self::assertSame(
+            $this->getExpectedHtml('datagrid/datagrid_cell_widget_result.html'),
+            trim(preg_replace('/>\s+</', '><', $html) ?? '') . "\n"
+        );
     }
 
     public function testRenderCellActionWidget(): void

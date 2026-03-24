@@ -16,7 +16,7 @@
         "symfony/event-dispatcher" : "^4.4.30|^5.4|^6.0|^7.0",
         "symfony/property-access": "^4.4.30|^5.4|^6.0|^7.0",
         "symfony/options-resolver": "^5.4|^6.0|^7.0",
-        "twig/twig": "^3.9"
+        "twig/twig": "^3.12"
     },
     "require-dev": {
         "ext-dom": "*",

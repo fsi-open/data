@@ -43,7 +43,7 @@ final class DataSourceRouteTokenParser extends AbstractTokenParser
 
         $stream->expect(Token::BLOCK_END_TYPE);
 
-        return new DataSourceRouteNode($dataSource, $route, $vars, $token->getLine(), $this->getTag());
+        return new DataSourceRouteNode($dataSource, $route, $vars, $token->getLine());
     }
 
     public function getTag(): string
