@@ -40,7 +40,7 @@ class DataGridThemeTokenParser extends AbstractTokenParser
 
         $stream->expect(Token::BLOCK_END_TYPE);
 
-        return new DataGridThemeNode($dataGrid, $theme, $vars, $token->getLine(), $this->getTag());
+        return new DataGridThemeNode($dataGrid, $theme, $vars, $token->getLine());
     }
 
     public function getTag(): string

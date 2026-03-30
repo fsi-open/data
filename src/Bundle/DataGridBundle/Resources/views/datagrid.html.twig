@@ -1,31 +1,27 @@
 {% block datagrid_column_type_batch_header %}
-    {% apply spaceless %}
-        <th>
-            <input type="checkbox" id="{{ header.dataGridName }}_{{ header.type }}"/>
-            <script type="text/javascript">
-                (function (w) {
-                    var header = w.document.getElementById('{{ header.dataGridName }}_{{ header.type }}');
+    <th>
+        <input type="checkbox" id="{{ header.dataGridName }}_{{ header.type }}"/>
+        <script type="text/javascript">
+            (function (w) {
+                var header = w.document.getElementById('{{ header.dataGridName }}_{{ header.type }}');
 
-                    header.onclick = function() {
-                        var elements = w.document.getElementsByClassName('{{ header.dataGridName }}_{{ header.type }}'),
-                            i = 0;
+                header.onclick = function() {
+                    var elements = w.document.getElementsByClassName('{{ header.dataGridName }}_{{ header.type }}'),
+                        i = 0;
 
-                        for (i; i < elements.length; i++) {
-                            elements[i].checked = this.checked;
-                        }
+                    for (i; i < elements.length; i++) {
+                        elements[i].checked = this.checked;
                     }
-                }(window));
-            </script>
-        </th>
-    {% endapply %}
+                }
+            }(window));
+        </script>
+    </th>
 {% endblock %}
 
 {% block datagrid_column_type_batch_cell %}
-{% apply spaceless %}
     <td>
         <input type="checkbox" name="{{ cell.dataGridName }}_{{ cell.type }}[]" value="{{ cell.getAttribute('index') }}" class="{{ cell.dataGridName }}_{{ cell.type }}" />
     </td>
-{% endapply %}
 {% endblock %}
 
 {% block datagrid_column_type_action_cell_action %}
@@ -35,7 +31,6 @@
 {% endblock %}
 
 {% block datagrid_column_type_action_cell %}
-{% apply spaceless %}
     <td>
         <div>
             {% for action_name, action in cell.value %}
@@ -49,11 +44,9 @@
             {% endfor %}
         </div>
     </td>
-{% endapply %}
 {% endblock %}
 
 {% block datagrid_column_header %}
-{% apply spaceless %}
 {% if header.hasAttribute('label') %}
     {% set label = header.getAttribute('label')|trans({}, translation_domain)  %}
 {% else %}
@@ -62,17 +55,14 @@
     <th{{ block('datagrid_header_attributes') }}>
         <span>{{ label }}</span>
     </th>
-{% endapply %}
 {% endblock %}
 
 {% block datagrid_header %}
-{% apply spaceless %}
 <tr>
     {% for header in headers %}
         {{ datagrid_column_header_widget(header) }}
     {% endfor %}
 </tr>
-{% endapply %}
 {% endblock %}
 
 {% block datagrid_column_cell_form %}
@@ -88,7 +78,6 @@
 {% endblock %}
 
 {% block datagrid_column_cell %}
-{% apply spaceless %}
     <td{{ block('datagrid_cell_attributes') }}>
         <div{{ block('datagrid_container_attributes') }}>
             <span{{ block('datagrid_value_attributes') }}>
@@ -97,11 +86,9 @@
             </span>
         </div>
     </td>
-{% endapply %}
 {% endblock %}
 
 {% block datagrid_rowset %}
-{% apply spaceless %}
     {% for index, row in datagrid %}
         <tr>
             {% for cell in row %}
@@ -109,11 +96,9 @@
             {% endfor %}
         </tr>
     {% endfor %}
-{% endapply %}
 {% endblock %}
 
 {% block datagrid %}
-{% apply spaceless %}
     <table>
         <thead>
             {{ datagrid_header_widget(datagrid) }}
@@ -122,7 +107,6 @@
             {{ datagrid_rowset_widget(datagrid) }}
         </tbody>
     </table>
-{% endapply %}
 {% endblock %}
 
 {% block datagrid_container_class 'datagrid-cell-container' ~ ('action' == cell.type ? ' text-right actions' : '') %}
@@ -161,10 +145,8 @@
 {%- endblock datagrid_attributes -%}
 
 {% block datagrid_column_type_web_file_cell %}
-{% apply spaceless %}
 <td{{ block('datagrid_cell_attributes') }}>
     <div>
-        {% endapply %}
         {% for file in cell.value %}
             {% if is_web_file(file) %}
                 {% if cell.getAttribute('resolve_file_url') %}
@@ -174,10 +156,8 @@
                 {% endif %}
             {% endif %}
         {% endfor %}
-        {% apply spaceless %}
     </div>
 </td>
-{% endapply %}
 {% endblock %}
 
 {% block datagrid_column_type_web_image_cell %}

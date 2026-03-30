@@ -40,7 +40,7 @@ final class DataSourceThemeTokenParser extends AbstractTokenParser
 
         $stream->expect(Token::BLOCK_END_TYPE);
 
-        return new DataSourceThemeNode($dataSource, $theme, $vars, $token->getLine(), $this->getTag());
+        return new DataSourceThemeNode($dataSource, $theme, $vars, $token->getLine());
     }
 
     public function getTag(): string

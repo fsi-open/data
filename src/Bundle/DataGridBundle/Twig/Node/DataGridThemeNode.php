@@ -12,20 +12,18 @@ declare(strict_types=1);
 namespace FSi\Bundle\DataGridBundle\Twig\Node;
 
 use FSi\Bundle\DataGridBundle\Twig\Extension\DataGridRuntime;
+use Twig\Attribute\YieldReady;
 use Twig\Compiler;
+use Twig\Node\BodyNode;
 use Twig\Node\Expression\ArrayExpression;
 use Twig\Node\Node;
 
-class DataGridThemeNode extends Node
+#[YieldReady]
+class DataGridThemeNode extends BodyNode
 {
-    public function __construct(
-        Node $dataGrid,
-        Node $theme,
-        ArrayExpression $vars,
-        int $lineno,
-        ?string $tag = null
-    ) {
-        parent::__construct(['datagrid' => $dataGrid, 'theme' => $theme, 'vars' => $vars], [], $lineno, $tag);
+    public function __construct(Node $dataGrid, Node $theme, ArrayExpression $vars, int $lineno)
+    {
+        parent::__construct(['datagrid' => $dataGrid, 'theme' => $theme, 'vars' => $vars], [], $lineno);
     }
 
     public function compile(Compiler $compiler): void
