@@ -11,11 +11,13 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
+use Countable;
 use Doctrine\DBAL\Connection;
 use FSi\Component\DataSource\DataSourceInterface;
-use FSi\Component\DataSource\Driver\Doctrine\DBAL\Paginator;
 use FSi\Component\DataSource\Extension\Ordering\OrderingExtension;
 use FSi\Component\DataSource\Extension\Pagination\PaginationExtension;
+use FSi\Component\DataSource\Result;
+use Iterator;
 
 use function preg_replace;
 
@@ -99,10 +101,13 @@ class DBALDriverResultTest extends TestBase
             'SELECT e.* FROM news e WHERE e.title LIKE :title ORDER BY e.content asc, e.title desc LIMIT 10',
             $this->queryLogger->getQueryBuilder()->getSQL()
         );
-        self::assertInstanceOf(Paginator::class, $result);
+        self::assertInstanceOf(Result::class, $result);
+        self::assertInstanceOf(Countable::class, $result);
         self::assertCount(12, $result);
         self::assertCount(10, iterator_to_array($result));
-        self::assertEquals('title-18', $result->getIterator()->current()['title']);
+        $iterator = $result->getIterator();
+        self::assertInstanceOf(Iterator::class, $iterator);
+        self::assertEquals('title-18', $iterator->current()['title']);
     }
 
     /**

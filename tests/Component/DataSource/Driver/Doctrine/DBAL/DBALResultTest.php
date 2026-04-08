@@ -11,16 +11,18 @@ declare(strict_types=1);
 
 namespace Tests\FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
+use Composer\InstalledVersions;
 use Doctrine\DBAL\Connection;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\DBALResult;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Paginator;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Paginator4;
 use RuntimeException;
 
 class DBALResultTest extends TestBase
 {
     private Connection $connection;
 
-    private Paginator $paginator;
+    private Paginator|Paginator4 $paginator;
 
     protected function setUp(): void
     {
@@ -32,7 +34,11 @@ class DBALResultTest extends TestBase
             ->from(self::TABLE_CATEGORY_NAME, 'c')
             ->setMaxResults(3);
 
-        $this->paginator = new Paginator($qb);
+        if (InstalledVersions::getVersion('doctrine/dbal') >= '4.0.0') {
+            $this->paginator = new Paginator4($this->connection, $qb);
+        } else {
+            $this->paginator = new Paginator($qb);
+        }
     }
 
     public function testEmptyResult(): void
@@ -42,7 +48,11 @@ class DBALResultTest extends TestBase
             ->from(self::TABLE_CATEGORY_NAME, 'c')
             ->where('0 = 1');
 
-        $paginator = new Paginator($qb);
+        if (InstalledVersions::getVersion('doctrine/dbal') >= '4.0.0') {
+            $paginator = new Paginator4($this->connection, $qb);
+        } else {
+            $paginator = new Paginator($qb);
+        }
         $result = new DBALResult($paginator, '[id]');
 
         self::assertCount(0, $result);

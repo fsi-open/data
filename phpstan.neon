@@ -37,3 +37,5 @@ parameters:
         - message: '#.*Symfony\\Component\\Routing\\RouteCollectionBuilder.*#'
           path: 'tests/Bundle/DataSourceBundle/Fixtures/TestKernel.php'
         - message: "#Property Doctrine\\\\ORM\\\\Mapping\\\\ClassMetadata<Tests\\\\FSi\\\\Bundle\\\\DataGridBundle\\\\Fixtures\\\\EntityCategory>::\\$fieldMappings \\(array<string, Doctrine\\\\ORM\\\\Mapping\\\\FieldMapping>\\) does not accept array<string, array<string, array\\|string>>\\.#"
+        - message: '#Call to an undefined method Doctrine\\DBAL\\Query\\QueryBuilder::\w+\(\).#'
+          path: 'src/Component/DataSource/Driver/Doctrine/DBAL/Paginator.php'

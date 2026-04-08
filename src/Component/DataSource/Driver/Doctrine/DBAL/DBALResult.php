@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
 use Closure;
+use Countable;
 use Doctrine\Common\Collections\ArrayCollection;
 use FSi\Component\DataSource\Result;
 use InvalidArgumentException;
@@ -19,7 +20,6 @@ use RuntimeException;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 
 use function array_key_exists;
-use function count;
 use function get_class;
 use function gettype;
 use function is_object;
@@ -28,17 +28,17 @@ use function is_string;
 /**
  * @template T
  * @template-implements Result<T>
- * @template-extends ArrayCollection<int|string,mixed>
+ * @template-extends ArrayCollection<int|string,T>
  */
 final class DBALResult extends ArrayCollection implements Result
 {
     private int $count;
 
     /**
-     * @param Paginator $paginator
+     * @param Countable&Result<T> $paginator
      * @param string|Closure $indexField
      */
-    public function __construct(Paginator $paginator, $indexField)
+    public function __construct(Countable&Result $paginator, $indexField)
     {
         if (false === is_string($indexField) && false === $indexField instanceof Closure) {
             throw new InvalidArgumentException(sprintf(
@@ -53,24 +53,22 @@ final class DBALResult extends ArrayCollection implements Result
         $data = $paginator->getIterator();
 
         $propertyAccessor = new PropertyAccessor();
-        if (0 !== count($data)) {
-            foreach ($data as $element) {
-                if (true === is_string($indexField)) {
-                    $index = $propertyAccessor->getValue($element, $indexField);
-                } else {
-                    $index = $indexField($element);
-                }
-
-                if (null === $index) {
-                    throw new RuntimeException('Index cannot be null');
-                }
-
-                if (true === array_key_exists($index, $result)) {
-                    throw new RuntimeException("'Duplicate index \"{$index}\"'");
-                }
-
-                $result[$index] = $element;
+        foreach ($data as $element) {
+            if (true === is_string($indexField)) {
+                $index = $propertyAccessor->getValue($element, $indexField);
+            } else {
+                $index = $indexField($element);
             }
+
+            if (null === $index) {
+                throw new RuntimeException('Index cannot be null');
+            }
+
+            if (true === array_key_exists($index, $result)) {
+                throw new RuntimeException("'Duplicate index \"{$index}\"'");
+            }
+
+            $result[$index] = $element;
         }
 
         parent::__construct($result);
