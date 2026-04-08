@@ -21,7 +21,7 @@
     "require-dev": {
         "ext-dom": "*",
         "doctrine/collections": "^1.7|^2.0",
-        "doctrine/dbal": "^3.4",
+        "doctrine/dbal": "^3.4|^4.0",
         "doctrine/doctrine-bundle": "^2.4",
         "doctrine/orm": "^2.14|^3.0",
         "doctrine/persistence": "^2.4|^3.0",
