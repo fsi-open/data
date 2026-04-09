@@ -32,7 +32,7 @@ if (class_exists(\Doctrine\DBAL\Connection::class)) {
             return 'test';
         }
 
-        public function getConnection($name = null): ?\Doctrine\DBAL\Connection
+        public function getConnection($name = null): \Doctrine\DBAL\Connection
         {
             if (null !== $name && $this->getDefaultConnectionName() !== $name) {
                 throw new InvalidArgumentException('invalid connection');
@@ -66,7 +66,7 @@ if (class_exists(\Doctrine\DBAL\Connection::class)) {
             return 'test';
         }
 
-        public function getConnection($name = null): ?\Doctrine\DBAL\Driver\Connection
+        public function getConnection($name = null): \Doctrine\DBAL\Driver\Connection
         {
             if (null !== $name && $this->getDefaultConnectionName() !== $name) {
                 throw new InvalidArgumentException('invalid connection');
