@@ -28,6 +28,9 @@ use function is_object;
  */
 final class ORMResult extends ArrayCollection implements Result
 {
+    /**
+     * @var int<0, max>
+     */
     private int $count;
 
     /**

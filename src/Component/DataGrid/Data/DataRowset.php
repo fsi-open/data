@@ -29,6 +29,9 @@ class DataRowset implements DataRowsetInterface
      * @var array<int|string,array<string,mixed>|object>
      */
     private array $data = [];
+    /**
+     * @var int<0, max>
+     */
     private int $count;
 
     /**

@@ -14,6 +14,7 @@ namespace FSi\Component\DataSource\Driver\Elastica;
 use ArrayIterator;
 use Countable;
 use Elastica\SearchableInterface;
+use FSi\Component\DataSource\Driver\Elastica\Exception\ElasticaDriverException;
 use FSi\Component\DataSource\Result;
 use Iterator;
 use Elastica\ResultSet;
@@ -35,7 +36,12 @@ class ElasticaResult implements Countable, Result
 
     public function count(): int
     {
-        return $this->resultSet->getTotalHits();
+        $count = $this->resultSet->getTotalHits();
+        if (0 > $count) {
+            throw new ElasticaDriverException(sprintf('Total hits count is negative, got %d.', $count));
+        }
+
+        return $count;
     }
 
     public function getIterator(): Iterator

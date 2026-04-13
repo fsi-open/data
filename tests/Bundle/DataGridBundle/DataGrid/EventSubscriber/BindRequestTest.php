@@ -40,7 +40,6 @@ final class BindRequestTest extends TestCase
         $request->expects(self::once())->method('getMethod')->willReturn('POST');
 
         if (true === class_exists(InputBag::class)) {
-            /** @var ParameterBag<string,mixed> $requestBag */
             $requestBag = new InputBag();
         } else {
             $requestBag = new ParameterBag();

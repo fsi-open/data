@@ -32,6 +32,9 @@ use function is_string;
  */
 final class DBALResult extends ArrayCollection implements Result
 {
+    /**
+     * @var int<0, max>
+     */
     private int $count;
 
     /**

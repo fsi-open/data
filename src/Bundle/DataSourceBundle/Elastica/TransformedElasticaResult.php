@@ -22,6 +22,9 @@ use Traversable;
  */
 final class TransformedElasticaResult implements Countable, Result
 {
+    /**
+     * @var int<0, max>
+     */
     private int $count;
     /**
      * @var array<int|string, T>
@@ -33,7 +36,7 @@ final class TransformedElasticaResult implements Countable, Result
     private array $aggregations;
 
     /**
-     * @param int $count
+     * @param int<0, max> $count
      * @param array<int|string, T> $objects
      * @param array<string, array<string, mixed>> $aggregations
      */

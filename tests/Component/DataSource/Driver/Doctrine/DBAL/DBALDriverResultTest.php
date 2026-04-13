@@ -101,7 +101,6 @@ class DBALDriverResultTest extends TestBase
             'SELECT e.* FROM news e WHERE e.title LIKE :title ORDER BY e.content asc, e.title desc LIMIT 10',
             $this->queryLogger->getQueryBuilder()->getSQL()
         );
-        self::assertInstanceOf(Result::class, $result);
         self::assertInstanceOf(Countable::class, $result);
         self::assertCount(12, $result);
         self::assertCount(10, iterator_to_array($result));

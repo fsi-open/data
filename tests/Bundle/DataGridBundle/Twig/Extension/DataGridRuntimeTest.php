@@ -65,7 +65,7 @@ final class DataGridRuntimeTest extends TestCase
     public function testInitRuntimeWithValidPathToTheme(): void
     {
         $this->twig->addExtension($this->extension);
-        self::assertNotNull($this->twig->load('datagrid.html.twig'));
+        $this->twig->load('datagrid.html.twig');
     }
 
     public function testRenderDataGridWidget(): void

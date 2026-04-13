@@ -201,7 +201,7 @@ class DateTime extends ColumnAbstractType
                 break;
 
             case 'string':
-                $field = key($value);
+                $field = (string) key($value);
                 $value = current($value);
 
                 if (false === empty($value) && false === is_string($value)) {
@@ -217,7 +217,7 @@ class DateTime extends ColumnAbstractType
                 break;
 
             case 'datetime':
-                $field = key($value);
+                $field = (string) key($value);
                 $value = current($value);
 
                 if (false === empty($value) && (false === $value instanceof DateTimeInterface)) {
@@ -230,7 +230,7 @@ class DateTime extends ColumnAbstractType
                 break;
 
             case 'timestamp':
-                $field = key($value);
+                $field = (string) key($value);
                 $value = current($value);
 
                 $inputData[$field] = false === empty($value)

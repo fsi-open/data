@@ -14,6 +14,7 @@ namespace FSi\Component\DataSource\Driver\Doctrine\DBAL;
 use ArrayIterator;
 use Countable;
 use Doctrine\DBAL\Query\QueryBuilder;
+use FSi\Component\DataSource\Driver\Doctrine\DBAL\Exception\DBALDriverException;
 use FSi\Component\DataSource\Result;
 
 use function sprintf;
@@ -65,6 +66,13 @@ final class Paginator implements Countable, Result
             $query->getParameterTypes()
         );
 
-        return (int) $statement->fetchOne();
+        $count = (int) $statement->fetchOne();
+        if (0 > $count) {
+            throw new DBALDriverException(
+                sprintf('Count query should return non-negative integer, but %d was returned', $count)
+            );
+        }
+
+        return $count;
     }
 }

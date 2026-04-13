@@ -153,7 +153,7 @@ final class DataGrid implements DataGridInterface
     }
 
     /**
-     * @return array<string,mixed>|object|false
+     * @return array<string,mixed>|object
      */
     #[ReturnTypeWillChange]
     public function current()
@@ -166,7 +166,7 @@ final class DataGrid implements DataGridInterface
     }
 
     /**
-     * @return int|string|null
+     * @return int|string
      */
     #[ReturnTypeWillChange]
     public function key()

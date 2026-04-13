@@ -260,7 +260,7 @@ final class BundleIntegrationTest extends WebTestCase
         $resetter = $container->get('test.fos_elastica.resetter');
         $resetter->resetIndex('news');
 
-        $metadata = $entityManager->getMetadataFactory()->getAllMetadata();
+        $metadata = array_values($entityManager->getMetadataFactory()->getAllMetadata());
 
         $tool = new SchemaTool($entityManager);
         $tool->dropSchema($metadata);

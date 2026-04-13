@@ -235,17 +235,18 @@ final class DataSourceRuntime implements RuntimeExtensionInterface
         }
 
         if (true === array_key_exists('max_pages', $options)) {
-            $delta = ceil($options['max_pages'] / 2);
+            $maxPages = (int) $options['max_pages'];
+            $delta = (int) ceil($maxPages / 2);
 
-            if ($current - $delta > $pageCount - $options['max_pages']) {
-                $pages = range(max($pageCount - $options['max_pages'] + 1, 1), $pageCount);
+            if ($current - $delta > $pageCount - $maxPages) {
+                $pages = range(max($pageCount - $maxPages + 1, 1), $pageCount);
             } else {
                 if ($current - $delta < 0) {
                     $delta = $current;
                 }
 
                 $offset = $current - $delta;
-                $pages = range($offset + 1, min($offset + $options['max_pages'], $pageCount));
+                $pages = range($offset + 1, min($offset + $maxPages, $pageCount));
             }
         } else {
             $pages = range(1, $pageCount);

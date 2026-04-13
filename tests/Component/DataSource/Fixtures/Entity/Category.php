@@ -17,7 +17,7 @@ use Doctrine\Common\Collections\Collection;
 class Category
 {
     private ?int $id = null;
-    private ?string $name;
+    private ?string $name = null;
 
     /**
      * @var Collection<int,News>

@@ -27,7 +27,7 @@ final class DataSourceBundle extends Bundle
         $container->addCompilerPass(new FOSElasticaPass(), PassConfig::TYPE_BEFORE_OPTIMIZATION, 200);
     }
 
-    public function getContainerExtension(): ?ExtensionInterface
+    public function getContainerExtension(): ExtensionInterface
     {
         if (false === $this->extension instanceof FSIDataSourceExtension) {
             $this->extension = new FSIDataSourceExtension();
