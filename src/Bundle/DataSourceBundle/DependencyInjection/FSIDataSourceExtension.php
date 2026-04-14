@@ -62,9 +62,7 @@ final class FSIDataSourceExtension extends Extension
             $container->setParameter('datasource.twig.template', $config['twig']['template']);
         }
 
-        if (true === method_exists($container, 'registerForAutoconfiguration')) {
-            $this->registerForAutoconfiguration($container);
-        }
+        $this->registerForAutoconfiguration($container);
     }
 
     private function registerDrivers(LoaderInterface $loader): void

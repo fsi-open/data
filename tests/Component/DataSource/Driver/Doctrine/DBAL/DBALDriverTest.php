@@ -48,7 +48,14 @@ final class DBALDriverTest extends TestBase
     public function testGetResultExceptionWhenFieldIsNotDBALField(): void
     {
         $qb = $this->connection->createQueryBuilder();
-        $driver = new DBALDriver($this->createMock(EventDispatcherInterface::class), [], $qb, 'e');
+        $driver = new DBALDriver(
+            $this->createMock(EventDispatcherInterface::class),
+            [],
+            $qb,
+            'e',
+            null,
+            $this->connection
+        );
 
         $this->expectException(DBALDriverException::class);
         $fields = [$this->createMock(FieldInterface::class)];
@@ -69,7 +76,14 @@ final class DBALDriverTest extends TestBase
         }
 
         $qb = $this->connection->createQueryBuilder();
-        $driver = new DBALDriver($this->createMock(EventDispatcherInterface::class), [], $qb, 'e');
+        $driver = new DBALDriver(
+            $this->createMock(EventDispatcherInterface::class),
+            [],
+            $qb,
+            'e',
+            null,
+            $this->connection
+        );
         $driver->getResult($fields, 0, 20);
     }
 
@@ -77,7 +91,7 @@ final class DBALDriverTest extends TestBase
     {
         $qb = $this->connection->createQueryBuilder();
         $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
-        $driver = new DBALDriver($eventDispatcher, [], $qb, 'e');
+        $driver = new DBALDriver($eventDispatcher, [], $qb, 'e', null, $this->connection);
 
         $eventDispatcher->expects(self::exactly(2))
             ->method('dispatch')
@@ -120,7 +134,9 @@ final class DBALDriverTest extends TestBase
                 new Time([]),
             ],
             $qb,
-            'e'
+            'e',
+            null,
+            $this->connection
         );
         self::assertTrue($driver->hasFieldType($type));
         $fieldType = $driver->getFieldType($type);

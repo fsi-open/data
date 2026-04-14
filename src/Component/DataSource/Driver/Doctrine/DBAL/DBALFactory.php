@@ -30,8 +30,7 @@ use function is_string;
 use function sprintf;
 
 /**
- * @template T
- * @template-implements DriverFactoryInterface<T>
+ * @template-implements DriverFactoryInterface<array<string,mixed>>
  */
 final class DBALFactory implements DriverFactoryInterface
 {
@@ -74,7 +73,8 @@ final class DBALFactory implements DriverFactoryInterface
             $this->fieldTypes,
             $options['qb'],
             $options['alias'],
-            $options['indexField']
+            $options['indexField'],
+            $options['connection'],
         );
     }
 

@@ -22,6 +22,7 @@ use FSi\Component\DataSource\Field\Type\AbstractFieldType as CoreAbstractFieldTy
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+use function array_values;
 use function is_array;
 
 abstract class AbstractFieldField extends CoreAbstractFieldType implements FieldTypeInterface
@@ -69,13 +70,13 @@ abstract class AbstractFieldField extends CoreAbstractFieldType implements Field
                 if (false === is_array($data)) {
                     throw new ElasticaDriverException("'in' comparison needs an array");
                 }
-                $filter->addMust(new Terms($fieldPath, $data));
+                $filter->addMust(new Terms($fieldPath, array_values($data)));
                 break;
             case 'notIn':
                 if (false === is_array($data)) {
                     throw new ElasticaDriverException("'notIn' comparison needs an array");
                 }
-                $filter->addMustNot(new Terms($fieldPath, $data));
+                $filter->addMustNot(new Terms($fieldPath, array_values($data)));
                 break;
             case 'isNull':
                 $existsQuery = new Exists($fieldPath);

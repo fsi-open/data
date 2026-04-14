@@ -31,7 +31,7 @@ class DataRowsetTest extends TestCase
         $rowset = new DataRowset($data);
 
         foreach ($rowset as $index => $row) {
-            self::assertSame($data[$index], $row);
+            self::assertSame($data[$index] ?? null, $row);
         }
 
         self::assertSame(2, $rowset->count());
@@ -54,7 +54,7 @@ class DataRowsetTest extends TestCase
         $rowset = new DataRowset($data);
 
         foreach ($rowset as $index => $row) {
-            self::assertSame($expectedData[$index], $row);
+            self::assertSame($expectedData[$index] ?? null, $row);
         }
         self::assertSame(2, $rowset->count());
     }

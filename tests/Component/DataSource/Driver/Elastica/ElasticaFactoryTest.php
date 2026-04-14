@@ -23,7 +23,6 @@ class ElasticaFactoryTest extends TestCase
     public function testDriverCreation(): void
     {
         $factory = new ElasticaFactory($this->createMock(EventDispatcherInterface::class), []);
-        $this->assertInstanceOf(DriverFactoryInterface::class, $factory);
 
         $driver = $factory->createDriver(['searchable' => $this->createMock(SearchableInterface::class)]);
         $this->assertInstanceOf(ElasticaDriver::class, $driver);

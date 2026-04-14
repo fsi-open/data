@@ -120,11 +120,7 @@ final class EntityValueFormatColumnOptionsExtensionTest extends TestCase
             'value_glue' => '<br />',
         ];
 
-        if (PHP_VERSION_ID < 80000 && true === method_exists($this, 'expectError')) {
-            $this->expectError();
-        } else {
-            $this->expectException(ArgumentCountError::class);
-        }
+        $this->expectException(ArgumentCountError::class);
         $this->assertFilteredValue($options, [0 => ['id' => 1, 'name' => 'Foo']], 'unreachable');
     }
 

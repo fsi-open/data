@@ -133,7 +133,7 @@ final class FormExtension extends ColumnAbstractTypeExtension implements
             return true;
         }
 
-        return true === $form->isSubmitted() && true === $form->isValid();
+        return true === $form->isValid();
     }
 
     public function reset(): void

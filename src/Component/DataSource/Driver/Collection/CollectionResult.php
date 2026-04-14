@@ -34,6 +34,9 @@ class CollectionResult implements ArrayAccess, Countable, Result
      * @var Collection<int|string,T>
      */
     private Collection $collection;
+    /**
+     * @var int<0, max>
+     */
     private int $count;
 
     /**

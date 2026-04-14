@@ -77,9 +77,6 @@ final class ORMFactory implements DriverFactoryInterface
         );
     }
 
-    /**
-     * @throws InvalidOptionsException
-     */
     private function initOptions(): void
     {
         $this->optionsResolver->setDefaults([

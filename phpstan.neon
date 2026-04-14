@@ -11,19 +11,19 @@ parameters:
     excludePaths:
         - src/Bundle/DataGridBundle/DependencyInjection/Configuration.php
         - src/Bundle/DataSourceBundle/DependencyInjection/Configuration.php
-        - tests/Bundle/DataGridBundle/Fixtures/var
-        - tests/Bundle/DataSourceBundle/Fixtures/var
+        - tests/Bundle/DataGridBundle/Fixtures/var?
+        - tests/Bundle/DataSourceBundle/Fixtures/var?
     ignoreErrors:
-        - message: '#Property Symfony\\Component\\HttpFoundation\\Request::\$request \(Symfony\\Component\\HttpFoundation\\InputBag\) does not accept Symfony\\Component\\HttpFoundation\\ParameterBag\.#'
+        - message: '#Property Symfony\\Component\\HttpFoundation\\Request::\$request \(Symfony\\Component\\HttpFoundation\\InputBag\) does not accept Symfony\\Component\\HttpFoundation\\InputBag(.*)\|Symfony\\Component\\HttpFoundation\\ParameterBag\.#'
+          path: tests/Bundle/DataGridBundle/DataGrid/EventSubscriber/BindRequestTest.php
+        - message: '#Property Symfony\\Component\\HttpFoundation\\Request::\$request \(Symfony\\Component\\HttpFoundation\\ParameterBag\) does not accept Symfony\\Component\\HttpFoundation\\InputBag(.*)\|Symfony\\Component\\HttpFoundation\\ParameterBag\.#'
+          path: tests/Bundle/DataGridBundle/DataGrid/EventSubscriber/BindRequestTest.php
+        - message: '#Call to method set\(\) on an unknown class Symfony\\Component\\HttpFoundation\\InputBag\.#'
           path: tests/Bundle/DataGridBundle/DataGrid/EventSubscriber/BindRequestTest.php
         - message: '#Strict comparison using === between false and array will always evaluate to false\.#'
           path: src/Component/DataIndexer/DoctrineDataIndexer.php
         - message: '#PHPDoc tag @return contains generic type Gedmo\\Tree\\RepositoryInterface<object> but interface Gedmo\\Tree\\RepositoryInterface is not generic\.#'
           path: src/Component/DataGrid/Gedmo/ColumnType/Tree.php
-        - message: '#Call to an undefined method Tests\\FSi\\Component\\DataGrid\\ColumnTypeExtension\\EntityValueFormatColumnOptionsExtensionTest\:\:expectError\(\)\.#'
-          path: tests/Component/DataGrid/ColumnTypeExtension/EntityValueFormatColumnOptionsExtensionTest.php
-        - message: "#Call to function method_exists\\(\\) with \\$this\\(Tests\\\\FSi\\\\Component\\\\DataGrid\\\\ColumnTypeExtension\\\\EntityValueFormatColumnOptionsExtensionTest\\) and 'expectError' will always evaluate to false.#"
-          path: tests/Component/DataGrid/ColumnTypeExtension/EntityValueFormatColumnOptionsExtensionTest.php
         - message: '#Call to an undefined method Tests\\FSi\\Component\\DataGrid\\ColumnTypeExtension\\ValueFormatColumnOptionsExtensionTest\:\:expectError\(\)\.#'
           path: tests/Component/DataGrid/ColumnTypeExtension/ValueFormatColumnOptionsExtensionTest.php
         - message: "#Call to function method_exists\\(\\) with \\$this\\(Tests\\\\FSi\\\\Component\\\\DataGrid\\\\ColumnTypeExtension\\\\ValueFormatColumnOptionsExtensionTest\\) and 'expectError' will always evaluate to false.#"
@@ -37,3 +37,5 @@ parameters:
         - message: '#.*Symfony\\Component\\Routing\\RouteCollectionBuilder.*#'
           path: 'tests/Bundle/DataSourceBundle/Fixtures/TestKernel.php'
         - message: "#Property Doctrine\\\\ORM\\\\Mapping\\\\ClassMetadata<Tests\\\\FSi\\\\Bundle\\\\DataGridBundle\\\\Fixtures\\\\EntityCategory>::\\$fieldMappings \\(array<string, Doctrine\\\\ORM\\\\Mapping\\\\FieldMapping>\\) does not accept array<string, array<string, array\\|string>>\\.#"
+        - message: '#Call to an undefined method Doctrine\\DBAL\\Query\\QueryBuilder::\w+\(\).#'
+          path: 'src/Component/DataSource/Driver/Doctrine/DBAL/Paginator.php'

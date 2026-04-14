@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace FSi\Component\DataSource\Driver\Doctrine\DBAL;
 
 use Closure;
+use Composer\InstalledVersions;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Event\PostGetResult;
 use FSi\Component\DataSource\Driver\Doctrine\DBAL\Event\PreGetResult;
@@ -23,11 +25,9 @@ use FSi\Component\DataSource\Result;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 use function sprintf;
-use function strpos;
 
 /**
- * @template T
- * @template-extends AbstractDriver<T>
+ * @template-extends AbstractDriver<array<string,mixed>>
  */
 final class DBALDriver extends AbstractDriver
 {
@@ -37,6 +37,7 @@ final class DBALDriver extends AbstractDriver
      * @var string|Closure|null
      */
     private $indexField;
+    private ?Connection $connection;
 
     /**
      * @param EventDispatcherInterface $eventDispatcher
@@ -44,19 +45,22 @@ final class DBALDriver extends AbstractDriver
      * @param QueryBuilder $queryBuilder
      * @param string $alias
      * @param string|Closure|null $indexField
+     * @param Connection|null $connection
      */
     public function __construct(
         EventDispatcherInterface $eventDispatcher,
         array $fieldTypes,
         QueryBuilder $queryBuilder,
         string $alias,
-        $indexField = null
+        string|Closure|null $indexField = null,
+        ?Connection $connection = null
     ) {
         parent::__construct($eventDispatcher, $fieldTypes);
 
         $this->initialQuery = $queryBuilder;
         $this->alias = $alias;
         $this->indexField = $indexField;
+        $this->connection = $connection;
     }
 
     /**
@@ -67,7 +71,7 @@ final class DBALDriver extends AbstractDriver
     {
         $name = $field->getOption('field');
 
-        if (true === $field->getOption('auto_alias') && false === strpos($name, ".")) {
+        if (true === $field->getOption('auto_alias') && false === str_contains($name, ".")) {
             $name = "{$this->alias}.{$name}";
         }
 
@@ -103,7 +107,18 @@ final class DBALDriver extends AbstractDriver
             $query->setFirstResult($first);
         }
 
-        $result = new Paginator($query);
+        if (false === InstalledVersions::getVersion('doctrine/dbal') >= '4.0.0') {
+            $result = new Paginator($query);
+        } else {
+            if (null === $this->connection) {
+                throw new DBALDriverException(
+                    sprintf('Connection is required for "%s" driver.', self::class)
+                );
+            }
+
+            $result = new Paginator4($this->connection, $query);
+        }
+
         if (null !== $this->indexField) {
             $result = new DBALResult($result, $this->indexField);
         }
