@@ -102,7 +102,6 @@ final class TestKernel extends Kernel
                 'logging' => false
             ],
             'orm' => [
-                'auto_generate_proxy_classes' => true,
                 'naming_strategy' => 'doctrine.orm.naming_strategy.underscore_number_aware',
                 'mappings' => [
                     'datasource_bundle' => [
