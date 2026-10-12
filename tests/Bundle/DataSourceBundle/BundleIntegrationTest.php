@@ -245,6 +245,7 @@ final class BundleIntegrationTest extends WebTestCase
 
     protected function setUp(): void
     {
+        self::$class = null;
         $this->client = self::createClient(['debug' => false]);
         $this->setupDatabase();
     }
