@@ -30,7 +30,7 @@
         "gedmo/doctrine-extensions": "^3.5",
         "nyholm/psr7": "^1.8",
         "oneup/flysystem-bundle": "^4.4",
-        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan": "^2.1.47",
         "phpstan/phpstan-doctrine": "^2.0",
         "phpstan/phpstan-phpunit": "^2.0",
         "phpunit/phpunit": "^10.5",
