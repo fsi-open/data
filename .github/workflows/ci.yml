@@ -13,6 +13,17 @@ jobs:
         strategy:
             matrix:
                 php-version: [8.1, 8.2, 8.3, 8.4, 8.5]
+                include:
+                    - php-version: 8.1
+                      elasticsearch-version: 7.17.8
+                    - php-version: 8.2
+                      elasticsearch-version: 7.17.8
+                    - php-version: 8.3
+                      elasticsearch-version: 7.17.8
+                    - php-version: 8.4
+                      elasticsearch-version: 8.11.3
+                    - php-version: 8.5
+                      elasticsearch-version: 8.11.3
         runs-on: ubuntu-22.04
         container:
             image: fsiopenpl/docker-php-apache:alpine-${{ matrix.php-version }}
@@ -23,7 +34,7 @@ jobs:
         timeout-minutes: 10
         services:
             elasticsearch:
-                image: docker.elastic.co/elasticsearch/elasticsearch:7.17.8
+                image: docker.elastic.co/elasticsearch/elasticsearch:${{ matrix.elasticsearch-version }}
                 ports:
                     - 9200/tcp
                 env:

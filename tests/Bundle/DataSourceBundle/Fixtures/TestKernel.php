@@ -102,7 +102,6 @@ final class TestKernel extends Kernel
                 'logging' => false
             ],
             'orm' => [
-                'auto_generate_proxy_classes' => true,
                 'naming_strategy' => 'doctrine.orm.naming_strategy.underscore_number_aware',
                 'mappings' => [
                     'datasource_bundle' => [
@@ -116,12 +115,22 @@ final class TestKernel extends Kernel
             ]
         ]);
 
-        $configuration->loadFromExtension('fos_elastica', [
-            'clients' => [
+        if (InstalledVersions::getVersion('friendsofsymfony/elastica-bundle') >= '7.0.0') {
+            $clients = [
+                'default' => [
+                    'hosts' => ['%env(ELASTICSEARCH_URL)%/'],
+                ],
+            ];
+        } else {
+            $clients = [
                 'default' => [
                     'url' => '%env(ELASTICSEARCH_URL)%/',
                 ],
-            ],
+            ];
+        }
+
+        $configuration->loadFromExtension('fos_elastica', [
+            'clients' => $clients,
             'indexes' => [
                 'news' => [
                     'use_alias' => true,

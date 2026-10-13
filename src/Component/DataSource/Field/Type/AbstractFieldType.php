@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace FSi\Component\DataSource\Field\Type;
 
-use FSi\Component\DataSource\DataSourceInterface;
+use Countable;
 use FSi\Component\DataSource\Exception\DataSourceException;
 use FSi\Component\DataSource\Field\Field;
 use FSi\Component\DataSource\Field\FieldExtensionInterface;
@@ -19,6 +19,8 @@ use FSi\Component\DataSource\Field\FieldInterface;
 use FSi\Component\DataSource\Field\FieldView;
 use FSi\Component\DataSource\Field\FieldViewInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+
+use function count;
 
 abstract class AbstractFieldType implements FieldTypeInterface
 {
@@ -97,6 +99,7 @@ abstract class AbstractFieldType implements FieldTypeInterface
      */
     protected function isEmpty($data): bool
     {
-        return ([] === $data) || ('' === $data) || (null === $data);
+        return ([] === $data) || ('' === $data) || (null === $data)
+            || (true === $data instanceof Countable && 0 === count($data));
     }
 }
