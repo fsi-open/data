@@ -77,7 +77,8 @@
     "config": {
         "bin-dir": "vendor/bin",
         "allow-plugins": {
-            "ocramius/package-versions": true
+            "ocramius/package-versions": true,
+            "php-http/discovery": true
         }
     },
     "scripts": {

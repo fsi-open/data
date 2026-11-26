@@ -13,6 +13,8 @@ namespace Tests\FSi\Component\DataIndexer;
 
 use Doctrine\Common\EventManager;
 use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\TypeRegistry;
 use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
@@ -42,6 +44,7 @@ use Tests\FSi\Component\DataIndexer\Fixtures\Entity\Post;
 use Tests\FSi\Component\DataIndexer\Fixtures\Entity\Tree;
 use Tests\FSi\Component\DataIndexer\Fixtures\Entity\Vehicle;
 
+use function method_exists;
 use function sys_get_temp_dir;
 
 final class DoctrineDataIndexerTest extends TestCase
@@ -262,6 +265,9 @@ final class DoctrineDataIndexerTest extends TestCase
     {
         $config = $this->createMock(Configuration::class);
         $config->method('getProxyDir')->willReturn(sys_get_temp_dir());
+        if (true === method_exists(Configuration::class, 'getTypeProvider')) {
+            $config->method('getTypeProvider')->willReturn(Type::getTypeRegistry());
+        }
 
         $config->method('getNamingStrategy')->willReturn(new DefaultNamingStrategy());
         $config->expects(self::once())->method('getProxyNamespace')->willReturn('Proxy');
