@@ -17,6 +17,7 @@ use FSi\Component\DataSource\Exception\DataSourceException;
 use FSi\Component\DataSource\Field\FieldExtensionInterface;
 use ReflectionNamedType;
 use RuntimeException;
+use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
@@ -161,7 +162,10 @@ final class DataSourcePass implements CompilerPassInterface
             }
             $eventClass = $eventTypeReflection->getName();
 
-            $eventDispatcher->addMethodCall('addListener', [$eventClass, new Reference($serviceId), $priority]);
+            $eventDispatcher->addMethodCall(
+                'addListener',
+                [$eventClass, [new ServiceClosureArgument(new Reference($serviceId)), '__invoke'], $priority]
+            );
         }
     }
 }
